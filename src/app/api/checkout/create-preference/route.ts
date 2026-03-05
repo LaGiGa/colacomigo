@@ -32,11 +32,12 @@ const CreatePreferenceSchema = z.object({
 })
 
 export async function POST(request: NextRequest) {
-    let body: z.infer<typeof CreatePreferenceSchema>
-
+    let body: any
     try {
-        body = CreatePreferenceSchema.parse(await request.json())
+        body = await request.json()
+        body = CreatePreferenceSchema.parse(body)
     } catch (err) {
+        console.error('[create-preference] Erro no payload:', err)
         return NextResponse.json({ error: 'Payload inválido', details: err }, { status: 400 })
     }
 
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
 
     // ─── Calcula valores ─────────────────────────────────────────────
     const subtotal = body.items.reduce(
-        (sum, i) => sum + i.unitPrice * i.quantity,
+        (sum: number, i: any) => sum + i.unitPrice * i.quantity,
         0
     )
     const total = Math.max(0.01, subtotal + body.shippingCost - body.discount)
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
     }
 
     // ─── 2. Insere os itens do pedido ────────────────────────────────
-    const orderItems = body.items.map((item) => ({
+    const orderItems = body.items.map((item: any) => ({
         order_id: order.id,
         variant_id: item.variantId,
         quantity: item.quantity,
@@ -123,7 +124,7 @@ export async function POST(request: NextRequest) {
         const preference = await new Preference(mercadopago).create({
             body: {
                 items: [
-                    ...body.items.map((item) => ({
+                    ...body.items.map((item: any) => ({
                         id: item.variantId,
                         title: item.productName,
                         quantity: item.quantity,
