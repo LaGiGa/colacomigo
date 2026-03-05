@@ -114,7 +114,7 @@ export function ProductCard({
                     {variantId && (
                         <button
                             onClick={handleQuickAdd}
-                            className="absolute bottom-0 left-0 right-0 bg-primary text-black text-[10px] font-black tracking-widest py-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 hidden sm:block border-t border-black/10 hover:bg-white transition-colors"
+                            className="absolute bottom-0 left-0 right-0 bg-primary text-white text-[10px] font-black tracking-widest py-3 sm:translate-y-full group-hover:translate-y-0 transition-transform duration-300 block border-t border-white/10 hover:bg-white hover:text-black transition-colors z-20"
                         >
                             ADICIONAR AO CARRINHO
                         </button>

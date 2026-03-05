@@ -54,7 +54,7 @@ export function ShippingCalculator({ weightKg = 0.3, subtotal = 0, onSelect }: S
                 // Fallback com valores padrão se a API falhar
                 setConfig({
                     free_shipping_enabled: true,
-                    free_shipping_threshold: 499,
+                    free_shipping_threshold: 399,
                     store_pickup_enabled: true,
                     store_pickup_label: 'Retirar na Loja',
                     local_delivery_enabled: true,

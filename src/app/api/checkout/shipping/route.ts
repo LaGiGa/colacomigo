@@ -26,7 +26,7 @@ async function calcularFrete(
     cepDestino: string,
     totalWeightKg: number
 ): Promise<ShippingOption[]> {
-    const cepOrigem = process.env.CORREIOS_CEP_ORIGEM ?? '01310100'
+    const cepOrigem = process.env.CORREIOS_CEP_ORIGEM ?? '77006002' // Padrão: Palmas-TO
 
     // Autenticação Correios CWS
     const authResponse = await fetch(

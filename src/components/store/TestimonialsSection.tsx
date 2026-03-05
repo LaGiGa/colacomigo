@@ -84,7 +84,7 @@ export function TestimonialsSection() {
                             O QUE <span className="text-primary italic">DIZEM</span> DE NÓS
                         </h2>
                         <p className="text-neutral-400 text-sm md:text-base leading-relaxed">
-                            Mais de 10.000 clientes já vestem nossa marca. Veja o que quem já comprou achou da experiência.
+                            A comunidade Cola Comigo cresce a cada drop. Veja o que quem já garantiu seu estilo achou da experiência.
                         </p>
                     </div>
 
