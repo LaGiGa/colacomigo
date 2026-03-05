@@ -141,8 +141,6 @@ export function CheckoutFlow() {
                     customerInfo: data,
                     shippingCost: shipping.price,
                     discount: discountValue,
-                    // Para o checkout transparente, addressId será criado pelo servidor
-                    shippingAddressId: '00000000-0000-0000-0000-000000000000', // placeholder
                 }),
             })
 
