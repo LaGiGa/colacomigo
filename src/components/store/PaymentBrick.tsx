@@ -84,7 +84,7 @@ export function PaymentBrick({ preferenceId, totalAmount, onSuccess, onError }: 
                 },
                 callbacks: {
                     onReady: () => {
-                        console.log('[PaymentBrick] Ready')
+                        // Brick carregado
                     },
                     onSubmit: async (
                         { selectedPaymentMethod, formData }: {

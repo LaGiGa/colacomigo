@@ -40,7 +40,7 @@ export default async function ProdutosPage({ searchParams }: Props) {
       *,
       brand:brands(name),
       images:product_images(url, is_primary),
-      variants:product_variants(id, sku, size, color_name, color_hex, price_delta:price, is_active)
+      variants:product_variants(id, sku, size, color_name, color_hex, price_delta:price, is_active, stock)
     `)
         .eq('is_active', true)
 
@@ -152,6 +152,7 @@ export default async function ProdutosPage({ searchParams }: Props) {
                                                 isNew={pm.is_featured ?? false}
                                                 variantId={pm.variants?.[0]?.id ?? null}
                                                 variantSku={pm.variants?.[0]?.sku ?? null}
+                                                inStock={pm.variants?.some((v: any) => (v.stock ?? 0) > 0) ?? false}
                                             />
                                         )
                                     })}

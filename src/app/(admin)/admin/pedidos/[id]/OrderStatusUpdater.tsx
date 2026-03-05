@@ -24,9 +24,17 @@ interface OrderStatusUpdaterProps {
     orderId: string
     currentStatus: string
     currentTrackingCode: string
+    customerName: string
+    customerPhone: string
 }
 
-export function OrderStatusUpdater({ orderId, currentStatus, currentTrackingCode }: OrderStatusUpdaterProps) {
+export function OrderStatusUpdater({
+    orderId,
+    currentStatus,
+    currentTrackingCode,
+    customerName,
+    customerPhone
+}: OrderStatusUpdaterProps) {
     const [status, setStatus] = useState(currentStatus)
     const [trackingCode, setTrackingCode] = useState(currentTrackingCode)
     const [isPending, startTransition] = useTransition()
@@ -42,6 +50,35 @@ export function OrderStatusUpdater({ orderId, currentStatus, currentTrackingCode
                 toast.success('Pedido atualizado com sucesso!')
             } else {
                 toast.error('Erro ao atualizar o pedido.')
+            }
+        })
+    }
+
+    function sendWhatsAppTracking() {
+        if (!trackingCode) {
+            toast.error('Insira o código de rastreio primeiro.')
+            return
+        }
+        const cleanPhone = customerPhone.replace(/\D/g, '')
+        const msg = `Olá ${customerName}! 👋\nSeu pedido na *Cola Comigo* já foi enviado! 🚀\n\nCódigo de Rastreio: *${trackingCode.toUpperCase()}*\nVocê pode rastrear pelo site dos Correios.\n\nQualquer dúvida, estamos à disposição!`
+        window.open(`https://wa.me/55${cleanPhone}?text=${encodeURIComponent(msg)}`, '_blank')
+    }
+
+    function sendEmailTracking() {
+        if (!trackingCode) {
+            toast.error('Insira o código de rastreio primeiro.')
+            return
+        }
+        startTransition(async () => {
+            const res = await fetch(`/api/admin/orders/${orderId}/send-tracking`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ trackingCode }),
+            })
+            if (res.ok) {
+                toast.success('E-mail enviado com sucesso!')
+            } else {
+                toast.error('Erro ao enviar e-mail.')
             }
         })
     }
@@ -79,14 +116,33 @@ export function OrderStatusUpdater({ orderId, currentStatus, currentTrackingCode
                 </div>
             </div>
 
-            <Button
-                onClick={handleSave}
-                disabled={isPending}
-                className="gradient-brand text-white font-semibold"
-            >
-                <Save className="h-4 w-4 mr-2" />
-                {isPending ? 'Salvando...' : 'Salvar Alterações'}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+                <Button
+                    onClick={handleSave}
+                    disabled={isPending}
+                    className="gradient-brand text-white font-semibold"
+                >
+                    <Save className="h-4 w-4 mr-2" />
+                    {isPending ? 'Salvando...' : 'Salvar Alterações'}
+                </Button>
+
+                <Button
+                    variant="outline"
+                    onClick={sendWhatsAppTracking}
+                    className="border-green-500/50 text-green-500 hover:bg-green-500/10"
+                >
+                    Enviar WhatsApp
+                </Button>
+
+                <Button
+                    variant="outline"
+                    onClick={sendEmailTracking}
+                    disabled={isPending}
+                    className="border-blue-500/50 text-blue-500 hover:bg-blue-500/10"
+                >
+                    Enviar Email
+                </Button>
+            </div>
         </div>
     )
 }

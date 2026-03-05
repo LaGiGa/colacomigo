@@ -50,8 +50,8 @@ export default async function AdminPedidosPage() {
                 </div>
             </div>
 
-            {/* Tabela */}
-            <div className="rounded-xl border border-border overflow-x-auto">
+            {/* Tabela (Desktop) */}
+            <div className="hidden md:block rounded-xl border border-border overflow-hidden">
                 <table className="w-full text-sm">
                     <thead className="bg-secondary/50 border-b border-border">
                         <tr>
@@ -66,12 +66,7 @@ export default async function AdminPedidosPage() {
                     </thead>
                     <tbody>
                         {orders && orders.length > 0 ? (
-                            orders.map((order: {
-                                id: string; status: string; total: number; created_at: string;
-                                mp_payment_id?: string;
-                                shipping_address?: { name?: string; city?: string; state?: string };
-                                items?: { id: string }[]
-                            }) => {
+                            orders.map((order: any) => {
                                 const statusConf = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.pending
                                 const date = new Date(order.created_at)
 
@@ -117,12 +112,64 @@ export default async function AdminPedidosPage() {
                                 <td colSpan={7} className="p-12 text-center text-muted-foreground">
                                     <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
                                     <p>Nenhum pedido recebido ainda.</p>
-                                    <p className="text-xs mt-1">Os pedidos aparecem aqui após o primeiro checkout.</p>
                                 </td>
                             </tr>
                         )}
                     </tbody>
                 </table>
+            </div>
+
+            {/* Cards (Mobile) */}
+            <div className="grid grid-cols-1 gap-4 md:hidden">
+                {orders && orders.length > 0 ? (
+                    orders.map((order: any) => {
+                        const statusConf = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.pending
+                        const date = new Date(order.created_at)
+
+                        return (
+                            <div key={order.id} className="rounded-xl border border-border p-4 bg-card space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Pedido</span>
+                                        <span className="font-mono font-bold text-white">#{order.id.slice(0, 8).toUpperCase()}</span>
+                                    </div>
+                                    <Badge variant="outline" className={`text-[10px] uppercase font-bold ${statusConf.color}`}>
+                                        {statusConf.label}
+                                    </Badge>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4 pt-1">
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] text-muted-foreground uppercase font-bold">Cliente</span>
+                                        <span className="text-sm font-medium truncate">{order.shipping_address?.name ?? '—'}</span>
+                                        <span className="text-[10px] text-muted-foreground">{order.shipping_address?.city}/{order.shipping_address?.state}</span>
+                                    </div>
+                                    <div className="flex flex-col text-right">
+                                        <span className="text-[10px] text-muted-foreground uppercase font-bold">Total</span>
+                                        <span className="text-sm font-black text-primary">{formatCurrency(order.total)}</span>
+                                        <span className="text-[10px] text-muted-foreground">{order.items?.length ?? 0} item(ns)</span>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-between pt-2 border-t border-border/40">
+                                    <div className="flex items-center gap-2 text-muted-foreground">
+                                        <Clock className="h-3 w-3" />
+                                        <span className="text-[10px]">{date.toLocaleDateString('pt-BR')} às {date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                    </div>
+                                    <Button size="sm" variant="secondary" className="h-8 px-3 text-xs" asChild>
+                                        <Link href={`/admin/pedidos/${order.id}`}>
+                                            Ver Detalhes
+                                        </Link>
+                                    </Button>
+                                </div>
+                            </div>
+                        )
+                    })
+                ) : (
+                    <div className="p-8 text-center text-muted-foreground border border-dashed border-border rounded-xl">
+                        <p>Nenhum pedido recebido.</p>
+                    </div>
+                )}
             </div>
         </div>
     )

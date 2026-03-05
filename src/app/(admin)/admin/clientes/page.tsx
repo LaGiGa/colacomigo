@@ -74,8 +74,8 @@ export default async function AdminClientesPage() {
                 ))}
             </div>
 
-            {/* Tabela de clientes */}
-            <div className="rounded-xl border border-border overflow-hidden">
+            {/* Tabela (Desktop) */}
+            <div className="hidden md:block rounded-xl border border-border overflow-hidden">
                 <table className="w-full text-sm">
                     <thead className="bg-secondary/50 border-b border-border">
                         <tr>
@@ -90,7 +90,6 @@ export default async function AdminClientesPage() {
                             clientes.map((c) => (
                                 <tr key={c.id} className="border-b border-border/40 hover:bg-secondary/20 transition-colors">
                                     <td className="p-4">
-                                        {/* Avatar inicial */}
                                         <div className="flex items-center gap-3">
                                             <div className="h-9 w-9 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
                                                 <span className="text-sm font-black text-primary">
@@ -116,7 +115,6 @@ export default async function AdminClientesPage() {
                                                 <span className="text-xs">{c.phone}</span>
                                             </div>
                                         )}
-                                        {!c.email && !c.phone && <span className="text-muted-foreground">—</span>}
                                     </td>
                                     <td className="p-4 text-muted-foreground text-xs">
                                         {new Date(c.created_at).toLocaleDateString('pt-BR')}
@@ -136,12 +134,63 @@ export default async function AdminClientesPage() {
                                 <td colSpan={4} className="p-12 text-center text-muted-foreground">
                                     <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
                                     <p>Nenhum cliente cadastrado ainda.</p>
-                                    <p className="text-xs mt-1">Os clientes aparecem aqui após o primeiro cadastro na loja.</p>
                                 </td>
                             </tr>
                         )}
                     </tbody>
                 </table>
+            </div>
+
+            {/* Cards (Mobile) */}
+            <div className="grid grid-cols-1 gap-4 md:hidden">
+                {clientes.length > 0 ? (
+                    clientes.map((c) => (
+                        <div key={c.id} className="rounded-xl border border-border p-4 bg-card space-y-3">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+                                        <span className="text-base font-black text-primary">
+                                            {(c.full_name ?? c.email ?? '?')[0].toUpperCase()}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <p className="font-bold">{c.full_name ?? '—'}</p>
+                                        <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider">{c.id.slice(0, 8)}</p>
+                                    </div>
+                                </div>
+                                <Badge
+                                    variant={c.role === 'admin' ? 'default' : 'secondary'}
+                                    className={c.role === 'admin' ? 'bg-primary/20 text-primary border-primary/30' : ''}
+                                >
+                                    {c.role === 'admin' ? 'Admin' : 'Cliente'}
+                                </Badge>
+                            </div>
+
+                            <div className="flex flex-col gap-2 pt-1">
+                                {c.email && (
+                                    <div className="flex items-center gap-2 text-muted-foreground">
+                                        <Mail className="h-3.5 w-3.5" />
+                                        <span className="text-sm">{c.email}</span>
+                                    </div>
+                                )}
+                                {c.phone && (
+                                    <div className="flex items-center gap-2 text-muted-foreground">
+                                        <Phone className="h-3.5 w-3.5" />
+                                        <span className="text-sm">{c.phone}</span>
+                                    </div>
+                                )}
+                                <div className="flex items-center gap-2 text-muted-foreground">
+                                    <MapPin className="h-3.5 w-3.5" />
+                                    <span className="text-sm">Cadastrado em {new Date(c.created_at).toLocaleDateString('pt-BR')}</span>
+                                </div>
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <div className="p-8 text-center text-muted-foreground border border-dashed border-border rounded-xl">
+                        <p>Nenhum cliente cadastrado.</p>
+                    </div>
+                )}
             </div>
         </div>
     )

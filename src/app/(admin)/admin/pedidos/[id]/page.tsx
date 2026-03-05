@@ -133,6 +133,8 @@ export default async function PedidoDetailPage({ params }: Props) {
                         orderId={order.id}
                         currentStatus={order.status}
                         currentTrackingCode={order.shipment?.[0]?.tracking_code ?? ''}
+                        customerName={order.shipping_address?.name ?? 'Cliente'}
+                        customerPhone={order.shipping_address?.phone ?? ''}
                     />
                 </div>
 

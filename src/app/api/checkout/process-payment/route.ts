@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
             amount: payment.transaction_amount,
             method: body.selectedPaymentMethod,
             status: paymentStatus,
-            raw_payload: payment as unknown as Record<string, unknown>,
+            raw_data: payment as unknown as Record<string, unknown>,
         })
 
         // Se aprovado, decrementa o estoque

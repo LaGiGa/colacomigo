@@ -100,6 +100,12 @@ export function ProductActions({
         window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`, '_blank')
     }
 
+    function handleRestockWhatsApp() {
+        const sizeText = selectedSize ? ` no tamanho ${selectedSize}` : ''
+        const msg = `Olá, vi que o produto *${productName}* esgotou${sizeText}, quando chega mais?`
+        window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`, '_blank')
+    }
+
     return (
         <div className="space-y-8">
             {/* Preço Brutalista */}
@@ -205,14 +211,24 @@ export function ProductActions({
 
                 {/* Botões de ação Brutalistas */}
                 <div className="flex-1">
-                    <Button
-                        size="lg"
-                        onClick={handleAddToCart}
-                        disabled={!inStock || isPending}
-                        className="btn-primary w-full"
-                    >
-                        {!inStock ? 'ESGOTADO' : 'ADICIONAR AO CARRINHO'}
-                    </Button>
+                    {inStock ? (
+                        <Button
+                            size="lg"
+                            onClick={handleAddToCart}
+                            disabled={isPending}
+                            className="btn-primary w-full"
+                        >
+                            ADICIONAR AO CARRINHO
+                        </Button>
+                    ) : (
+                        <Button
+                            size="lg"
+                            onClick={handleRestockWhatsApp}
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black tracking-widest uppercase border-0 rounded-none h-14"
+                        >
+                            ESGOTADO - CONSULTAR REESTOQUE
+                        </Button>
+                    )}
                 </div>
             </div>
 

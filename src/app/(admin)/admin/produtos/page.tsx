@@ -38,8 +38,8 @@ export default async function AdminProdutosPage() {
                 </Button>
             </div>
 
-            {/* Tabela */}
-            <div className="rounded-xl border border-border overflow-hidden">
+            {/* Tabela (Desktop) */}
+            <div className="hidden md:block rounded-xl border border-border overflow-hidden">
                 <table className="w-full text-sm">
                     <thead className="bg-secondary/50 border-b border-border">
                         <tr>
@@ -53,13 +53,7 @@ export default async function AdminProdutosPage() {
                     </thead>
                     <tbody>
                         {products && products.length > 0 ? (
-                            products.map((p: {
-                                id: string; name: string; slug: string; price: number;
-                                compare_price?: number; is_active: boolean; sku?: string;
-                                brand?: { name: string }; category?: { name: string };
-                                images?: { url: string; is_primary: boolean }[];
-                                variants?: { id: string; is_active: boolean }[]
-                            }) => (
+                            products.map((p: any) => (
                                 <tr key={p.id} className="border-b border-border/40 hover:bg-secondary/20 transition-colors">
                                     <td className="p-4">
                                         <div className="flex items-center gap-3">
@@ -106,14 +100,60 @@ export default async function AdminProdutosPage() {
                                 <td colSpan={6} className="p-12 text-center text-muted-foreground">
                                     <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
                                     <p>Nenhum produto cadastrado.</p>
-                                    <Button className="mt-4 gradient-brand text-white" size="sm" asChild>
-                                        <Link href="/admin/produtos/novo">Cadastrar primeiro produto</Link>
-                                    </Button>
                                 </td>
                             </tr>
                         )}
                     </tbody>
                 </table>
+            </div>
+
+            {/* Cards (Mobile) */}
+            <div className="grid grid-cols-1 gap-4 md:hidden">
+                {products && products.length > 0 ? (
+                    products.map((p: any) => (
+                        <div key={p.id} className="rounded-xl border border-border p-4 bg-card space-y-3">
+                            <div className="flex items-center gap-4">
+                                <div className="h-16 w-16 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0 relative overflow-hidden">
+                                    {p.images?.[0] ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img src={p.images[0].url} alt="" className="h-16 w-16 object-cover" />
+                                    ) : (
+                                        <Package className="h-8 w-8 text-muted-foreground" />
+                                    )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <h3 className="font-bold text-sm text-white line-clamp-2">{p.name}</h3>
+                                        <Badge variant={p.is_active ? 'default' : 'secondary'} className={`text-[10px] ${p.is_active ? 'bg-green-500/20 text-green-400' : ''}`}>
+                                            {p.is_active ? 'Ativo' : 'Off'}
+                                        </Badge>
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <span className="text-xs font-black text-primary">{formatCurrency(p.price)}</span>
+                                        {p.compare_price && <span className="text-[10px] text-muted-foreground line-through">{formatCurrency(p.compare_price)}</span>}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-between pt-3 border-t border-border/40">
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] text-muted-foreground font-medium uppercase">{p.category?.name ?? 'S/ Categoria'}</span>
+                                    <span className="text-[10px] text-muted-foreground uppercase font-mono">{p.variants?.length ?? 0} variantes</span>
+                                </div>
+                                <Button size="sm" variant="secondary" className="h-8 px-4 text-xs font-bold" asChild>
+                                    <Link href={`/admin/produtos/${p.id}`}>
+                                        <Edit className="h-3.5 w-3.5 mr-2" />
+                                        Editar
+                                    </Link>
+                                </Button>
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <div className="p-8 text-center text-muted-foreground border border-dashed border-border rounded-xl">
+                        <p>Nenhum produto cadastrado.</p>
+                    </div>
+                )}
             </div>
         </div>
     )

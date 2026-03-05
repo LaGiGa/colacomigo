@@ -20,6 +20,7 @@ interface ProductCardProps {
     isNew?: boolean
     variantId?: string
     variantSku?: string
+    inStock?: boolean
 }
 
 export function ProductCard({
@@ -34,6 +35,7 @@ export function ProductCard({
     isNew,
     variantId,
     variantSku,
+    inStock = true,
 }: ProductCardProps) {
     const addItem = useCartStore((s) => s.addItem)
     const openCart = useUIStore((s) => s.openCart)
@@ -98,12 +100,17 @@ export function ProductCard({
 
                     {/* Badges Brutalistas */}
                     <div className="absolute top-0 left-0 flex flex-col gap-0 z-10 w-full">
-                        {hasDiscount && (
+                        {!inStock && (
+                            <span className="bg-neutral-800 text-neutral-400 font-black text-[10px] tracking-widest px-3 py-1.5 uppercase text-center w-full">
+                                ESGOTADO
+                            </span>
+                        )}
+                        {hasDiscount && inStock && (
                             <span className="bg-red-600 text-white font-black text-[10px] tracking-widest px-3 py-1.5 uppercase text-center w-full">
                                 {discountPct}% OFF
                             </span>
                         )}
-                        {isNew && !hasDiscount && (
+                        {isNew && !hasDiscount && inStock && (
                             <span className="bg-primary text-black font-black text-[10px] tracking-widest px-3 py-1.5 uppercase text-center w-full">
                                 NOVO DROP
                             </span>
@@ -111,14 +118,17 @@ export function ProductCard({
                     </div>
 
                     {/* Quick add — Extreme Feedback */}
-                    {variantId && (
+                    {variantId && inStock && (
                         <button
                             onClick={handleQuickAdd}
                             style={{ backgroundColor: '#1a8fff' }}
-                            className="absolute bottom-0 left-0 right-0 text-white text-[10px] font-black tracking-widest py-3 sm:translate-y-full group-hover:translate-y-0 transition-transform duration-300 block border-t border-white/10 z-20"
+                            className="absolute bottom-0 left-0 right-0 text-white text-[10px] font-black tracking-widest py-3 translate-y-0 lg:translate-y-full lg:group-hover:translate-y-0 transition-transform duration-300 block border-t border-white/10 z-20"
                         >
                             ADICIONAR AO CARRINHO
                         </button>
+                    )}
+                    {!inStock && (
+                        <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] pointer-events-none" />
                     )}
                 </div>
 

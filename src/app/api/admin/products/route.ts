@@ -8,6 +8,7 @@ const VariantSchema = z.object({
     colorName: z.string().optional(),
     colorHex: z.string().optional(),
     priceDelta: z.number().default(0),
+    stock: z.number().int().min(0).default(0),
 })
 
 const ImageSchema = z.object({
@@ -96,7 +97,6 @@ export async function POST(request: NextRequest) {
         if (imagesError) console.warn('[products] Erro ao inserir imagens:', imagesError)
     }
 
-    // 4. Insere as variantes
     for (const v of body.variants) {
         const { data: variant, error: variantError } = await supabase
             .from('product_variants')
@@ -107,6 +107,7 @@ export async function POST(request: NextRequest) {
                 color_name: v.colorName || null,
                 color_hex: v.colorHex || null,
                 price: v.priceDelta,
+                stock: v.stock,
                 is_active: true,
             })
             .select()
@@ -116,13 +117,6 @@ export async function POST(request: NextRequest) {
             console.warn('[products] Erro na variante:', variantError)
             continue
         }
-
-        // Cria o registro de inventário (estoque inicial = 0)
-        await supabase.from('inventory').insert({
-            variant_id: variant.id,
-            quantity: 0,
-            reserved: 0,
-        })
     }
 
     return NextResponse.json({ id: product.id, slug: product.slug }, { status: 201 })

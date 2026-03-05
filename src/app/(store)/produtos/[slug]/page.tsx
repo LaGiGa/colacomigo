@@ -46,8 +46,7 @@ export default async function ProductPage({ params }: Props) {
       category:categories(name, slug),
       images:product_images(url, alt_text, is_primary, position),
       variants:product_variants(
-        id, sku, size, color_name, color_hex, price_delta:price, is_active,
-        inventory(quantity)
+        id, sku, size, color_name, color_hex, price_delta:price, is_active, stock
       )
     `)
         .eq('slug', slug)
@@ -62,13 +61,9 @@ export default async function ProductPage({ params }: Props) {
         .map((img: { url: string; alt_text?: string }) => ({ url: img.url, alt: img.alt_text }))
 
     // Normaliza variantes com estoque
-    const variants = (product.variants ?? []).map((v: {
-        id: string; sku: string; size: string | null; color_name: string | null;
-        color_hex: string | null; price_delta: number; is_active: boolean;
-        inventory?: { quantity: number }[]
-    }) => ({
+    const variants = (product.variants ?? []).map((v: any) => ({
         ...v,
-        stock: v.inventory?.[0]?.quantity ?? 0,
+        stock: v.stock ?? 0,
     }))
 
     const primaryImage = images[0]?.url ?? null
@@ -80,7 +75,7 @@ export default async function ProductPage({ params }: Props) {
       *,
       brand:brands(name),
       images:product_images(url, is_primary),
-      variants:product_variants(id, sku, size, color_name, color_hex, price_delta:price, is_active)
+      variants:product_variants(id, sku, size, color_name, color_hex, price_delta:price, is_active, stock)
     `)
         .eq('category_id', product.category_id)
         .eq('is_active', true)
@@ -205,6 +200,7 @@ export default async function ProductPage({ params }: Props) {
                                             isNew={pm.is_featured ?? false}
                                             variantId={pm.variants?.[0]?.id ?? null}
                                             variantSku={pm.variants?.[0]?.sku ?? null}
+                                            inStock={pm.variants?.some((v: any) => (v.stock ?? 0) > 0) ?? false}
                                         />
                                     )
                                 })}

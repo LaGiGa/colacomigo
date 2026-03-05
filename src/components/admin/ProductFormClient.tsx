@@ -30,13 +30,14 @@ interface ProductFormValues {
 interface ImagePreview { file: File; preview: string; uploading: boolean; url?: string }
 
 interface Variant {
-    size: string; colorName: string; colorHex: string; priceDelta: number; sku: string
+    id?: string; size: string; colorName: string; colorHex: string; priceDelta: number; sku: string; stock: number
 }
 
 interface ProductFormProps {
     categories: { id: string; name: string }[]
     brands: { id: string; name: string }[]
     collections?: { id: string; name: string }[]
+    initialProduct?: any
 }
 
 const SelectField = ({
@@ -58,14 +59,20 @@ const SelectField = ({
 )
 
 
-export function ProductFormClient({ categories: initCats, brands: initBrands, collections: initCols }: ProductFormProps) {
+export function ProductFormClient({ categories: initCats, brands: initBrands, collections: initCols, initialProduct }: ProductFormProps) {
     const router = useRouter()
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [isPending, startTransition] = useTransition()
-    const [images, setImages] = useState<ImagePreview[]>([])
-    const [variants, setVariants] = useState<Variant[]>([
-        { size: '', colorName: '', colorHex: '#000000', priceDelta: 0, sku: '' }
-    ])
+    const [images, setImages] = useState<ImagePreview[]>(
+        initialProduct?.images?.map((img: any) => ({
+            preview: img.url, url: img.url, uploading: false
+        })) || []
+    )
+    const [variants, setVariants] = useState<Variant[]>(
+        initialProduct?.variants?.map((v: any) => ({
+            id: v.id, sku: v.sku, size: v.size || '', colorName: v.color_name || '', colorHex: v.color_hex || '#000000', priceDelta: v.price_delta || 0, stock: v.stock || 0
+        })) || [{ size: '', colorName: '', colorHex: '#000000', priceDelta: 0, sku: '', stock: 0 }]
+    )
 
     // Dados dos dropdowns — sempre carregados via API na montagem
     const [categories, setCategories] = useState<{ id: string; name: string }[]>(initCats)
@@ -94,7 +101,20 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
     }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
     const { register, handleSubmit, setValue } = useForm<ProductFormValues>({
-        defaultValues: { is_active: true, is_new: false },
+        defaultValues: {
+            name: initialProduct?.name || '',
+            slug: initialProduct?.slug || '',
+            sku: initialProduct?.sku || '',
+            description: initialProduct?.description || '',
+            price: initialProduct?.price?.toString() || '',
+            compare_price: initialProduct?.compare_price?.toString() || '',
+            category_id: initialProduct?.category_id || '',
+            brand_id: initialProduct?.brand_id || '',
+            collection_id: initialProduct?.collection_id || '',
+            weight_kg: initialProduct?.weight_kg?.toString() || '',
+            is_active: initialProduct?.is_active ?? true,
+            is_new: initialProduct?.is_new ?? false,
+        },
     })
 
     function generateSlug(name: string) {
@@ -124,7 +144,7 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
                 const res = await fetch('/api/admin/upload', { method: 'POST', body: formData })
                 const data = await res.json()
                 setImages((prev) => prev.map((img) => img.file === files[i] ? { ...img, uploading: false, url: data.url } : img))
-            } catch {
+            } catch (err) {
                 setImages((prev) => prev.map((img) => img.file === files[i] ? { ...img, uploading: false } : img))
                 toast.error(`Erro ao fazer upload de ${files[i].name}`)
             }
@@ -136,7 +156,7 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
     }
 
     function addVariant() {
-        setVariants((prev) => [...prev, { size: '', colorName: '', colorHex: '#000000', priceDelta: 0, sku: '' }])
+        setVariants((prev) => [...prev, { size: '', colorName: '', colorHex: '#000000', priceDelta: 0, sku: '', stock: 0 }])
     }
 
     function removeVariant(i: number) { setVariants((prev) => prev.filter((_, idx) => idx !== i)) }
@@ -156,21 +176,29 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
             try {
                 const payload = {
                     ...data,
-                    collection_id: data.collection_id || null, // opcional
+                    price: parseFloat(data.price),
+                    compare_price: data.compare_price ? parseFloat(data.compare_price) : undefined,
+                    weight_kg: data.weight_kg ? parseFloat(data.weight_kg) : undefined,
+                    collection_id: data.collection_id || null,
                     images: uploadedImages.map((img, i) => ({
                         url: img.url!, is_primary: i === 0, position: i,
                     })),
-                    variants: variants.filter((v) => v.sku || v.size || v.colorName),
+                    variants: variants.filter((v) => v.sku || v.size || v.colorName).map(v => ({
+                        ...v, priceDelta: parseFloat(v.priceDelta as any) || 0
+                    })),
                 }
 
-                const res = await fetch('/api/admin/products', {
-                    method: 'POST',
+                const url = initialProduct ? `/api/admin/products/${initialProduct.id}` : '/api/admin/products'
+                const method = initialProduct ? 'PATCH' : 'POST'
+
+                const res = await fetch(url, {
+                    method,
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),
                 })
                 const result = await res.json()
                 if (!res.ok) throw new Error(result.error)
-                toast.success('Produto cadastrado com sucesso!')
+                toast.success(initialProduct ? 'Produto atualizado!' : 'Produto cadastrado com sucesso!')
                 router.push('/admin/produtos')
                 router.refresh()
             } catch (err) {
@@ -351,13 +379,18 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
                                 </div>
                             </div>
 
+                            <div className="space-y-1 sm:col-span-2">
+                                <Label className="text-xs">Cor (Hex)</Label>
+                                <div className="flex items-center gap-1">
+                                    <input type="color" value={v.colorHex} onChange={(e) => updateVariant(i, 'colorHex', e.target.value)} className="h-9 w-10 rounded border border-input cursor-pointer flex-shrink-0 p-0" />
+                                    <Input value={v.colorHex} onChange={(e) => updateVariant(i, 'colorHex', e.target.value)} className="h-9 text-xs font-mono flex-1 p-2" />
+                                </div>
+                            </div>
+
                             <div className="grid grid-cols-2 gap-3 sm:col-span-2">
                                 <div className="space-y-1">
-                                    <Label className="text-xs">Cor (Hex)</Label>
-                                    <div className="flex items-center gap-1">
-                                        <input type="color" value={v.colorHex} onChange={(e) => updateVariant(i, 'colorHex', e.target.value)} className="h-9 w-10 rounded border border-input cursor-pointer flex-shrink-0 p-0" />
-                                        <Input value={v.colorHex} onChange={(e) => updateVariant(i, 'colorHex', e.target.value)} className="h-9 text-xs font-mono flex-1 p-2" />
-                                    </div>
+                                    <Label className="text-xs">Estoque</Label>
+                                    <Input value={v.stock} onChange={(e) => updateVariant(i, 'stock', parseInt(e.target.value) || 0)} type="number" className="h-9 text-xs" />
                                 </div>
                                 <div className="space-y-1">
                                     <Label className="text-xs">Acréscimo R$</Label>
