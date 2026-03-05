@@ -51,6 +51,23 @@ export function CheckoutFlow() {
     const [orderId, setOrderId] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
 
+    // Coupon states
+    const [couponCode, setCouponCode] = useState('')
+    const [appliedCoupon, setAppliedCoupon] = useState<{
+        code: string
+        discount_type: 'percent' | 'fixed'
+        discount_value: number
+    } | null>(null)
+    const [isValidatingCoupon, setIsValidatingCoupon] = useState(false)
+
+    const calculateDiscount = () => {
+        if (!appliedCoupon) return 0
+        if (appliedCoupon.discount_type === 'fixed') return appliedCoupon.discount_value
+        return (subtotal() * appliedCoupon.discount_value) / 100
+    }
+
+    const discountValue = calculateDiscount()
+
     const {
         register,
         handleSubmit,
@@ -59,7 +76,7 @@ export function CheckoutFlow() {
         formState: { errors },
     } = useForm<AddressForm>({ resolver: zodResolver(AddressSchema) })
 
-    const orderTotal = subtotal() + (shipping?.price ?? 0)
+    const orderTotal = Math.max(0, subtotal() + (shipping?.price ?? 0) - discountValue)
     const validItems = items.filter((i) => i.quantity > 0)
 
     // Auto-preenche endereço via ViaCEP
@@ -76,6 +93,29 @@ export function CheckoutFlow() {
                 setValue('state', data.uf)
             }
         } catch { /* silencioso */ }
+    }
+
+    // Validação de Cupom
+    async function handleApplyCoupon() {
+        if (!couponCode.trim()) return
+        setIsValidatingCoupon(true)
+        try {
+            const res = await fetch('/api/coupons/validate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: couponCode })
+            })
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error)
+
+            setAppliedCoupon(data)
+            toast.success(`Cupom ${data.code} aplicado!`)
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : 'Erro ao validar cupom')
+            setAppliedCoupon(null)
+        } finally {
+            setIsValidatingCoupon(false)
+        }
     }
 
     async function onAddressSubmit(data: AddressForm) {
@@ -100,6 +140,7 @@ export function CheckoutFlow() {
                     })),
                     customerInfo: data,
                     shippingCost: shipping.price,
+                    discount: discountValue,
                     // Para o checkout transparente, addressId será criado pelo servidor
                     shippingAddressId: '00000000-0000-0000-0000-000000000000', // placeholder
                 }),
@@ -175,11 +216,37 @@ export function CheckoutFlow() {
                             ))}
                         </div>
 
+                        <div className="flex flex-col gap-4 py-6 border-y border-white/10">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400">POSSUI UM CUPOM?</Label>
+                            <div className="flex gap-2">
+                                <Input
+                                    placeholder="CÓDIGO"
+                                    value={couponCode}
+                                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                    className="h-10 border-white/10 bg-black text-white rounded-none focus-visible:ring-1 focus-visible:ring-white focus-visible:border-white transition-all uppercase tracking-wider text-xs"
+                                />
+                                <Button
+                                    type="button"
+                                    disabled={isValidatingCoupon || !couponCode}
+                                    onClick={handleApplyCoupon}
+                                    className="btn-ghost h-10 px-6 text-[10px] font-black tracking-widest bg-white/5 hover:bg-white/10"
+                                >
+                                    {isValidatingCoupon ? <Loader2 className="h-4 w-4 animate-spin" /> : 'APLICAR'}
+                                </Button>
+                            </div>
+                        </div>
+
                         <div className="space-y-3 text-[10px] font-black tracking-widest uppercase">
                             <div className="flex justify-between text-neutral-400">
                                 <span>Subtotal</span>
                                 <span className="text-white">{formatCurrency(subtotal())}</span>
                             </div>
+                            {appliedCoupon && (
+                                <div className="flex justify-between text-green-500">
+                                    <span>DESCONTO ({appliedCoupon.code})</span>
+                                    <span>-{formatCurrency(discountValue)}</span>
+                                </div>
+                            )}
                             <div className="flex justify-between text-neutral-400">
                                 <span>Frete</span>
                                 <span className="text-white">{shipping ? formatCurrency(shipping.price) : 'CALCULADO NA PRÓXIMA ETAPA'}</span>
@@ -299,6 +366,12 @@ export function CheckoutFlow() {
                         <span>SUBTOTAL</span>
                         <span className="text-white">{formatCurrency(subtotal())}</span>
                     </div>
+                    {appliedCoupon && (
+                        <div className="flex justify-between text-green-500">
+                            <span>DESCONTO ({appliedCoupon.code})</span>
+                            <span>-{formatCurrency(discountValue)}</span>
+                        </div>
+                    )}
                     <div className="flex justify-between text-neutral-400">
                         <span>FRETE ({shipping?.serviceName ?? 'PENDENTE'})</span>
                         <span className="text-white">{shipping ? formatCurrency(shipping.price) : '0,00'}</span>

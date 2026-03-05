@@ -16,6 +16,7 @@ const CreatePreferenceSchema = z.object({
     ).min(1),
     shippingAddressId: z.string().uuid(),
     shippingCost: z.number().min(0),
+    discount: z.number().min(0).default(0),
     profileId: z.string().uuid().optional(),
 })
 
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
         (sum, i) => sum + i.unitPrice * i.quantity,
         0
     )
-    const total = subtotal + body.shippingCost
+    const total = Math.max(0.01, subtotal + body.shippingCost - body.discount)
 
     // ─── 1. Cria o pedido no Supabase (status: pending) ───────────────
     const { data: order, error: orderError } = await supabase
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
             status: 'pending',
             subtotal,
             shipping_cost: body.shippingCost,
-            discount: 0,
+            discount: body.discount,
             total,
         })
         .select()
@@ -84,14 +85,23 @@ export async function POST(request: NextRequest) {
     try {
         const preference = await new Preference(mercadopago).create({
             body: {
-                items: body.items.map((item) => ({
-                    id: item.variantId,
-                    title: item.productName,
-                    quantity: item.quantity,
-                    unit_price: item.unitPrice,
-                    currency_id: 'BRL',
-                    picture_url: item.imageUrl,
-                })),
+                items: [
+                    ...body.items.map((item) => ({
+                        id: item.variantId,
+                        title: item.productName,
+                        quantity: item.quantity,
+                        unit_price: item.unitPrice,
+                        currency_id: 'BRL',
+                        picture_url: item.imageUrl,
+                    })),
+                    ...(body.discount > 0 ? [{
+                        id: 'discount',
+                        title: 'CUPOM DE DESCONTO',
+                        quantity: 1,
+                        unit_price: -body.discount,
+                        currency_id: 'BRL',
+                    }] : [])
+                ],
                 back_urls: {
                     success: `${appUrl}/checkout/sucesso`,
                     pending: `${appUrl}/checkout/pendente`,
