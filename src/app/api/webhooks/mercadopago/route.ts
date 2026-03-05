@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
         if (newStatus === 'paid') {
             const { data: orderData } = await supabase
                 .from('orders')
-                .select('user_id, total')
+                .select('user_id, total, customer_email, customer_name')
                 .eq('id', orderId)
                 .single()
 
@@ -127,8 +127,11 @@ export async function POST(request: NextRequest) {
                 }
 
                 // Enviar e-mail de confirmação
-                const { data: authUser } = await supabase.auth.admin.getUserById(orderData.user_id)
-                if (authUser.user?.email) {
+                // Tenta pegar o e-mail do cliente (guest) ou do usuário logado
+                const customerEmail = orderData.customer_email
+                const customerName = orderData.customer_name || 'Família'
+
+                if (customerEmail) {
                     const itemsHtml = items.map((it: any) => `
                         <div style="padding: 10px 0; border-bottom: 1px solid #222;">
                             <p style="margin: 0; font-weight: 900;">${it.variant?.product?.name} x ${it.quantity}</p>
@@ -173,7 +176,7 @@ export async function POST(request: NextRequest) {
                     </div>
                     `
                     await sendEmail({
-                        to: authUser.user.email,
+                        to: customerEmail,
                         subject: `Pagamento Confirmado! Pedido #${orderId.slice(0, 8).toUpperCase()}`,
                         html: emailHtml
                     })

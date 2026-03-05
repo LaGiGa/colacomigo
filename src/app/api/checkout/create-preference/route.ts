@@ -14,7 +14,18 @@ const CreatePreferenceSchema = z.object({
             imageUrl: z.string().url().optional(),
         })
     ).min(1),
-    shippingAddressId: z.string().uuid(),
+    customerInfo: z.object({
+        name: z.string(),
+        email: z.string(),
+        phone: z.string(),
+        zipCode: z.string(),
+        street: z.string(),
+        number: z.string(),
+        complement: z.string().optional(),
+        neighborhood: z.string(),
+        city: z.string(),
+        state: z.string(),
+    }),
     shippingCost: z.number().min(0),
     discount: z.number().min(0).default(0),
     profileId: z.string().uuid().optional(),
@@ -29,7 +40,6 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Payload inválido', details: err }, { status: 400 })
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const supabase = createServiceClient()
 
     // ─── Calcula valores ─────────────────────────────────────────────
@@ -39,17 +49,44 @@ export async function POST(request: NextRequest) {
     )
     const total = Math.max(0.01, subtotal + body.shippingCost - body.discount)
 
+    // ─── 0. Cria ou usa o endereço no Supabase ───────────────────────
+    // Para simplificar, sempre criaremos um novo registro de endereço por pedido
+    const { data: address, error: addressError } = await supabase
+        .from('addresses')
+        .insert({
+            user_id: body.profileId ?? null,
+            name: body.customerInfo.name,
+            phone: body.customerInfo.phone,
+            zip_code: body.customerInfo.zipCode,
+            street: body.customerInfo.street,
+            number: body.customerInfo.number,
+            complement: body.customerInfo.complement,
+            neighborhood: body.customerInfo.neighborhood,
+            city: body.customerInfo.city,
+            state: body.customerInfo.state,
+        })
+        .select()
+        .single()
+
+    if (addressError || !address) {
+        console.error('[create-preference] Erro ao criar endereço:', addressError)
+        return NextResponse.json({ error: 'Erro ao salvar endereço' }, { status: 500 })
+    }
+
     // ─── 1. Cria o pedido no Supabase (status: pending) ───────────────
     const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
-            profile_id: body.profileId ?? null,
-            shipping_address_id: body.shippingAddressId,
+            user_id: body.profileId ?? null,
+            address_id: address.id,
             status: 'pending',
             subtotal,
             shipping_cost: body.shippingCost,
             discount: body.discount,
             total,
+            customer_name: body.customerInfo.name,
+            customer_email: body.customerInfo.email,
+            customer_phone: body.customerInfo.phone,
         })
         .select()
         .single()
