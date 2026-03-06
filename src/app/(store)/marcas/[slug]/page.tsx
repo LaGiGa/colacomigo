@@ -4,11 +4,7 @@ import { ProductCard } from '@/components/store/ProductCard'
 import { Header } from '@/components/store/Header'
 import { Footer } from '@/components/store/Footer'
 
-export async function generateStaticParams() {
-    const supabase = createServiceClient()
-    const { data } = await supabase.from('brands').select('slug').eq('is_active', true)
-    return data?.map((brand) => ({ slug: brand.slug })) || []
-}
+export const runtime = 'edge';
 
 export default async function MarcaPage({
     params,

@@ -119,19 +119,32 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
         if (table) {
             if (id) {
                 const { data, error } = await supabase.from(table as any).select('*').eq('id', id).single()
-                if (error) throw error
+                if (error) {
+                    console.error(`[API ADMIN GET ERROR] Failed on ${table}/${id}:`, error)
+                    return NextResponse.json({ [SINGULAR_MAP[resource] || resource]: null, _error: error.message })
+                }
                 const key = SINGULAR_MAP[resource] || resource
                 return NextResponse.json({ [key]: data })
             }
 
             const { data, error } = await supabase.from(table as any).select('*').order('created_at', { ascending: false })
-            if (error) throw error
+            if (error) {
+                console.error(`[API ADMIN GET ERROR] Failed listing ${table}:`, error)
+                // Retorna 200 com array vazio em caso de erro (ex: tabela não existe) para não quebrar a UI
+                return NextResponse.json({ [resource]: [], _error: error.message })
+            }
             return NextResponse.json({ [resource]: data ?? [] })
         }
 
         return NextResponse.json({ error: 'Endpoint não encontrado' }, { status: 404 })
     } catch (err: any) {
-        console.error('[API ADMIN GET ERROR]', err)
+        console.error('[API ADMIN GET CATCH]', err)
+        // Se der crash na função, ainda retorna [] para as listas poderem funcionar e não dar 500 bruto
+        const { slug = [] } = await params
+        const resource = slug[0]
+        if (resource && RESOURCES[resource]) {
+            return NextResponse.json({ [resource]: [], _fallback_error: err.message })
+        }
         return NextResponse.json({ error: err.message }, { status: 500 })
     }
 

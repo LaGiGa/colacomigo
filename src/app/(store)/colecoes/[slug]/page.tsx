@@ -2,11 +2,7 @@ import { notFound } from 'next/navigation'
 import { createServiceClient } from '@/lib/supabase/server'
 import { ProdutosPageClient } from '@/components/store/StoreDynamicComponents'
 
-export async function generateStaticParams() {
-    const supabase = createServiceClient()
-    const { data } = await supabase.from('collections').select('slug').eq('is_active', true)
-    return data?.map((col) => ({ slug: col.slug })) || []
-}
+export const runtime = 'edge';
 
 export default async function ColecaoPage({
     params,

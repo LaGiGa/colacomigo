@@ -1,11 +1,7 @@
 import { ProductPageClient } from '@/components/store/ProductPageClient'
 import { createServiceClient } from '@/lib/supabase/server'
 
-export async function generateStaticParams() {
-    const supabase = createServiceClient()
-    const { data } = await supabase.from('products').select('slug').eq('is_active', true)
-    return data?.map((p) => ({ slug: p.slug })) || []
-}
+export const runtime = 'edge';
 
 export default async function ProductPage({
     params,
