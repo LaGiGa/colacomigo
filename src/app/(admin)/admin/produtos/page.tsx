@@ -1,12 +1,7 @@
 export const runtime = 'edge';
 import { createAdminClient } from '@/lib/supabase/server'
-import dynamic from 'next/dynamic'
+import { ProdutosAdminClient } from '@/components/admin/AdminDynamicComponents'
 import type { Metadata } from 'next'
-
-const ProdutosAdminClient = dynamic(
-    () => import('@/components/admin/ProdutosAdminClient').then(mod => mod.ProdutosAdminClient),
-    { ssr: false, loading: () => <div className="p-8 text-center text-zinc-500 animate-pulse">Carregando produtos...</div> }
-)
 
 export const metadata: Metadata = { title: 'Produtos | Admin' }
 

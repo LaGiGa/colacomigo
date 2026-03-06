@@ -1,10 +1,6 @@
 export const runtime = 'edge';
 import { createAdminClient } from '@/lib/supabase/server'
-import dynamic from 'next/dynamic'
-const MarcasAdminClient = dynamic(
-    () => import('@/components/admin/MarcasAdminClient').then(mod => mod.MarcasAdminClient),
-    { ssr: false, loading: () => <div className="p-8 text-center text-zinc-500 animate-pulse">Carregando marcas...</div> }
-)
+import { MarcasAdminClient } from '@/components/admin/AdminDynamicComponents'
 import { Boxes } from 'lucide-react'
 import type { Metadata } from 'next'
 
@@ -16,22 +12,22 @@ export default async function AdminMarcasPage() {
 
     const { data: marcas } = await supabase
         .from('brands')
-        .select('id, name, slug, description, logo_url, website, is_active, sort_order, created_at')
-        .order('sort_order', { ascending: true })
+        .select('*')
+        .order('name', { ascending: true })
 
     return (
         <div className="space-y-6">
             <div className="flex items-center gap-3">
-                <Boxes className="h-5 w-5 text-primary" />
+                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Boxes className="h-5 w-5 text-primary" />
+                </div>
                 <div>
                     <h1 className="text-2xl font-black tracking-tight">Marcas</h1>
-                    <p className="text-muted-foreground mt-0.5 text-sm">
-                        Gerencie as marcas disponíveis na loja. Ative ou desative para controlar a exibição.
-                    </p>
+                    <p className="text-muted-foreground text-sm">Gerencie as marcas parceiras da loja</p>
                 </div>
             </div>
 
-            <MarcasAdminClient marcas={marcas ?? []} />
+            <MarcasAdminClient marcas={marcas || []} />
         </div>
     )
 }

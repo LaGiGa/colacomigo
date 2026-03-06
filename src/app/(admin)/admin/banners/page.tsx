@@ -1,10 +1,6 @@
 export const runtime = 'edge';
 import { createAdminClient } from '@/lib/supabase/server'
-import dynamic from 'next/dynamic'
-const BannersAdminClient = dynamic(
-    () => import('@/components/admin/BannersAdminClient').then(mod => mod.BannersAdminClient),
-    { ssr: false, loading: () => <div className="p-8 text-center text-zinc-500 animate-pulse">Carregando banners...</div> }
-)
+import { BannersAdminClient } from '@/components/admin/AdminDynamicComponents'
 import { Layout } from 'lucide-react'
 import type { Metadata } from 'next'
 
@@ -22,16 +18,16 @@ export default async function AdminBannersPage() {
     return (
         <div className="space-y-6">
             <div className="flex items-center gap-3">
-                <Layout className="h-5 w-5 text-primary" />
+                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Layout className="h-5 w-5 text-primary" />
+                </div>
                 <div>
-                    <h1 className="text-2xl font-black tracking-tight">Banners do Carrossel</h1>
-                    <p className="text-muted-foreground mt-0.5 text-sm">
-                        Gerencie as imagens e textos que aparecem no destaque da página inicial.
-                    </p>
+                    <h1 className="text-2xl font-black tracking-tight">Banners</h1>
+                    <p className="text-muted-foreground text-sm">Gerencie os banners do carrossel principal</p>
                 </div>
             </div>
 
-            <BannersAdminClient banners={banners ?? []} />
+            <BannersAdminClient banners={banners || []} />
         </div>
     )
 }

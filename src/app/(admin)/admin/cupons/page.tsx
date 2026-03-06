@@ -1,10 +1,6 @@
 export const runtime = 'edge';
 import { createServiceClient } from '@/lib/supabase/server'
-import dynamic from 'next/dynamic'
-const CuponsAdminClient = dynamic(
-    () => import('@/components/admin/CuponsAdminClient').then(mod => mod.CuponsAdminClient),
-    { ssr: false, loading: () => <div className="p-8 text-center text-zinc-500 animate-pulse">Carregando cupons...</div> }
-)
+import { CuponsAdminClient } from '@/components/admin/AdminDynamicComponents'
 import { Ticket } from 'lucide-react'
 import type { Metadata } from 'next'
 
@@ -20,15 +16,16 @@ export default async function AdminCuponsPage() {
     return (
         <div className="space-y-6">
             <div className="flex items-center gap-3">
-                <Ticket className="h-5 w-5 text-primary" />
+                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Ticket className="h-5 w-5 text-primary" />
+                </div>
                 <div>
-                    <h1 className="text-2xl font-black tracking-tight">Cupons de Desconto</h1>
-                    <p className="text-muted-foreground mt-0.5 text-sm">
-                        Crie cupons para seus clientes — percentual ou valor fixo.
-                    </p>
+                    <h1 className="text-2xl font-black tracking-tight">Cupons</h1>
+                    <p className="text-muted-foreground text-sm">Crie códigos de desconto para seus clientes</p>
                 </div>
             </div>
-            <CuponsAdminClient cupons={cupons ?? []} />
+
+            <CuponsAdminClient cupons={cupons || []} />
         </div>
     )
 }

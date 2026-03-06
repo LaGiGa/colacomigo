@@ -1,10 +1,6 @@
 export const runtime = 'edge';
 import { createAdminClient } from '@/lib/supabase/server'
-import dynamic from 'next/dynamic'
-const CategoriasAdminClient = dynamic(
-    () => import('@/components/admin/CategoriasAdminClient').then(mod => mod.CategoriasAdminClient),
-    { ssr: false, loading: () => <div className="p-8 text-center text-zinc-500 animate-pulse">Carregando painel...</div> }
-)
+import { CategoriasAdminClient } from '@/components/admin/AdminDynamicComponents'
 import { Tag } from 'lucide-react'
 import type { Metadata } from 'next'
 
@@ -22,16 +18,16 @@ export default async function AdminCategoriasPage() {
     return (
         <div className="space-y-6">
             <div className="flex items-center gap-3">
-                <Tag className="h-5 w-5 text-primary" />
+                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Tag className="h-5 w-5 text-primary" />
+                </div>
                 <div>
                     <h1 className="text-2xl font-black tracking-tight">Categorias</h1>
-                    <p className="text-muted-foreground mt-0.5 text-sm">
-                        Gerencie as categorias da loja. Ative ou desative para controlar a exibição.
-                    </p>
+                    <p className="text-muted-foreground text-sm">Organize seus produtos por departamento</p>
                 </div>
             </div>
 
-            <CategoriasAdminClient categorias={categorias ?? []} />
+            <CategoriasAdminClient categorias={categorias || []} />
         </div>
     )
 }

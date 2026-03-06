@@ -1,10 +1,6 @@
 export const runtime = 'edge';
 import { createAdminClient } from '@/lib/supabase/server'
-import dynamic from 'next/dynamic'
-const ProductFormClient = dynamic(
-    () => import('@/components/admin/ProductFormClient').then(mod => mod.ProductFormClient),
-    { ssr: false, loading: () => <div className="p-8 text-center text-zinc-500 animate-pulse">Carregando editor...</div> }
-)
+import { ProductFormClient } from '@/components/admin/AdminDynamicComponents'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 
@@ -16,47 +12,33 @@ export default async function EditarProdutoPage({
     params: Promise<{ id: string }>
 }) {
     const { id } = await params
-    const supabase = await createAdminClient()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const supabase = await createAdminClient() as any
 
-    // Buscar categorias e marcas para o form
-    const [
-        { data: categories },
-        { data: brands },
-        { data: collections },
-        { data: product }
-    ] = await Promise.all([
+    // Busca produto com todas as relações
+    const { data: product } = await supabase
+        .from('products')
+        .select(`
+      *,
+      images:product_images(id, url, position, is_primary),
+      variants:product_variants(id, sku, size, color_name, color_hex, price, is_active, stock)
+    `)
+        .eq('id', id)
+        .single()
+
+    if (!product) notFound()
+
+    // Busca categorias e marcas para o form
+    const [categoriesRes, brandsRes] = await Promise.all([
         supabase.from('categories').select('id, name').order('name'),
         supabase.from('brands').select('id, name').order('name'),
-        supabase.from('collections').select('id, name').order('name'),
-        supabase.from('products')
-            .select(`
-                *,
-                images:product_images(*),
-                variants:product_variants(*)
-            `)
-            .eq('id', id)
-            .single()
     ])
 
-    if (!product) {
-        notFound()
-    }
-
     return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-black tracking-tight">Editar Produto</h1>
-                <p className="text-muted-foreground mt-1">
-                    Altere as informações, fotos e variantes do produto #{id.slice(0, 8).toUpperCase()}
-                </p>
-            </div>
-
-            <ProductFormClient
-                categories={categories ?? []}
-                brands={brands ?? []}
-                collections={collections ?? []}
-                initialProduct={product}
-            />
-        </div>
+        <ProductFormClient
+            initialData={product}
+            categories={categoriesRes.data || []}
+            brands={brandsRes.data || []}
+        />
     )
 }
