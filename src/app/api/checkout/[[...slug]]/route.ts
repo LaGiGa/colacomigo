@@ -1,4 +1,4 @@
-// export const runtime = 'edge'; // Removed due to node:buffer usage
+export const runtime = 'edge';
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { mpCreatePreference, mpCreatePayment, mpGetPayment } from '@/lib/mercadopago'
@@ -56,8 +56,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
         // 1. CÁLCULO DE FRETE
         if (action === 'shipping') {
             const body = ShippingSchema.parse(await req.json()); const totalWeight = body.itens.reduce((s, i) => s + (i.weightKg * i.quantity), 0)
-            const { Buffer } = await import('node:buffer')
-            const auth = Buffer.from(`${process.env.CORREIOS_USER}:${process.env.CORREIOS_PASSWORD}`).toString('base64')
+            const auth = btoa(`${process.env.CORREIOS_USER}:${process.env.CORREIOS_PASSWORD}`)
             const tokenRes = await fetch('https://api.correios.com.br/token/v1/autentica/cartaopostagem', {
                 method: 'POST',
                 headers: {

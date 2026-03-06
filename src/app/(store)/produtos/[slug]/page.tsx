@@ -1,3 +1,4 @@
+export const runtime = 'edge'
 import { ProductPageClient } from '@/components/store/ProductPageClient'
 import { createServiceClient } from '@/lib/supabase/server'
 
