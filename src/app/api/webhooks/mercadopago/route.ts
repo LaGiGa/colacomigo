@@ -5,7 +5,7 @@ import { Payment } from 'mercadopago'
 import { sendEmail } from '@/lib/email'
 import { formatCurrency } from '@/lib/utils'
 
-export const runtime = 'edge'
+
 
 /** Valida a assinatura HMAC SHA256 do Mercado Pago usando Web Crypto API (Edge-compatible) */
 async function validateMpSignature(request: NextRequest): Promise<boolean> {
