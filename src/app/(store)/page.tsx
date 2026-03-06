@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 
-export const runtime = 'edge'
+
 import { ArrowRight, Zap, Shield, Truck } from 'lucide-react'
 import { HeroCarousel } from '@/components/store/HeroCarousel'
 import { Header } from '@/components/store/Header'
@@ -10,7 +10,7 @@ import { RecentPurchasePopup } from '@/components/store/RecentPurchasePopup'
 import { Footer } from '@/components/store/Footer'
 import { WhatsAppButton } from '@/components/store/WhatsAppButton'
 import { TestimonialsSection } from '@/components/store/TestimonialsSection'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -52,7 +52,7 @@ const DIFERENCIAIS = [
 
 // ─── Página ───────────────────────────────────────────────────────────────────
 export default async function PaginaInicial() {
-    const supabase = await createClient()
+    const supabase = createServiceClient()
 
     // Buscar banners do banco (ativos, ordenados)
     const { data: bannersDB } = await supabase

@@ -1,7 +1,12 @@
 import { notFound } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 
-export const runtime = 'edge'
+export async function generateStaticParams() {
+    const supabase = createServiceClient()
+    const { data } = await supabase.from('products').select('slug').eq('is_active', true)
+    return (data || []).map(p => ({ slug: p.slug }))
+}
+
 import { ImageGallery } from '@/components/store/ImageGallery'
 import { ProductActions } from '@/components/store/ProductActions'
 import { ShippingCalculator } from '@/components/store/ShippingCalculator'
@@ -21,7 +26,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params
-    const supabase = await createClient()
+    const supabase = createServiceClient()
     const { data: product } = await supabase
         .from('products')
         .select('name, description')
@@ -37,7 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProductPage({ params }: Props) {
     const { slug } = await params
-    const supabase = await createClient()
+    const supabase = createServiceClient()
 
     // Busca produto completo com todas as relações
     const { data: product } = await supabase

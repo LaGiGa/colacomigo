@@ -1,5 +1,10 @@
+export const runtime = 'edge';
 import { createServiceClient } from '@/lib/supabase/server'
-import { CuponsAdminClient } from '@/components/admin/CuponsAdminClient'
+import dynamic from 'next/dynamic'
+const CuponsAdminClient = dynamic(
+    () => import('@/components/admin/CuponsAdminClient').then(mod => mod.CuponsAdminClient),
+    { ssr: false, loading: () => <div className="p-8 text-center text-zinc-500 animate-pulse">Carregando cupons...</div> }
+)
 import { Ticket } from 'lucide-react'
 import type { Metadata } from 'next'
 

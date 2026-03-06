@@ -1,6 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 
-export const runtime = 'edge'
+import { createServiceClient } from '@/lib/supabase/server'
+
+export async function generateStaticParams() {
+    const supabase = createServiceClient()
+    const { data } = await supabase.from('categories').select('slug').eq('is_active', true)
+    return (data || []).map(p => ({ slug: p.slug }))
+}
 import { ProductCard } from '@/components/store/ProductCard'
 import { Header } from '@/components/store/Header'
 import { Footer } from '@/components/store/Footer'

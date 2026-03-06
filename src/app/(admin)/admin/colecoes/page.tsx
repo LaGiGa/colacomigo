@@ -1,5 +1,10 @@
+export const runtime = 'edge';
 import { createServiceClient } from '@/lib/supabase/server'
-import { ColecoesAdminClient } from '@/components/admin/ColecoesAdminClient'
+import dynamic from 'next/dynamic'
+const ColecoesAdminClient = dynamic(
+    () => import('@/components/admin/ColecoesAdminClient').then(mod => mod.ColecoesAdminClient),
+    { ssr: false, loading: () => <div className="p-8 text-center text-zinc-500 animate-pulse">Carregando coleções...</div> }
+)
 import { Layers } from 'lucide-react'
 import type { Metadata } from 'next'
 

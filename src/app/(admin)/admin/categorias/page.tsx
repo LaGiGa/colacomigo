@@ -1,6 +1,10 @@
 export const runtime = 'edge';
 import { createAdminClient } from '@/lib/supabase/server'
-import { CategoriasAdminClient } from '@/components/admin/CategoriasAdminClient'
+import dynamic from 'next/dynamic'
+const CategoriasAdminClient = dynamic(
+    () => import('@/components/admin/CategoriasAdminClient').then(mod => mod.CategoriasAdminClient),
+    { ssr: false, loading: () => <div className="p-8 text-center text-zinc-500 animate-pulse">Carregando painel...</div> }
+)
 import { Tag } from 'lucide-react'
 import type { Metadata } from 'next'
 

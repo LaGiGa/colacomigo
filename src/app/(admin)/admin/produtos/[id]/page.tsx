@@ -1,6 +1,10 @@
 export const runtime = 'edge';
 import { createAdminClient } from '@/lib/supabase/server'
-import { ProductFormClient } from '@/components/admin/ProductFormClient'
+import dynamic from 'next/dynamic'
+const ProductFormClient = dynamic(
+    () => import('@/components/admin/ProductFormClient').then(mod => mod.ProductFormClient),
+    { ssr: false, loading: () => <div className="p-8 text-center text-zinc-500 animate-pulse">Carregando editor...</div> }
+)
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 

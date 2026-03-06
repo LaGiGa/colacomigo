@@ -1,6 +1,10 @@
 export const runtime = 'edge';
 import { createAdminClient } from '@/lib/supabase/server'
-import { BannersAdminClient } from '@/components/admin/BannersAdminClient'
+import dynamic from 'next/dynamic'
+const BannersAdminClient = dynamic(
+    () => import('@/components/admin/BannersAdminClient').then(mod => mod.BannersAdminClient),
+    { ssr: false, loading: () => <div className="p-8 text-center text-zinc-500 animate-pulse">Carregando banners...</div> }
+)
 import { Layout } from 'lucide-react'
 import type { Metadata } from 'next'
 
