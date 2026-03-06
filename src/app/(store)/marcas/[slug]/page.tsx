@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 
+export const runtime = 'edge';
 import { createServiceClient } from '@/lib/supabase/server'
 
 export async function generateStaticParams() {
