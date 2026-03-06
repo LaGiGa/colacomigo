@@ -104,20 +104,38 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
         const table = RESOURCES[resource]
         if (table) {
             if (id) {
-                const { data, error } = await supabase.from(table).select('*').eq('id', id).single()
+                const { data, error } = await supabase.from(table as any).select('*').eq('id', id).single()
                 if (error) throw error
                 return NextResponse.json(data)
             }
 
-            let query = supabase.from(table).select('*')
+            // Consultas explícitas para evitar erros de tipagem dinâmica do Supabase
+            if (resource === 'categories') {
+                const { data, error } = await supabase.from('categories').select('id, name').order('name')
+                if (error) throw error
+                return NextResponse.json({ categories: data })
+            }
 
-            if (resource === 'categories') query = query.select('id, name').order('name')
-            else if (resource === 'profiles' || resource === 'testimonials') query = query.order('created_at', { ascending: false })
-            else query = query.order('sort_order', { ascending: true })
+            if (resource === 'profiles') {
+                const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false })
+                if (error) throw error
+                return NextResponse.json({ profiles: data })
+            }
 
-            if (resource === 'collections') query = query.eq('is_active', true)
+            if (resource === 'testimonials') {
+                const { data, error } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false })
+                if (error) throw error
+                return NextResponse.json({ testimonials: data })
+            }
 
-            const { data, error } = await query
+            if (resource === 'collections') {
+                const { data, error } = await supabase.from('collections').select('*').eq('is_active', true).order('sort_order', { ascending: true })
+                if (error) throw error
+                return NextResponse.json({ collections: data })
+            }
+
+            // Fallback genérico para outros recursos simples
+            const { data, error } = await supabase.from(table as any).select('*').order('sort_order', { ascending: true })
             if (error) throw error
             return NextResponse.json({ [resource]: data })
         }
@@ -182,7 +200,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
 
         const table = RESOURCES[resource]
         if (table) {
-            const { data, error } = await supabase.from(table).insert([await req.json()]).select().single()
+            const { data, error } = await supabase.from(table as any).insert([await req.json()]).select().single()
             if (error) throw error
             const key = resource.endsWith('s') ? resource.slice(0, -1) : resource
             return NextResponse.json({ [key]: data }, { status: 201 })
@@ -236,14 +254,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ sl
         }
 
         if (resource === 'store-settings' || resource === 'shipping-settings') {
-            const { data, error } = await supabase.from(resource.replace('-', '_')).update({ ...body, updated_at: new Date().toISOString() }).eq('id', 1).select().single()
+            const { data, error } = await supabase.from(resource.replace('-', '_') as any).update({ ...body, updated_at: new Date().toISOString() }).eq('id', 1).select().single()
             if (error) throw error
             return NextResponse.json({ settings: data })
         }
 
         const table = RESOURCES[resource]
         if (table && id) {
-            const { data, error } = await supabase.from(table).update({ ...body }).eq('id', id).select().single()
+            const { data, error } = await supabase.from(table as any).update({ ...body }).eq('id', id).select().single()
             if (error) throw error
             const key = resource.endsWith('s') ? resource.slice(0, -1) : resource
             return NextResponse.json({ [key]: data })
@@ -266,7 +284,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ s
 
         const table = resource === 'products' ? 'products' : RESOURCES[resource]
         if (table) {
-            const { error } = await supabase.from(table).delete().eq('id', id)
+            const { error } = await supabase.from(table as any).delete().eq('id', id)
             if (error) throw error
             return NextResponse.json({ success: true })
         }
