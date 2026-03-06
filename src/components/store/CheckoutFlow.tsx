@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -14,9 +14,11 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency } from '@/lib/utils'
-import { Loader2, ChevronRight, ChevronLeft, ShoppingBag, MapPin, CreditCard } from 'lucide-react'
+import { Loader2, ChevronRight, ChevronLeft, ShoppingBag, MapPin, CreditCard, Lock } from 'lucide-react'
 import Image from 'next/image'
 import { toast } from 'sonner'
+import { createClient } from '@/lib/supabase/client'
+import { User } from '@supabase/supabase-js'
 
 const AddressSchema = z.object({
     name: z.string().min(3, 'Nome completo obrigatório'),
@@ -68,13 +70,34 @@ export function CheckoutFlow() {
 
     const discountValue = calculateDiscount()
 
+    const [user, setUser] = useState<User | null>(null)
+    const supabase = createClient()
+
+    useEffect(() => {
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            setUser(user)
+        })
+    }, [supabase])
+
     const {
         register,
         handleSubmit,
         watch,
         setValue,
         formState: { errors },
-    } = useForm<AddressForm>({ resolver: zodResolver(AddressSchema) })
+    } = useForm<AddressForm>({
+        resolver: zodResolver(AddressSchema),
+    })
+
+    // Pre-fill user data when it becomes available
+    useEffect(() => {
+        if (user) {
+            setValue('email', user.email || '')
+            if (user.user_metadata?.display_name) {
+                setValue('name', user.user_metadata.display_name)
+            }
+        }
+    }, [user, setValue])
 
     const orderTotal = Math.max(0, subtotal() + (shipping?.price ?? 0) - discountValue)
     const validItems = items.filter((i) => i.quantity > 0)
@@ -141,6 +164,7 @@ export function CheckoutFlow() {
                     customerInfo: data,
                     shippingCost: shipping.price,
                     discount: discountValue,
+                    profileId: user?.id,
                 }),
             })
 
@@ -256,11 +280,35 @@ export function CheckoutFlow() {
                         </div>
 
                         <Button
-                            className="btn-primary w-full h-14 text-xs mt-4"
-                            onClick={() => setStep('address')}
+                            className="btn-primary w-full h-14 text-xs mt-4 group"
+                            onClick={() => {
+                                if (!user) {
+                                    toast('Identificação Necessária', {
+                                        description: 'Para sua segurança, por favor entre na sua conta ou crie uma para finalizar a compra.',
+                                        action: {
+                                            label: 'ENTRAR',
+                                            onClick: () => router.push('/login?redirect=/checkout')
+                                        },
+                                    })
+                                    router.push('/login?redirect=/checkout')
+                                    return
+                                }
+                                setStep('address')
+                            }}
                         >
-                            AVANÇAR PARA ENTREGA
+                            {user ? 'AVANÇAR PARA ENTREGA' : (
+                                <>
+                                    <Lock className="h-4 w-4 mr-2 group-hover:animate-pulse" />
+                                    ENTRAR PARA FINALIZAR
+                                </>
+                            )}
                         </Button>
+
+                        {user && (
+                            <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest text-center mt-4">
+                                LOGADO COMO: <span className="text-primary">{user.email}</span>
+                            </p>
+                        )}
                     </>
                 )}
             </div>
