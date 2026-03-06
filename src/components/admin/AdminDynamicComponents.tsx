@@ -42,6 +42,11 @@ export const PedidosAdminClient = dynamic(
     { ssr: false, loading: () => <Loading text="Carregando pedidos..." /> }
 )
 
+export const PedidoDetailClient = dynamic(
+    () => import('../../app/(admin)/admin/pedidos/[id]/PedidoDetailClient').then(mod => mod.PedidoDetailClient),
+    { ssr: false, loading: () => <Loading text="Carregando detalhes..." /> }
+)
+
 export const ProdutosAdminClient = dynamic(
     () => import('./ProdutosAdminClient').then(mod => mod.ProdutosAdminClient),
     { ssr: false, loading: () => <Loading text="Carregando produtos..." /> }

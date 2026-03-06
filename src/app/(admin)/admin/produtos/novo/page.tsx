@@ -1,5 +1,6 @@
+export const runtime = 'edge';
 import { createServiceClient } from '@/lib/supabase/server'
-import { ProductFormClient } from '@/components/admin/ProductFormClient'
+import { ProductFormClient } from '@/components/admin/AdminDynamicComponents'
 import { ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 import type { Metadata } from 'next'

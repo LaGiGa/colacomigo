@@ -36,7 +36,7 @@ export default async function EditarProdutoPage({
 
     return (
         <ProductFormClient
-            initialData={product}
+            initialProduct={product}
             categories={categoriesRes.data || []}
             brands={brandsRes.data || []}
         />
