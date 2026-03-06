@@ -12,8 +12,14 @@ const Loading = ({ text }: { text: string }) => (
 
 export const ProdutosPageClient = dynamic(
     () => import('./ProdutosPageClient').then(mod => mod.ProdutosPageClient),
-    { ssr: false, loading: () => <Loading text="Carregando coleção..." /> }
+    { ssr: false, loading: () => <Loading text="Carregando drop..." /> }
 )
+
+export const ProductPageClient = dynamic(
+    () => import('./ProductPageClient').then(mod => mod.ProductPageClient),
+    { ssr: false, loading: () => <Loading text="Carregando drop..." /> }
+)
+
 
 export const ColecoesPageClient = dynamic(
     () => import('./ColecoesPageClient').then(mod => mod.ColecoesPageClient),

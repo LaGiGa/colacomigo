@@ -55,14 +55,30 @@ export default async function PaginaInicial() {
         .order('sort_order', { ascending: true })
         .limit(4)
 
+    // Buscar categorias do banco
+    const { data: categoriasDB } = await supabase
+        .from('categories')
+        .select('name, slug, image_url')
+        .eq('is_active', true)
+        .is('parent_id', null)
+        .order('sort_order', { ascending: true })
+        .limit(8)
+
     const MARCAS = (marcasDB ?? []).map(m => ({ nome: m.name, slug: m.slug, logo: m.logo_url }))
     const COLECOES = (colecoesDB ?? []).map((c, i) => ({
         nome: c.name,
         slug: c.slug,
         descricao: c.description ?? 'Explore essa coleção exclusiva da Cola Comigo.',
-        cor: i % 2 === 0 ? 'from-blue-900/40 to-zinc-900' : 'from-zinc-800/60 to-zinc-900',
+        cor: i % 2 === 0 ? 'from-blue-900/40 text-blue-900' : 'from-zinc-800/60 text-zinc-800', // Adjusted for contrast
         destaque: c.slug.replace(/-/g, ' ').toUpperCase(),
     }))
+    const CATEGORIAS_LIST = (categoriasDB ?? []).map((c, i) => ({
+        nome: c.name,
+        slug: c.slug,
+        img: c.image_url || `/cat-placeholder.png`,
+        num: (i + 1).toString().padStart(2, '0')
+    }))
+
 
     return (
         <div className="min-h-screen bg-black text-white selection:bg-primary selection:text-white">
@@ -89,19 +105,20 @@ export default async function PaginaInicial() {
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 border-t border-l border-white/[0.08]">
-                    {CATEGORIAS.map((cat) => (
-                        <Link key={cat.slug} href={`/categorias/${cat.slug}`} className="group relative border-r border-b border-white/[0.08] overflow-hidden bg-black" style={{ minHeight: '230px' }}>
-                            <Image src={cat.img} alt={cat.nome} fill className="object-cover object-center scale-105 group-hover:scale-100 transition-transform duration-500 ease-out" sizes="(max-width: 640px) 50vw, 25vw" />
-                            <div className="absolute inset-0 bg-black/75 group-hover:bg-black/40 transition-colors duration-500" />
+                    {CATEGORIAS_LIST.map((cat) => (
+                        <Link key={cat.slug} href={`/categorias/${cat.slug}`} className="group relative border-r border-b border-white/[0.08] overflow-hidden bg-black" style={{ minHeight: '300px' }}>
+                            {cat.img && <Image src={cat.img} alt={cat.nome} fill className="object-cover object-center scale-105 group-hover:scale-100 transition-transform duration-700 ease-out opacity-60 group-hover:opacity-100" sizes="(max-width: 640px) 50vw, 25vw" />}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent group-hover:from-black/80 transition-all duration-500" />
                             <div className="absolute inset-x-0 bottom-0 h-1 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
-                            <div className="absolute top-8 left-8">
-                                <span className="text-[10px] font-black tracking-widest text-white/40 block mb-1">{cat.num}</span>
-                                <h3 className="text-xl font-black tracking-tighter uppercase group-hover:text-primary transition-colors">{cat.nome}</h3>
-                                <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mt-1 opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0 duration-500">{cat.desc}</p>
+                            <div className="absolute top-8 left-8 z-10">
+                                <span className="text-[10px] font-black tracking-widest text-primary block mb-1">{cat.num}</span>
+                                <h3 className="text-2xl font-black tracking-tighter uppercase group-hover:text-white transition-colors">{cat.nome}</h3>
+                                <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mt-1">EXPLORAR DROP</p>
                             </div>
                         </Link>
                     ))}
                 </div>
+
             </section>
 
             {/* Coleções */}
@@ -164,22 +181,21 @@ export default async function PaginaInicial() {
                                 <Link
                                     key={marca.slug}
                                     href={`/marcas/${marca.slug}`}
-                                    className="group relative bg-black aspect-square flex items-center justify-center grayscale-[60%] hover:grayscale-0 transition-all duration-700"
+                                    className="group relative bg-black aspect-square flex items-center justify-center grayscale-[100%] hover:grayscale-0 transition-all duration-700 border-r border-b border-white/5"
                                 >
-                                    <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
+                                    <div className="absolute inset-0 bg-zinc-950 group-hover:bg-primary/10 transition-colors duration-500" />
                                     {marca.logo ? (
-                                        <div className="relative w-2/3 h-1/3 opacity-40 group-hover:opacity-100 transition-opacity">
+                                        <div className="relative w-2/3 h-1/3 opacity-30 group-hover:opacity-100 transition-opacity duration-500">
                                             <Image src={marca.logo} alt={marca.nome} fill className="object-contain" />
                                         </div>
                                     ) : (
-                                        <span className="text-lg font-black text-white/20 group-hover:text-white transition-colors uppercase tracking-widest">
+                                        <span className="text-xl font-black text-white/10 group-hover:text-white transition-all duration-500 uppercase tracking-widest">
                                             {marca.nome}
                                         </span>
                                     )}
-                                    <span className="absolute bottom-4 text-[9px] font-black uppercase tracking-[0.3em] text-primary/0 group-hover:text-primary transition-all opacity-0 group-hover:opacity-100 translate-y-3 group-hover:translate-y-0 duration-500">
-                                        Ver Marca
-                                    </span>
+                                    <div className="absolute inset-x-0 bottom-0 h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
                                 </Link>
+
                             ))}
                         </div>
                     </div>

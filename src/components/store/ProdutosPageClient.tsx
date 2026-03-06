@@ -55,9 +55,10 @@ export function ProdutosPageClient({ initialCategory = null, initialCollection =
                     *,
                     brand:brands(name),
                     images:product_images(url, is_primary),
-                    variants:product_variants(id, sku, size, color_name, color_hex, price_delta:price, is_active, stock)
+                    variants:product_variants(id, sku, size, color_name, color_hex, price_delta, is_active, stock)
                 `)
                 .eq('is_active', true)
+
 
             if (categoria) {
                 // Tenta encontrar ID localmente ou busca no banco

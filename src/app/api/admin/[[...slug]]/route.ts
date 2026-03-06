@@ -131,8 +131,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
 
         return NextResponse.json({ error: 'Endpoint não encontrado' }, { status: 404 })
     } catch (err: any) {
+        console.error('[API ADMIN GET ERROR]', err)
         return NextResponse.json({ error: err.message }, { status: 500 })
     }
+
 }
 
 // --- POST DISPATCHER ---
@@ -182,8 +184,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
             }).select().single()
             if (productError) throw productError
             if (body.images.length > 0) await supabase.from('product_images').insert(body.images.map(img => ({ product_id: product.id, url: img.url, alt_text: body.name, is_primary: img.is_primary, position: img.position })))
-            for (const v of body.variants) await supabase.from('product_variants').insert({ product_id: product.id, sku: v.sku || `${product.id}-${Date.now()}`, size: v.size || null, color_name: v.colorName || null, color_hex: v.colorHex || null, price: v.priceDelta, stock: v.stock, is_active: true })
+            for (const v of body.variants) await supabase.from('product_variants').insert({
+                product_id: product.id,
+                sku: v.sku || `${product.id}-${Date.now()}`,
+                size: v.size || null,
+                color_name: v.colorName || null,
+                color_hex: v.colorHex || null,
+                price_delta: v.priceDelta,
+                stock: v.stock,
+                is_active: true
+            })
             return NextResponse.json({ product }, { status: 201 })
+
         }
 
         const table = RESOURCES[resource]
@@ -222,10 +234,19 @@ async function handleUpdate(req: NextRequest, slug: string[]) {
             const sentVariantIds = data.variants.map(v => v.id).filter(Boolean) as string[]
             await supabase.from('product_variants').delete().eq('product_id', id).not('id', 'in', `(${sentVariantIds.join(',')})`)
             for (const v of data.variants) {
-                const vData = { sku: v.sku, size: v.size || null, color_name: v.colorName || null, color_hex: v.colorHex || null, price: v.priceDelta || 0, stock: v.stock || 0, is_active: true }
+                const vData = {
+                    sku: v.sku,
+                    size: v.size || null,
+                    color_name: v.colorName || null,
+                    color_hex: v.colorHex || null,
+                    price_delta: v.priceDelta || 0,
+                    stock: v.stock || 0,
+                    is_active: true
+                }
                 if (v.id) await supabase.from('product_variants').update(vData).eq('id', v.id)
                 else await supabase.from('product_variants').insert({ ...vData, product_id: id })
             }
+
             return NextResponse.json({ success: true })
         }
 
