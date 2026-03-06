@@ -4,6 +4,8 @@ import mercadopago from '@/lib/mercadopago'
 import { Preference } from 'mercadopago'
 import { z } from 'zod'
 
+export const runtime = 'edge'
+
 const CreatePreferenceSchema = z.object({
     items: z.array(
         z.object({

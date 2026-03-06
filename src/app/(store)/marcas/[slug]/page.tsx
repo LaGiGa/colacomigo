@@ -1,4 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
+
+export const runtime = 'edge'
 import { ProductCard } from '@/components/store/ProductCard'
 import { Header } from '@/components/store/Header'
 import { Footer } from '@/components/store/Footer'

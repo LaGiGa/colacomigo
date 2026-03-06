@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
+
+export const runtime = 'edge'
 import { ArrowRight, Zap, Shield, Truck } from 'lucide-react'
 import { HeroCarousel } from '@/components/store/HeroCarousel'
 import { Header } from '@/components/store/Header'

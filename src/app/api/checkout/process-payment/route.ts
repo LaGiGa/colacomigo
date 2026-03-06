@@ -4,6 +4,8 @@ import mercadopago from '@/lib/mercadopago'
 import { Payment } from 'mercadopago'
 import { z } from 'zod'
 
+export const runtime = 'edge'
+
 const ProcessPaymentSchema = z.object({
     preferenceId: z.string(),
     selectedPaymentMethod: z.string(),

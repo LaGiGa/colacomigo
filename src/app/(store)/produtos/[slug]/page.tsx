@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+
+export const runtime = 'edge'
 import { ImageGallery } from '@/components/store/ImageGallery'
 import { ProductActions } from '@/components/store/ProductActions'
 import { ShippingCalculator } from '@/components/store/ShippingCalculator'

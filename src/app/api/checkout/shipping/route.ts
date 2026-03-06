@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
+export const runtime = 'edge'
+
 const ShippingSchema = z.object({
     cepDestino: z.string().regex(/^\d{8}$/, 'CEP deve ter 8 dígitos (sem hífen)'),
     itens: z.array(
