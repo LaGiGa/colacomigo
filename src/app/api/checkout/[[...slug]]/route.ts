@@ -49,9 +49,9 @@ async function validateMpSignature(request: NextRequest): Promise<boolean> {
 }
 
 // --- MAIN DISPATCHER ---
-export async function POST(req: NextRequest, { params }: { params: Promise<{ slug: string[] }> }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ slug?: string[] }> }) {
     try {
-        const { slug } = await params; const action = slug[0]; const supabase = createServiceClient()
+        const { slug = [] } = await params; const action = slug[0]; const supabase = createServiceClient()
 
         // 1. CÁLCULO DE FRETE
         if (action === 'shipping') {

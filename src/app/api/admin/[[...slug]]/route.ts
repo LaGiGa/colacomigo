@@ -60,15 +60,12 @@ const RESOURCES: Record<string, string> = {
 }
 
 // --- HELPERS ---
-async function parseParams(params: any) {
-    const p = await params
-    return { resource: p.slug[0], id: p.slug[1], action: p.slug[2] }
-}
-
 // --- GET DISPATCHER ---
-export async function GET(req: NextRequest, { params }: { params: Promise<{ slug: string[] }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ slug?: string[] }> }) {
     try {
-        const { resource, id } = await parseParams(params)
+        const { slug = [] } = await params
+        const resource = slug[0]
+        const id = slug[1]
         const supabase = createServiceClient()
 
         if (resource === 'financeiro') {
@@ -106,18 +103,23 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
 
         const table = RESOURCES[resource]
         if (table) {
-            let query = supabase.from(table).select('*')
-            if (id) query = query.eq('id', id).single()
-            else {
-                if (resource === 'categories') query = query.select('id, name').order('name')
-                else if (resource === 'profiles') query = query.order('created_at', { ascending: false })
-                else if (resource === 'testimonials') query = query.order('created_at', { ascending: false })
-                else query = query.order('sort_order', { ascending: true })
-                if (resource === 'collections') query = query.eq('is_active', true)
+            if (id) {
+                const { data, error } = await supabase.from(table).select('*').eq('id', id).single()
+                if (error) throw error
+                return NextResponse.json(data)
             }
+
+            let query = supabase.from(table).select('*')
+
+            if (resource === 'categories') query = query.select('id, name').order('name')
+            else if (resource === 'profiles' || resource === 'testimonials') query = query.order('created_at', { ascending: false })
+            else query = query.order('sort_order', { ascending: true })
+
+            if (resource === 'collections') query = query.eq('is_active', true)
+
             const { data, error } = await query
             if (error) throw error
-            return NextResponse.json(id ? data : { [resource]: data })
+            return NextResponse.json({ [resource]: data })
         }
 
         return NextResponse.json({ error: 'Endpoint não encontrado' }, { status: 404 })
@@ -127,9 +129,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
 }
 
 // --- POST DISPATCHER ---
-export async function POST(req: NextRequest, { params }: { params: Promise<{ slug: string[] }> }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ slug?: string[] }> }) {
     try {
-        const { resource, id, action } = await parseParams(params)
+        const { slug = [] } = await params
+        const resource = slug[0]
+        const id = slug[1]
+        const action = slug[2]
         const supabase = createServiceClient()
 
         if (resource === 'upload') {
@@ -190,9 +195,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
 }
 
 // --- PATCH DISPATCHER ---
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ slug: string[] }> }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ slug?: string[] }> }) {
     try {
-        const { resource, id } = await parseParams(params)
+        const { slug = [] } = await params
+        const resource = slug[0]
+        const id = slug[1]
         const supabase = createServiceClient()
         const body = await req.json()
 
@@ -249,9 +256,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ sl
 }
 
 // --- DELETE DISPATCHER ---
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ slug: string[] }> }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ slug?: string[] }> }) {
     try {
-        const { resource, id } = await parseParams(params)
+        const { slug = [] } = await params
+        const resource = slug[0]
+        const id = slug[1]
         const supabase = createServiceClient()
         if (!id) throw new Error('ID requerido')
 
