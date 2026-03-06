@@ -1,4 +1,3 @@
-export const runtime = 'edge'
 import { notFound } from 'next/navigation'
 import { createServiceClient } from '@/lib/supabase/server'
 import { ProdutosPageClient } from '@/components/store/StoreDynamicComponents'
