@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import mercadopago from '@/lib/mercadopago'
-import { Preference } from 'mercadopago'
+import { mpCreatePreference } from '@/lib/mercadopago'
 import { z } from 'zod'
 
 export const runtime = 'edge'
@@ -123,39 +122,43 @@ export async function POST(request: NextRequest) {
     const webhookUrl = `${appUrl}/api/webhooks/mercadopago`
 
     try {
-        const preference = await new Preference(mercadopago).create({
-            body: {
-                items: [
-                    ...body.items.map((item: any) => ({
-                        id: item.variantId,
-                        title: item.productName,
-                        quantity: item.quantity,
-                        unit_price: item.unitPrice,
-                        currency_id: 'BRL',
-                        picture_url: item.imageUrl,
-                    })),
-                    ...(body.discount > 0 ? [{
-                        id: 'discount',
-                        title: 'CUPOM DE DESCONTO',
-                        quantity: 1,
-                        unit_price: -body.discount,
-                        currency_id: 'BRL',
-                    }] : [])
-                ],
-                back_urls: {
-                    success: `${appUrl}/checkout/sucesso`,
-                    pending: `${appUrl}/checkout/pendente`,
-                    failure: `${appUrl}/checkout`,
-                },
-                auto_return: 'approved',
-                notification_url: webhookUrl,
-                metadata: {
-                    order_id: order.id,
-                },
-                payment_methods: {
-                    installments: 12,
-                },
+        const items = [
+            ...body.items.map((item: any) => ({
+                id: item.variantId,
+                title: item.productName,
+                quantity: item.quantity,
+                unit_price: item.unitPrice,
+                currency_id: 'BRL',
+                picture_url: item.imageUrl,
+            })),
+            ...(body.discount > 0 ? [{
+                id: 'discount',
+                title: 'CUPOM DE DESCONTO',
+                quantity: 1,
+                unit_price: -body.discount,
+                currency_id: 'BRL',
+            }] : [])
+        ];
+
+        const preference = await mpCreatePreference({
+            items,
+            back_urls: {
+                success: `${appUrl}/checkout/sucesso`,
+                failure: `${appUrl}/checkout`,
+                pending: `${appUrl}/checkout`,
             },
+            auto_return: 'approved',
+            external_reference: order.id,
+            notification_url: webhookUrl,
+            metadata: {
+                order_id: order.id,
+            },
+            payment_methods: {
+                excluded_payment_types: [
+                    { id: 'ticket' }
+                ],
+                installments: 12
+            }
         })
 
         // ─── 4. Salva o preference_id no pedido ──────────────────────

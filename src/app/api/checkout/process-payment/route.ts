@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import mercadopago from '@/lib/mercadopago'
-import { Payment } from 'mercadopago'
+import { mpCreatePayment } from '@/lib/mercadopago'
 import { z } from 'zod'
 
 export const runtime = 'edge'
@@ -54,9 +53,7 @@ export async function POST(request: NextRequest) {
             paymentData.installments = body.formData.installments ?? 1
         }
 
-        const payment = await new Payment(mercadopago).create({
-            body: paymentData,
-        })
+        const payment = await mpCreatePayment(paymentData)
 
         const paymentStatus = payment.status ?? 'pending'
         const newOrderStatus =

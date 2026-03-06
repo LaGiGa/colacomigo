@@ -1,12 +1,10 @@
+export const runtime = 'edge';
 import { ProductFormClient } from '@/components/admin/AdminDynamicComponents'
 
 interface Props {
     params: Promise<{ id: string }>
 }
 
-export function generateStaticParams() {
-    return []
-}
 
 export default async function EditProdutoPage({ params }: Props) {
     const { id } = await params

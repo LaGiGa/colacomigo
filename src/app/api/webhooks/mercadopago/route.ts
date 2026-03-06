@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import mercadopago from '@/lib/mercadopago'
-import { Payment } from 'mercadopago'
+import { mpGetPayment } from '@/lib/mercadopago'
 import { sendEmail } from '@/lib/email'
 import { formatCurrency } from '@/lib/utils'
 
@@ -90,7 +89,7 @@ export async function POST(request: NextRequest) {
 
     try {
         // ─── 2. Consulta detalhes do pagamento ───────────────────────
-        const payment = await new Payment(mercadopago).get({ id: mpPaymentId })
+        const payment = await mpGetPayment(mpPaymentId)
         const orderId = (payment.metadata as Record<string, string> | undefined)?.order_id
         if (!orderId) {
             return NextResponse.json({ received: true })
