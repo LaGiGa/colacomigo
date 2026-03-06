@@ -48,7 +48,7 @@ export const PedidosAdminClient = dynamic(
 )
 
 export const PedidoDetailClient = dynamic(
-    () => import('../../app/(admin)/admin/pedidos/[id]/PedidoDetailClient').then(mod => mod.PedidoDetailClient),
+    () => import('./PedidoDetailClient').then(mod => mod.PedidoDetailClient),
     { ssr: false, loading: () => <Loading text="Carregando detalhes..." /> }
 )
 
