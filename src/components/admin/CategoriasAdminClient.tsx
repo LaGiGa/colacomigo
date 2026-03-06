@@ -43,7 +43,8 @@ export function CategoriasAdminClient({ initialCategories = [] }: Props) {
             fetch('/api/admin/categories')
                 .then(res => res.json())
                 .then(data => {
-                    setCategorias(data)
+                    const categoriesList = Array.isArray(data) ? data : (data.categories || [])
+                    setCategorias(categoriesList)
                     setLoading(false)
                 })
         }

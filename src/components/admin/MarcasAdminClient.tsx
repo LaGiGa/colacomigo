@@ -31,7 +31,8 @@ export function MarcasAdminClient({ initialMarcas = [] }: { initialMarcas?: Marc
             fetch('/api/admin/brands')
                 .then(res => res.json())
                 .then(data => {
-                    setMarcas(data)
+                    const brandsList = Array.isArray(data) ? data : (data.brands || [])
+                    setMarcas(brandsList)
                     setLoading(false)
                 })
         }

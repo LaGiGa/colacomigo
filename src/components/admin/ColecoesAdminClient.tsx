@@ -30,7 +30,8 @@ export function ColecoesAdminClient({ colecoes: initial = [] }: { colecoes?: Col
             fetch('/api/admin/collections')
                 .then(res => res.json())
                 .then(data => {
-                    setColecoes(data)
+                    const collectionsList = Array.isArray(data) ? data : (data.collections || [])
+                    setColecoes(collectionsList)
                     setLoading(false)
                 })
         }

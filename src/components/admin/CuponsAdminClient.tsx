@@ -34,7 +34,8 @@ export function CuponsAdminClient({ initialCoupons = [] }: { initialCoupons?: Co
             fetch('/api/admin/coupons')
                 .then(res => res.json())
                 .then(data => {
-                    setCoupons(data)
+                    const couponsList = Array.isArray(data) ? data : (data.coupons || [])
+                    setCoupons(couponsList)
                     setLoading(false)
                 })
         }

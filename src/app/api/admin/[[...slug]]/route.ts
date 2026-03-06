@@ -93,7 +93,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
                 if (error || !product) return NextResponse.json({ error: 'Produto não encontrado' }, { status: 404 })
                 return NextResponse.json({ product })
             }
-            const { data, error } = await supabase.from('products').select('*, category:categories(id, name), brand:brands(id, name), images:product_images(id, url, is_main)').order('created_at', { ascending: false })
+            const { data, error } = await supabase.from('products').select('*, category:categories(id, name), brand:brands(id, name), images:product_images(id, url, is_primary), variants:product_variants(*)').order('created_at', { ascending: false })
             if (error) throw error
             return NextResponse.json({ products: data ?? [] })
         }

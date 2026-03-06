@@ -13,10 +13,11 @@ export function ClientesAdminClient({ initialClients = [] }: { initialClients?: 
 
     useEffect(() => {
         if (initialClients.length === 0) {
-            fetch('/api/admin/profiles') // Assuming this is the endpoint
+            fetch('/api/admin/profiles')
                 .then(res => res.json())
                 .then(data => {
-                    setProfiles(data)
+                    const profilesList = Array.isArray(data) ? data : (data.profiles || [])
+                    setProfiles(profilesList)
                     setLoading(false)
                 })
         }

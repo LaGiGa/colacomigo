@@ -29,7 +29,8 @@ export function PedidosAdminClient({ initialOrders = [] }: { initialOrders?: any
             fetch('/api/admin/orders')
                 .then(res => res.json())
                 .then(data => {
-                    setOrders(data)
+                    const ordersList = Array.isArray(data) ? data : (data.orders || [])
+                    setOrders(ordersList)
                     setLoading(false)
                 })
         }

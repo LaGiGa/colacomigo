@@ -18,7 +18,8 @@ export function ProdutosAdminClient({ products: initial = [] }: { products?: any
             fetch('/api/admin/products')
                 .then(res => res.json())
                 .then(data => {
-                    setProducts(data)
+                    const productsList = Array.isArray(data) ? data : (data.products || [])
+                    setProducts(productsList)
                     setLoading(false)
                 })
         }

@@ -32,7 +32,8 @@ export function BannersAdminClient({ banners: initial = [] }: { banners?: Banner
             fetch('/api/admin/banners')
                 .then(res => res.json())
                 .then(data => {
-                    setBanners(data)
+                    const bannersList = Array.isArray(data) ? data : (data.banners || [])
+                    setBanners(bannersList)
                     setLoading(false)
                 })
         }
