@@ -19,10 +19,24 @@ interface Colecao {
     created_at: string
 }
 
-interface Props { colecoes: Colecao[] }
+import { useEffect } from 'react'
 
-export function ColecoesAdminClient({ colecoes: initial }: Props) {
+export function ColecoesAdminClient({ colecoes: initial = [] }: { colecoes?: Colecao[] }) {
     const [colecoes, setColecoes] = useState<Colecao[]>(initial)
+    const [loading, setLoading] = useState(initial.length === 0)
+
+    useEffect(() => {
+        if (initial.length === 0) {
+            fetch('/api/admin/collections')
+                .then(res => res.json())
+                .then(data => {
+                    setColecoes(data)
+                    setLoading(false)
+                })
+        }
+    }, [initial])
+
+    if (loading) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
     const [showForm, setShowForm] = useState(false)
     const [editando, setEditando] = useState<Colecao | null>(null)
     const [isPending, startTransition] = useTransition()

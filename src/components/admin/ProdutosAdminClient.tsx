@@ -6,11 +6,25 @@ import { Badge } from '@/components/ui/badge'
 import { formatCurrency } from '@/lib/utils'
 import { Plus, Edit, Package } from 'lucide-react'
 
-interface Props {
-    products: any[]
-}
+import { useState, useEffect } from 'react'
+import { Loader2 } from 'lucide-react'
 
-export function ProdutosAdminClient({ products }: Props) {
+export function ProdutosAdminClient({ products: initial = [] }: { products?: any[] }) {
+    const [products, setProducts] = useState<any[]>(initial)
+    const [loading, setLoading] = useState(initial.length === 0)
+
+    useEffect(() => {
+        if (initial.length === 0) {
+            fetch('/api/admin/products')
+                .then(res => res.json())
+                .then(data => {
+                    setProducts(data)
+                    setLoading(false)
+                })
+        }
+    }, [initial])
+
+    if (loading) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">

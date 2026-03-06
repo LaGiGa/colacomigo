@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -18,10 +18,6 @@ interface Categoria {
     created_at: string
 }
 
-interface Props {
-    categorias: Categoria[]
-}
-
 // Categorias padrão da Cola Comigo Shop para seed
 const CATEGORIAS_PADRAO = [
     { name: 'Camisas', slug: 'camisas', description: 'Camisas grife e streetwear', position: 1 },
@@ -34,8 +30,26 @@ const CATEGORIAS_PADRAO = [
     { name: 'Chinelos', slug: 'chinelos', description: 'Slides e sandálias', position: 8 },
 ]
 
-export function CategoriasAdminClient({ categorias: initial }: Props) {
-    const [categorias, setCategorias] = useState<Categoria[]>(initial)
+interface Props {
+    initialCategories?: Categoria[]
+}
+
+export function CategoriasAdminClient({ initialCategories = [] }: Props) {
+    const [categorias, setCategorias] = useState<Categoria[]>(initialCategories)
+    const [loading, setLoading] = useState(initialCategories.length === 0)
+
+    useEffect(() => {
+        if (initialCategories.length === 0) {
+            fetch('/api/admin/categories')
+                .then(res => res.json())
+                .then(data => {
+                    setCategorias(data)
+                    setLoading(false)
+                })
+        }
+    }, [initialCategories])
+
+    if (loading) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
     const [showForm, setShowForm] = useState(false)
     const [editando, setEditando] = useState<Categoria | null>(null)
     const [isPending, startTransition] = useTransition()

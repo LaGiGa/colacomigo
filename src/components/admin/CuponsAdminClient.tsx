@@ -23,10 +23,24 @@ interface Coupon {
     created_at: string
 }
 
-interface Props { cupons: Coupon[] }
+import { useEffect } from 'react'
 
-export function CuponsAdminClient({ cupons: initial }: Props) {
-    const [cupons, setCupons] = useState<Coupon[]>(initial)
+export function CuponsAdminClient({ initialCoupons = [] }: { initialCoupons?: Coupon[] }) {
+    const [coupons, setCoupons] = useState<Coupon[]>(initialCoupons)
+    const [loading, setLoading] = useState(initialCoupons.length === 0)
+
+    useEffect(() => {
+        if (initialCoupons.length === 0) {
+            fetch('/api/admin/coupons')
+                .then(res => res.json())
+                .then(data => {
+                    setCoupons(data)
+                    setLoading(false)
+                })
+        }
+    }, [initialCoupons])
+
+    if (loading) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
     const [showForm, setShowForm] = useState(false)
     const [editando, setEditando] = useState<Coupon | null>(null)
     const [isPending, startTransition] = useTransition()
@@ -77,10 +91,10 @@ export function CuponsAdminClient({ cupons: initial }: Props) {
             const data = await res.json()
             if (!res.ok) { toast.error(data.error ?? 'Erro ao salvar.'); return }
             if (editando) {
-                setCupons(prev => prev.map(c => c.id === editando.id ? { ...c, ...payload } : c))
+                setCoupons(prev => prev.map(c => c.id === editando.id ? { ...c, ...payload } : c))
                 toast.success('Cupom atualizado!')
             } else {
-                setCupons(prev => [data.coupon, ...prev])
+                setCoupons(prev => [data.coupon, ...prev])
                 toast.success('Cupom criado!')
             }
             setShowForm(false); setEditando(null); resetForm()
@@ -89,14 +103,14 @@ export function CuponsAdminClient({ cupons: initial }: Props) {
 
     async function toggleAtivo(c: Coupon) {
         const res = await fetch(`/api/admin/coupons/${c.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ is_active: !c.is_active }) })
-        if (res.ok) { setCupons(prev => prev.map(x => x.id === c.id ? { ...x, is_active: !x.is_active } : x)); toast.success(`Cupom "${c.code}" ${!c.is_active ? 'ativado' : 'desativado'}.`) }
+        if (res.ok) { setCoupons(prev => prev.map(x => x.id === c.id ? { ...x, is_active: !x.is_active } : x)); toast.success(`Cupom "${c.code}" ${!c.is_active ? 'ativado' : 'desativado'}.`) }
         else toast.error('Erro ao alterar status.')
     }
 
     async function excluir(c: Coupon) {
         if (!confirm(`Excluir cupom "${c.code}"?`)) return
         const res = await fetch(`/api/admin/coupons/${c.id}`, { method: 'DELETE' })
-        if (res.ok) { setCupons(prev => prev.filter(x => x.id !== c.id)); toast.success('Cupom excluído.') }
+        if (res.ok) { setCoupons(prev => prev.filter(x => x.id !== c.id)); toast.success('Cupom excluído.') }
         else toast.error('Erro ao excluir.')
     }
 
@@ -104,7 +118,7 @@ export function CuponsAdminClient({ cupons: initial }: Props) {
         <div className="space-y-6">
             {/* Barra */}
             <div className="flex items-center justify-between gap-4">
-                <p className="text-sm text-muted-foreground">{cupons.length} cupons · {cupons.filter(c => c.is_active).length} ativos</p>
+                <p className="text-sm text-muted-foreground">{coupons.length} cupons · {coupons.filter(c => c.is_active).length} ativos</p>
                 <Button className="gradient-brand text-white" size="sm" onClick={abrirNovo}>
                     <Plus className="h-4 w-4 mr-2" /> Novo Cupom
                 </Button>
@@ -168,7 +182,7 @@ export function CuponsAdminClient({ cupons: initial }: Props) {
 
             {/* Lista — cards no mobile, tabela no desktop */}
             <div className="space-y-3 lg:hidden">
-                {cupons.length > 0 ? cupons.map(c => (
+                {coupons.length > 0 ? coupons.map(c => (
                     <div key={c.id} className="rounded-xl border border-border bg-card p-4 space-y-3">
                         <div className="flex items-start justify-between gap-2">
                             <div>
@@ -223,7 +237,7 @@ export function CuponsAdminClient({ cupons: initial }: Props) {
                         </tr>
                     </thead>
                     <tbody>
-                        {cupons.length > 0 ? cupons.map(c => (
+                        {coupons.length > 0 ? coupons.map(c => (
                             <tr key={c.id} className="border-b border-border/40 hover:bg-secondary/20 transition-colors">
                                 <td className="p-4">
                                     <code className="font-black text-primary bg-primary/10 px-2 py-0.5 rounded text-sm">{c.code}</code>

@@ -20,12 +20,24 @@ interface Marca {
     created_at: string
 }
 
-interface Props {
-    marcas: Marca[]
-}
+import { useEffect } from 'react'
 
-export function MarcasAdminClient({ marcas: initial }: Props) {
-    const [marcas, setMarcas] = useState<Marca[]>(initial)
+export function MarcasAdminClient({ initialMarcas = [] }: { initialMarcas?: Marca[] }) {
+    const [marcas, setMarcas] = useState<Marca[]>(initialMarcas)
+    const [loading, setLoading] = useState(initialMarcas.length === 0)
+
+    useEffect(() => {
+        if (initialMarcas.length === 0) {
+            fetch('/api/admin/brands')
+                .then(res => res.json())
+                .then(data => {
+                    setMarcas(data)
+                    setLoading(false)
+                })
+        }
+    }, [initialMarcas])
+
+    if (loading) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
     const [showForm, setShowForm] = useState(false)
     const [editando, setEditando] = useState<Marca | null>(null)
     const [isPending, startTransition] = useTransition()

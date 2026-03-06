@@ -17,11 +17,25 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
     refunded: { label: 'Reembolsado', color: 'bg-gray-500/20 text-gray-400 border-gray-500/30' },
 }
 
-interface Props {
-    orders: any[]
-}
+import { useState, useEffect } from 'react'
+import { Loader2 } from 'lucide-react'
 
-export function PedidosAdminClient({ orders }: Props) {
+export function PedidosAdminClient({ initialOrders = [] }: { initialOrders?: any[] }) {
+    const [orders, setOrders] = useState<any[]>(initialOrders)
+    const [loading, setLoading] = useState(initialOrders.length === 0)
+
+    useEffect(() => {
+        if (initialOrders.length === 0) {
+            fetch('/api/admin/orders')
+                .then(res => res.json())
+                .then(data => {
+                    setOrders(data)
+                    setLoading(false)
+                })
+        }
+    }, [initialOrders])
+
+    if (loading) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
