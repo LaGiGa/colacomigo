@@ -38,7 +38,7 @@ export function ProdutosPageClient() {
         async function load() {
             setLoading(true)
             const supabase = createClient()
-            let query = supabase
+            let query = (supabase as any)
                 .from('products')
                 .select(`
                     *,
@@ -49,7 +49,7 @@ export function ProdutosPageClient() {
                 .eq('is_active', true)
 
             if (categoria) {
-                const { data: cat } = await supabase
+                const { data: cat } = await (supabase as any)
                     .from('categories')
                     .select('id')
                     .eq('slug', categoria)

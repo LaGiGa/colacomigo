@@ -22,13 +22,13 @@ export function ColecoesPageClient() {
     useEffect(() => {
         async function load() {
             const supabase = createClient()
-            const { data } = await supabase
+            const { data } = await (supabase as any)
                 .from('collections')
                 .select('name, slug, description')
                 .eq('is_active', true)
                 .order('sort_order', { ascending: true })
 
-            const final = (data ?? []).map((c, i) => ({
+            const final = (data ?? []).map((c: any, i: number) => ({
                 nome: c.name,
                 slug: c.slug,
                 descricao: c.description ?? 'Explore essa coleção exclusiva da Cola Comigo.',

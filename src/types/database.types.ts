@@ -135,6 +135,42 @@ export type Database = {
                 }
                 Relationships: []
             }
+            collections: {
+                Row: {
+                    banner_url: string | null
+                    created_at: string
+                    description: string | null
+                    id: string
+                    is_active: boolean
+                    name: string
+                    slug: string
+                    sort_order: number
+                    updated_at: string
+                }
+                Insert: {
+                    banner_url?: string | null
+                    created_at?: string
+                    description?: string | null
+                    id?: string
+                    is_active?: boolean
+                    name: string
+                    slug: string
+                    sort_order?: number
+                    updated_at?: string
+                }
+                Update: {
+                    banner_url?: string | null
+                    created_at?: string
+                    description?: string | null
+                    id?: string
+                    is_active?: boolean
+                    name?: string
+                    slug?: string
+                    sort_order?: number
+                    updated_at?: string
+                }
+                Relationships: []
+            }
             coupons: {
                 Row: {
                     code: string
