@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { createAdminClient } from '@/lib/supabase/server'
 import { TrendingUp, DollarSign, ShoppingCart, Package, ArrowUpRight, ArrowDownRight } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'

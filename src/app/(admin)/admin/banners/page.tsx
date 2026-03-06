@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { createAdminClient } from '@/lib/supabase/server'
 import { BannersAdminClient } from '@/components/admin/BannersAdminClient'
 import { Layout } from 'lucide-react'

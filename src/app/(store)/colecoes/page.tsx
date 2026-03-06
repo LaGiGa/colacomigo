@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react'
 import { Header } from '@/components/store/Header'
 import { Footer } from '@/components/store/Footer'
 import { WhatsAppButton } from '@/components/store/WhatsAppButton'
+export const runtime = 'edge';
 import { createClient } from '@/lib/supabase/server'
 import type { Metadata } from 'next'
 

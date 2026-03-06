@@ -1,4 +1,5 @@
 import Link from 'next/link'
+export const runtime = 'edge';
 import { createAdminClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'

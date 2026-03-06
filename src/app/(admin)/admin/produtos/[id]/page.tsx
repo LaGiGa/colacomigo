@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { createAdminClient } from '@/lib/supabase/server'
 import { ProductFormClient } from '@/components/admin/ProductFormClient'
 import { notFound } from 'next/navigation'

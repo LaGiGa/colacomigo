@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+export const runtime = 'edge';
 import { createAdminClient } from '@/lib/supabase/server'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'

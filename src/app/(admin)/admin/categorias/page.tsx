@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { createAdminClient } from '@/lib/supabase/server'
 import { CategoriasAdminClient } from '@/components/admin/CategoriasAdminClient'
 import { Tag } from 'lucide-react'

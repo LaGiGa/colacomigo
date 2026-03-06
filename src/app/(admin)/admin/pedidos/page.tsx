@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { createAdminClient } from '@/lib/supabase/server'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'

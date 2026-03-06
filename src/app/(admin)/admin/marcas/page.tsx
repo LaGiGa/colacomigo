@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { createAdminClient } from '@/lib/supabase/server'
 import { MarcasAdminClient } from '@/components/admin/MarcasAdminClient'
 import { Boxes } from 'lucide-react'
