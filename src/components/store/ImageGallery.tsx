@@ -16,7 +16,7 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
 
     if (!images.length) {
         return (
-            <div className="aspect-square bg-secondary rounded-xl flex items-center justify-center">
+            <div className="aspect-[4/5] bg-secondary rounded-xl flex items-center justify-center">
                 <span className="text-muted-foreground text-sm">Sem imagem</span>
             </div>
         )
@@ -30,7 +30,7 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
             {/* Imagem principal */}
             <div
                 className={cn(
-                    'relative aspect-square overflow-hidden rounded-xl bg-secondary group cursor-zoom-in',
+                    'relative aspect-[4/5] overflow-hidden rounded-2xl bg-secondary group cursor-zoom-in lg:rounded-3xl',
                     zoomed && 'cursor-zoom-out'
                 )}
                 onClick={() => setZoomed(!zoomed)}
@@ -85,8 +85,8 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
                             key={i}
                             onClick={() => setCurrent(i)}
                             className={cn(
-                                'relative flex-shrink-0 h-16 w-16 rounded-lg overflow-hidden border-2 transition-colors',
-                                i === current ? 'border-primary' : 'border-transparent hover:border-border'
+                                'relative flex-shrink-0 aspect-[4/5] w-20 lg:w-24 rounded-lg lg:rounded-xl overflow-hidden border-2 transition-all',
+                                i === current ? 'border-primary scale-100 opacity-100' : 'border-transparent hover:border-border opacity-60 hover:opacity-100 scale-95 hover:scale-100'
                             )}
                         >
                             <Image src={img.url} alt={`Foto ${i + 1}`} fill className="object-cover" />
