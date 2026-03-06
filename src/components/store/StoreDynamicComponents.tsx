@@ -29,3 +29,18 @@ export const ContaPedidosClient = dynamic(
     () => import('./ContaPedidosClient').then(mod => mod.ContaPedidosClient),
     { ssr: false, loading: () => <Loading text="Carregando seus pedidos..." /> }
 )
+
+export const CartDrawer = dynamic(
+    () => import('./CartDrawer').then(mod => mod.CartDrawer),
+    { ssr: false }
+)
+
+export const WhatsAppButton = dynamic(
+    () => import('./WhatsAppButton').then(mod => mod.WhatsAppButton),
+    { ssr: false }
+)
+
+export const CookieConsent = dynamic(
+    () => import('./CookieConsent').then(mod => mod.CookieConsent),
+    { ssr: false }
+)
