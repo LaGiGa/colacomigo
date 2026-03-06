@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { formatCurrency } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { Loader2, ChevronRight, Filter } from 'lucide-react'
+import { AnnouncementBar } from '@/components/store/StoreDynamicComponents'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -23,6 +24,8 @@ interface Category {
 export function ProductPageClient({ slug }: { slug: string }) {
     const [product, setProduct] = useState<any>(null)
     const [dbCategories, setDbCategories] = useState<Category[]>([])
+    const [dbBrands, setDbBrands] = useState<any[]>([])
+    const [dbCollections, setDbCollections] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
@@ -31,8 +34,18 @@ export function ProductPageClient({ slug }: { slug: string }) {
             const supabase = createClient()
 
             // 1. Carregar Categorias para a Sidebar
-            const { data: catData } = await supabase.from('categories').select('id, name, slug, parent_id').eq('is_active', true).order('sort_order', { ascending: true })
-            if (catData) setDbCategories(catData)
+            const [
+                { data: catData },
+                { data: brandData },
+                { data: colData }
+            ] = await Promise.all([
+                supabase.from('categories').select('id, name, slug, parent_id').eq('is_active', true).order('sort_order', { ascending: true }),
+                supabase.from('brands').select('id, name, slug').eq('is_active', true).order('sort_order', { ascending: true }),
+                supabase.from('collections').select('id, name, slug').eq('is_active', true).order('sort_order', { ascending: true })
+            ])
+            if (catData) setDbCategories(catData as Category[])
+            if (brandData) setDbBrands(brandData)
+            if (colData) setDbCollections(colData)
 
             // 2. Carregar o Produto
             const { data: prodData } = await supabase
@@ -73,6 +86,7 @@ export function ProductPageClient({ slug }: { slug: string }) {
 
     return (
         <div className="flex flex-col min-h-screen">
+            <AnnouncementBar />
             <Header />
             <main className="flex-1 bg-black">
                 <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
@@ -127,6 +141,44 @@ export function ProductPageClient({ slug }: { slug: string }) {
                                         ))}
                                     </div>
                                 </div>
+
+                                {dbCollections.length > 0 && (
+                                    <div>
+                                        <h2 className="text-[10px] font-black text-white uppercase tracking-[0.3em] mb-6 flex items-center gap-2">
+                                            <Filter className="w-4 h-4 text-primary" /> DROPS & COLEÇÕES
+                                        </h2>
+                                        <div className="flex flex-col gap-1">
+                                            {dbCollections.map((col) => (
+                                                <Link
+                                                    key={col.id}
+                                                    href={`/colecoes/${col.slug}`}
+                                                    className="w-full group flex items-center justify-between px-4 py-3 text-[11px] font-black uppercase tracking-widest text-neutral-400 hover:text-white hover:bg-white/5 border-l border-white/5 transition-all"
+                                                >
+                                                    {col.name}
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {dbBrands.length > 0 && (
+                                    <div>
+                                        <h2 className="text-[10px] font-black text-white uppercase tracking-[0.3em] mb-6 flex items-center gap-2">
+                                            <Filter className="w-4 h-4 text-primary" /> MARCAS (AUTORIDADE)
+                                        </h2>
+                                        <div className="flex flex-col gap-1">
+                                            {dbBrands.map((brand) => (
+                                                <Link
+                                                    key={brand.id}
+                                                    href={`/marcas/${brand.slug}`}
+                                                    className="w-full group flex items-center justify-between px-4 py-3 text-[11px] font-black uppercase tracking-widest text-neutral-400 hover:text-white hover:bg-white/5 border-l border-white/5 transition-all"
+                                                >
+                                                    {brand.name}
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </aside>
 

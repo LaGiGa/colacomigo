@@ -1,4 +1,4 @@
-export const runtime = 'edge';
+// export const runtime = 'edge'; // Removed due to node:buffer usage
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { mpCreatePreference, mpCreatePayment, mpGetPayment } from '@/lib/mercadopago'

@@ -6,6 +6,7 @@ import { ArrowRight, Loader2 } from 'lucide-react'
 import { Header } from '@/components/store/Header'
 import { Footer } from '@/components/store/Footer'
 import { WhatsAppButton } from '@/components/store/WhatsAppButton'
+import { AnnouncementBar } from '@/components/store/StoreDynamicComponents'
 import { createClient } from '@/lib/supabase/client'
 
 const CORES = [
@@ -43,6 +44,7 @@ export function ColecoesPageClient() {
 
     return (
         <>
+            <AnnouncementBar />
             <Header />
             <main className="min-h-screen bg-black text-white">
                 <div className="border-b border-white/5 py-16 px-4 sm:px-6 lg:px-8 max-w-[1400px] mx-auto">

@@ -8,6 +8,7 @@ import { Footer } from '@/components/store/Footer'
 import { CartDrawer } from '@/components/store/CartDrawer'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency } from '@/lib/utils'
+import { AnnouncementBar } from '@/components/store/StoreDynamicComponents'
 
 interface Category {
     id: string
@@ -24,9 +25,12 @@ interface Props {
 export function ProdutosPageClient({ initialCategory = null, initialCollection = null }: Props) {
     const [products, setProducts] = useState<any[]>([])
     const [dbCategories, setDbCategories] = useState<Category[]>([])
+    const [dbBrands, setDbBrands] = useState<any[]>([])
+    const [dbCollections, setDbCollections] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [categoria, setCategoria] = useState<string | null>(initialCategory)
     const [colecao, setColecao] = useState<string | null>(initialCollection)
+    const [marca, setMarca] = useState<string | null>(null)
     const [ordem, setOrdem] = useState<string>('novos')
 
     useEffect(() => {
@@ -35,14 +39,24 @@ export function ProdutosPageClient({ initialCategory = null, initialCollection =
         setColecao(initialCollection)
     }, [initialCategory, initialCollection])
 
-    // Carregar categorias reais do banco para o Sidebar
+    // Carregar filtros do banco para o Sidebar
     useEffect(() => {
-        async function loadCategories() {
+        async function loadFilters() {
             const supabase = createClient()
-            const { data } = await supabase.from('categories').select('id, name, slug, parent_id').eq('is_active', true).order('sort_order', { ascending: true })
-            if (data) setDbCategories(data)
+            const [
+                { data: catData },
+                { data: brandData },
+                { data: colData }
+            ] = await Promise.all([
+                supabase.from('categories').select('id, name, slug, parent_id').eq('is_active', true).order('sort_order', { ascending: true }),
+                supabase.from('brands').select('id, name, slug').eq('is_active', true).order('sort_order', { ascending: true }),
+                supabase.from('collections').select('id, name, slug').eq('is_active', true).order('sort_order', { ascending: true })
+            ])
+            if (catData) setDbCategories(catData as Category[])
+            if (brandData) setDbBrands(brandData)
+            if (colData) setDbCollections(colData)
         }
-        loadCategories()
+        loadFilters()
     }, [])
 
     useEffect(() => {
@@ -75,6 +89,11 @@ export function ProdutosPageClient({ initialCategory = null, initialCollection =
                 if (colData) query = query.eq('collection_id', colData.id)
             }
 
+            if (marca) {
+                const { data: brandData } = await supabase.from('brands').select('id').eq('slug', marca).single()
+                if (brandData) query = query.eq('brand_id', brandData.id)
+            }
+
             if (ordem === 'menor') query = query.order('price', { ascending: true })
             else if (ordem === 'maior') query = query.order('price', { ascending: false })
             else query = query.order('created_at', { ascending: false })
@@ -97,6 +116,7 @@ export function ProdutosPageClient({ initialCategory = null, initialCollection =
 
     return (
         <div className="flex flex-col min-h-screen">
+            <AnnouncementBar />
             <Header />
             <main className="flex-1 bg-black">
                 <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
@@ -126,15 +146,16 @@ export function ProdutosPageClient({ initialCategory = null, initialCollection =
                                             onClick={() => {
                                                 setCategoria(null)
                                                 setColecao(null)
+                                                setMarca(null)
                                                 window.history.pushState({}, '', '/produtos')
                                             }}
-                                            className={`group flex items-center justify-between px-4 py-3 text-[11px] font-black uppercase tracking-widest transition-all ${(!categoria && !colecao)
+                                            className={`group flex items-center justify-between px-4 py-3 text-[11px] font-black uppercase tracking-widest transition-all ${(!categoria && !colecao && !marca)
                                                 ? 'bg-primary text-white pl-6'
                                                 : 'text-neutral-500 hover:text-white hover:bg-white/5'
                                                 }`}
                                         >
                                             TODOS OS PRODUTOS
-                                            {(!categoria && !colecao) && <span className="w-1.5 h-1.5 bg-white rounded-full" />}
+                                            {(!categoria && !colecao && !marca) && <span className="w-1.5 h-1.5 bg-white rounded-full" />}
                                         </button>
 
                                         {dbCategories.filter(c => !c.parent_id).map((cat) => (
@@ -143,6 +164,7 @@ export function ProdutosPageClient({ initialCategory = null, initialCollection =
                                                     onClick={() => {
                                                         setCategoria(cat.slug)
                                                         setColecao(null)
+                                                        setMarca(null)
                                                         window.history.pushState({}, '', `/categorias/${cat.slug}`)
                                                     }}
                                                     className={`w-full group flex items-center justify-between px-4 py-3 text-[11px] font-black uppercase tracking-widest transition-all ${categoria === cat.slug
@@ -163,9 +185,10 @@ export function ProdutosPageClient({ initialCategory = null, initialCollection =
                                                                 onClick={() => {
                                                                     setCategoria(sub.slug)
                                                                     setColecao(null)
+                                                                    setMarca(null)
                                                                     window.history.pushState({}, '', `/categorias/${sub.slug}`)
                                                                 }}
-                                                                className={`group flex items-center gap-2 px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all ${categoria === sub.slug
+                                                                className={`w-full text-left group flex items-center gap-2 px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all ${categoria === sub.slug
                                                                     ? 'text-primary'
                                                                     : 'text-neutral-600 hover:text-neutral-300'
                                                                     }`}
@@ -180,6 +203,63 @@ export function ProdutosPageClient({ initialCategory = null, initialCollection =
                                         ))}
                                     </div>
                                 </div>
+
+                                {dbCollections.length > 0 && (
+                                    <div>
+                                        <h2 className="text-[10px] font-black text-white uppercase tracking-[0.3em] mb-6 flex items-center gap-2">
+                                            <Filter className="w-4 h-4 text-primary" /> DROPS & COLEÇÕES
+                                        </h2>
+                                        <div className="flex flex-col gap-1">
+                                            {dbCollections.map((col) => (
+                                                <button
+                                                    key={col.id}
+                                                    onClick={() => {
+                                                        setColecao(col.slug)
+                                                        setCategoria(null)
+                                                        setMarca(null)
+                                                        window.history.pushState({}, '', `/colecoes/${col.slug}`)
+                                                    }}
+                                                    className={`w-full group flex items-center justify-between px-4 py-3 text-[11px] font-black uppercase tracking-widest transition-all ${colecao === col.slug
+                                                        ? 'bg-zinc-800 text-white pl-6'
+                                                        : 'text-neutral-400 hover:text-white hover:bg-white/5 border-l border-white/5'
+                                                        }`}
+                                                >
+                                                    {col.name}
+                                                    {colecao === col.slug && <span className="w-1.5 h-1.5 bg-primary rounded-full" />}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {dbBrands.length > 0 && (
+                                    <div>
+                                        <h2 className="text-[10px] font-black text-white uppercase tracking-[0.3em] mb-6 flex items-center gap-2">
+                                            <Filter className="w-4 h-4 text-primary" /> MARCAS (AUTORIDADE)
+                                        </h2>
+                                        <div className="flex flex-col gap-1">
+                                            {dbBrands.map((brand) => (
+                                                <button
+                                                    key={brand.id}
+                                                    onClick={() => {
+                                                        setMarca(brand.slug)
+                                                        setCategoria(null)
+                                                        setColecao(null)
+                                                        window.history.pushState({}, '', `/marcas/${brand.slug}`)
+                                                    }}
+                                                    className={`w-full group flex items-center justify-between px-4 py-3 text-[11px] font-black uppercase tracking-widest transition-all ${marca === brand.slug
+                                                        ? 'bg-zinc-800 text-white pl-6'
+                                                        : 'text-neutral-400 hover:text-white hover:bg-white/5 border-l border-white/5'
+                                                        }`}
+                                                >
+                                                    {brand.name}
+                                                    {marca === brand.slug && <span className="w-1.5 h-1.5 bg-primary rounded-full" />}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
 
                                 <div>
                                     <h2 className="text-[10px] font-black text-white uppercase tracking-[0.3em] mb-6 flex items-center gap-2">
