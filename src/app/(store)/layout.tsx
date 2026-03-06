@@ -1,9 +1,5 @@
-import { CartDrawer } from '@/components/store/CartDrawer'
-import { WhatsAppButton } from '@/components/store/WhatsAppButton'
-import { CookieConsent } from '@/components/store/CookieConsent'
+import { CartDrawer, WhatsAppButton, CookieConsent } from '@/components/store/StoreDynamicComponents'
 
-// AnnouncementBar e RecentPurchasePopup são incluídos individualmente 
-// em cada page para controle fino de exibição
 export default function StoreLayout({
     children,
 }: {
@@ -12,11 +8,9 @@ export default function StoreLayout({
     return (
         <>
             {children}
-            {/* CartDrawer global — disponível em todas as páginas da vitrine */}
+            {/* Componentes carregados apenas no cliente para economizar bundle edge */}
             <CartDrawer />
-            {/* Botão Flutuante do WhatsApp Global */}
             <WhatsAppButton />
-            {/* Aviso de Cookies */}
             <CookieConsent />
         </>
     )
