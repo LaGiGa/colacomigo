@@ -43,7 +43,10 @@ export default async function ProductPage({
             <Header />
             <main className="container-store py-12">
                 <div className="grid lg:grid-cols-2 gap-12">
-                    <ImageGallery images={product.images || []} />
+                    <ImageGallery
+                        images={product.images || []}
+                        productName={product.name}
+                    />
 
                     <div className="space-y-8">
                         <div>
