@@ -23,7 +23,28 @@ interface Props {
     id: string
 }
 
-export function PedidoDetailClient({ order, id }: Props) {
+import { useState, useEffect } from 'react'
+import { Loader2 } from 'lucide-react'
+
+export function PedidoDetailClient({ order: initialOrder, id }: Props) {
+    const [order, setOrder] = useState<any>(initialOrder)
+    const [loading, setLoading] = useState(!initialOrder)
+
+    useEffect(() => {
+        if (!initialOrder) {
+            fetch(`/api/admin/orders/${id}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.order) setOrder(data.order)
+                    setLoading(false)
+                })
+                .catch(() => setLoading(false))
+        }
+    }, [initialOrder, id])
+
+    if (loading) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
+    if (!order) return <div className="p-10 text-center">Pedido não encontrado</div>
+
     const statusConf = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.pending
 
     return (

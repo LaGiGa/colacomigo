@@ -37,6 +37,11 @@ export const MarcasAdminClient = dynamic(
     { ssr: false, loading: () => <Loading text="Carregando marcas..." /> }
 )
 
+export const FinanceiroAdminClient = dynamic(
+    () => import('./FinanceiroAdminClient').then(mod => mod.FinanceiroAdminClient),
+    { ssr: false, loading: () => <Loading text="Carregando financeiro..." /> }
+)
+
 export const PedidosAdminClient = dynamic(
     () => import('./PedidosAdminClient').then(mod => mod.PedidosAdminClient),
     { ssr: false, loading: () => <Loading text="Carregando pedidos..." /> }

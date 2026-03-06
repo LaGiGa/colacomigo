@@ -38,6 +38,7 @@ interface ProductFormProps {
     brands: { id: string; name: string }[]
     collections?: { id: string; name: string }[]
     initialProduct?: any
+    productId?: string // New
 }
 
 const SelectField = ({
@@ -59,48 +60,76 @@ const SelectField = ({
 )
 
 
-export function ProductFormClient({ categories: initCats, brands: initBrands, collections: initCols, initialProduct }: ProductFormProps) {
+export function ProductFormClient({ categories: initCats, brands: initBrands, collections: initCols, initialProduct: incomingProduct, productId }: ProductFormProps) {
     const router = useRouter()
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [isPending, startTransition] = useTransition()
-    const [images, setImages] = useState<ImagePreview[]>(
-        initialProduct?.images?.map((img: any) => ({
-            preview: img.url, url: img.url, uploading: false
-        })) || []
-    )
-    const [variants, setVariants] = useState<Variant[]>(
-        initialProduct?.variants?.map((v: any) => ({
-            id: v.id, sku: v.sku, size: v.size || '', colorName: v.color_name || '', colorHex: v.color_hex || '#000000', priceDelta: v.price_delta || 0, stock: v.stock || 0
-        })) || [{ size: '', colorName: '', colorHex: '#000000', priceDelta: 0, sku: '', stock: 0 }]
-    )
 
-    // Dados dos dropdowns — sempre carregados via API na montagem
+    // ─── Estados do Produto ──────────────────────────────────
+    const [initialProduct, setInitialProduct] = useState<any>(incomingProduct)
+    const [loadingProduct, setLoadingProduct] = useState(!incomingProduct && !!productId)
+
+    // ─── Estados do Formulário ────────────────────────
+    const [images, setImages] = useState<ImagePreview[]>([])
+    const [variants, setVariants] = useState<Variant[]>([{ size: '', colorName: '', colorHex: '#000000', priceDelta: 0, sku: '', stock: 0 }])
+
+    // Sincroniza estados quando o produto chega (via prop ou fetch)
+    useEffect(() => {
+        if (initialProduct) {
+            setImages(initialProduct.images?.map((img: any) => ({ preview: img.url, url: img.url, uploading: false })) || [])
+            setVariants(initialProduct.variants?.map((v: any) => ({
+                id: v.id, sku: v.sku, size: v.size || '', colorName: v.color_name || '', colorHex: v.color_hex || '#000000', priceDelta: v.price_delta || 0, stock: v.stock || 0
+            })) || [{ size: '', colorName: '', colorHex: '#000000', priceDelta: 0, sku: '', stock: 0 }])
+        }
+    }, [initialProduct])
+
+    // Carregamento de Dropdowns (categorias/marcas)
     const [categories, setCategories] = useState<{ id: string; name: string }[]>(initCats)
     const [brands, setBrands] = useState<{ id: string; name: string }[]>(initBrands)
     const [collections, setCollections] = useState<{ id: string; name: string }[]>(initCols ?? [])
     const [loadingDropdowns, setLoadingDropdowns] = useState(true)
 
-    // Carrega dropdowns via API sempre que o componente monta
+    // Carregamento de Inicialização (Dropdowns + Produto se necessário)
     useEffect(() => {
-        setLoadingDropdowns(true)
-        Promise.all([
-            fetch('/api/admin/categories').then(r => r.json()),
-            fetch('/api/admin/brands').then(r => r.json()),
-            fetch('/api/admin/collections').then(r => r.json()),
-        ])
-            .then(([catsData, brandsData, colsData]) => {
-                if (Array.isArray(catsData.categories)) setCategories(catsData.categories)
-                if (Array.isArray(brandsData.brands)) setBrands(brandsData.brands)
-                if (Array.isArray(colsData.collections)) setCollections(colsData.collections)
-            })
-            .catch((err) => {
-                console.error('[dropdowns] Erro ao carregar:', err)
-                toast.error('Erro ao carregar categorias/marcas. Recarregue a página.')
-            })
-            .finally(() => setLoadingDropdowns(false))
-    }, []) // eslint-disable-line react-hooks/exhaustive-deps
+        async function init() {
+            setLoadingDropdowns(true)
+            try {
+                // Busca dropdowns
+                const [catsData, brandsData, colsData] = await Promise.all([
+                    fetch('/api/admin/categories').then(r => r.json()),
+                    fetch('/api/admin/brands').then(r => r.json()),
+                    fetch('/api/admin/collections').then(r => r.json()),
+                ])
+                if (Array.isArray(catsData)) setCategories(catsData)
+                else if (Array.isArray(catsData.categories)) setCategories(catsData.categories)
 
-    const { register, handleSubmit, setValue } = useForm<ProductFormValues>({
+                if (Array.isArray(brandsData)) setBrands(brandsData)
+                else if (Array.isArray(brandsData.brands)) setBrands(brandsData.brands)
+
+                if (Array.isArray(colsData)) setCollections(colsData)
+                else if (Array.isArray(colsData.collections)) setCollections(colsData.collections)
+
+                // Busca produto se só temos o ID
+                if (!initialProduct && productId) {
+                    setLoadingProduct(true)
+                    const prodRes = await fetch(`/api/admin/products/${productId}`)
+                    const prodData = await prodRes.json()
+                    if (prodData.product) {
+                        setInitialProduct(prodData.product)
+                    }
+                }
+            } catch (err) {
+                console.error('[init] Erro:', err)
+                toast.error('Erro ao carregar dados.')
+            } finally {
+                setLoadingDropdowns(false)
+                setLoadingProduct(false)
+            }
+        }
+        init()
+    }, [productId]) // eslint-disable-line
+
+    const { register, handleSubmit, setValue, reset } = useForm<ProductFormValues>({
         defaultValues: {
             name: initialProduct?.name || '',
             slug: initialProduct?.slug || '',
@@ -116,6 +145,28 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
             is_new: initialProduct?.is_new ?? false,
         },
     })
+
+    // Atualiza os valores do formulário quando o produto termina de carregar
+    useEffect(() => {
+        if (initialProduct) {
+            reset({
+                name: initialProduct.name || '',
+                slug: initialProduct.slug || '',
+                sku: initialProduct.sku || '',
+                description: initialProduct.description || '',
+                price: initialProduct.price?.toString() || '',
+                compare_price: initialProduct.compare_price?.toString() || '',
+                category_id: initialProduct.category_id || '',
+                brand_id: initialProduct.brand_id || '',
+                collection_id: initialProduct.collection_id || '',
+                weight_kg: initialProduct.weight_kg?.toString() || '',
+                is_active: initialProduct.is_active ?? true,
+                is_new: initialProduct.is_new ?? false,
+            })
+        }
+    }, [initialProduct, reset])
+
+    if (loadingProduct) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
 
     function generateSlug(name: string) {
         return name

@@ -62,3 +62,35 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
     return NextResponse.json({ success: true })
 }
+
+export async function GET(_req: NextRequest, { params }: Params) {
+    const { id } = await params
+    const supabase = createServiceClient()
+
+    const { data: order, error } = await supabase
+        .from('orders')
+        .select(`
+            *,
+            shipping_address:addresses(*),
+            items:order_items(
+                id, quantity, unit_price, total_price,
+                variant:product_variants(
+                    sku, size, color_name,
+                    product:products(name, slug)
+                )
+            ),
+            transactions:payment_transactions(
+                id, mp_payment_id, amount, method, status, created_at
+            ),
+            shipment:shipments(
+                id, tracking_code, carrier, status, shipped_at, delivered_at
+            )
+        `)
+        .eq('id', id)
+        .single()
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (!order) return NextResponse.json({ error: 'Pedido não encontrado' }, { status: 404 })
+
+    return NextResponse.json({ order })
+}

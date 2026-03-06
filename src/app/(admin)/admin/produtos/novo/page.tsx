@@ -1,21 +1,8 @@
-export const runtime = 'edge';
-import { createServiceClient } from '@/lib/supabase/server'
 import { ProductFormClient } from '@/components/admin/AdminDynamicComponents'
 import { ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
-import type { Metadata } from 'next'
 
-export const metadata: Metadata = { title: 'Novo Produto | Admin | Cola Comigo Shop' }
-
-export default async function NovoProdutoPage() {
-    const supabase = createServiceClient()
-
-    const [{ data: categories }, { data: brands }, { data: collections }] = await Promise.all([
-        supabase.from('categories').select('id, name').order('name'),
-        supabase.from('brands').select('id, name').order('name'),
-        supabase.from('collections').select('id, name').eq('is_active', true).order('sort_order'),
-    ])
-
+export default function NovoProdutoPage() {
     return (
         <div className="space-y-6">
             <div className="flex items-center gap-4">
@@ -29,9 +16,9 @@ export default async function NovoProdutoPage() {
             </div>
 
             <ProductFormClient
-                categories={categories ?? []}
-                brands={brands ?? []}
-                collections={collections ?? []}
+                categories={[]}
+                brands={[]}
+                collections={[]}
             />
         </div>
     )
