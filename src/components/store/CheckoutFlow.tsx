@@ -123,7 +123,7 @@ export function CheckoutFlow() {
         if (!couponCode.trim()) return
         setIsValidatingCoupon(true)
         try {
-            const res = await fetch('/api/coupons/validate', {
+            const res = await fetch('/api/checkout/coupon-validate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ code: couponCode })

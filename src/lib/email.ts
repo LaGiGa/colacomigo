@@ -1,6 +1,7 @@
-import { Resend } from 'resend'
-
-const resend = new Resend(process.env.RESEND_API_KEY)
+/**
+ * Módulo de e-mail otimizado para Edge Runtime.
+ * Substitui o SDK pesado 'resend' por chamadas diretas via fetch para reduzir bundle.
+ */
 
 interface SendEmailData {
     to: string
@@ -9,27 +10,37 @@ interface SendEmailData {
 }
 
 export async function sendEmail({ to, subject, html }: SendEmailData) {
-    if (!process.env.RESEND_API_KEY) {
-        console.warn('[Email] RESEND_API_KEY não configurada. E-mail não enviado.')
-        return { success: false, error: 'API Key missing' }
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+        console.warn('[Email] RESEND_API_KEY não configurada. E-mail não enviado.');
+        return { success: false, error: 'API Key missing' };
     }
 
     try {
-        const { data, error } = await resend.emails.send({
-            from: 'Cola Comigo <contato@colacomigoshop.com.br>',
-            to,
-            subject,
-            html,
-        })
+        const response = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                from: 'Cola Comigo <contato@colacomigoshop.com.br>',
+                to,
+                subject,
+                html,
+            }),
+        });
 
-        if (error) {
-            console.error('[Resend Error]', error)
-            return { success: false, error }
+        const data = await response.json();
+
+        if (!response.ok) {
+            console.error('[Resend API Error]', data);
+            return { success: false, error: data };
         }
 
-        return { success: true, data }
+        return { success: true, data };
     } catch (error) {
-        console.error('[Email Exception]', error)
-        return { success: false, error }
+        console.error('[Email API Exception]', error);
+        return { success: false, error };
     }
 }
