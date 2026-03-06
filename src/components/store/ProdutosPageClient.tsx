@@ -20,9 +20,10 @@ interface Category {
 interface Props {
     initialCategory?: string | null
     initialCollection?: string | null
+    initialMarca?: string | null
 }
 
-export function ProdutosPageClient({ initialCategory = null, initialCollection = null }: Props) {
+export function ProdutosPageClient({ initialCategory = null, initialCollection = null, initialMarca = null }: Props) {
     const [products, setProducts] = useState<any[]>([])
     const [dbCategories, setDbCategories] = useState<Category[]>([])
     const [dbBrands, setDbBrands] = useState<any[]>([])
@@ -30,14 +31,15 @@ export function ProdutosPageClient({ initialCategory = null, initialCollection =
     const [loading, setLoading] = useState(true)
     const [categoria, setCategoria] = useState<string | null>(initialCategory)
     const [colecao, setColecao] = useState<string | null>(initialCollection)
-    const [marca, setMarca] = useState<string | null>(null)
+    const [marca, setMarca] = useState<string | null>(initialMarca)
     const [ordem, setOrdem] = useState<string>('novos')
 
     useEffect(() => {
         // Se mudou via props externas (navegação)
         setCategoria(initialCategory)
         setColecao(initialCollection)
-    }, [initialCategory, initialCollection])
+        setMarca(initialMarca)
+    }, [initialCategory, initialCollection, initialMarca])
 
     // Carregar filtros do banco para o Sidebar
     useEffect(() => {
@@ -112,7 +114,9 @@ export function ProdutosPageClient({ initialCategory = null, initialCollection =
         ? dbCategories.find(c => c.slug === categoria)?.name
         : colecao
             ? colecao.replace(/-/g, ' ').toUpperCase()
-            : 'A COLA'
+            : marca
+                ? marca.replace(/-/g, ' ').toUpperCase()
+                : 'A COLA'
 
     return (
         <div className="flex flex-col min-h-screen">

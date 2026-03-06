@@ -1,5 +1,4 @@
-import { ProductPageClient } from '@/components/store/ProductPageClient'
-import { createServiceClient } from '@/lib/supabase/server'
+import { ProductPageClient } from '@/components/store/StoreDynamicComponents'
 
 export const runtime = 'edge';
 
@@ -11,4 +10,3 @@ export default async function ProductPage({
     const { slug } = await params
     return <ProductPageClient slug={slug} />
 }
-
