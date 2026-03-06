@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { BannersAdminClient } from '@/components/admin/AdminDynamicComponents'
 
 export default function BannersPage() {
@@ -5,3 +6,4 @@ export default function BannersPage() {
     // O bundle do servidor agora não precisa de Supabase, Tirando ~1.5MB de peso.
     return <BannersAdminClient />
 }
+

@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { TrendingUp, ShoppingCart, Users, Package, DollarSign, Clock, ArrowRight } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'

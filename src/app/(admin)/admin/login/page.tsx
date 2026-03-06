@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 'use client'
 
 import { useState } from 'react'
@@ -31,11 +32,11 @@ export default function AdminLoginPage() {
             // Validar se é admin (Profiles)
             const { data: profile } = await supabase
                 .from('profiles')
-                .select('role')
+                .select('is_admin')
                 .eq('id', data.user.id)
                 .single()
 
-            if (profile?.role !== 'admin') {
+            if (!profile?.is_admin) {
                 await supabase.auth.signOut()
                 throw new Error('Acesso restrito apenas para administradores.')
             }
