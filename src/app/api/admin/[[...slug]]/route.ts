@@ -1,4 +1,4 @@
-export const runtime = 'edge';
+// export const runtime = 'edge';
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient, createAdminClient } from '@/lib/supabase/server'
 import { z } from 'zod'
