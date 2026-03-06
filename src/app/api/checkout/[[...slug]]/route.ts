@@ -56,7 +56,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
         // 1. CÁLCULO DE FRETE
         if (action === 'shipping') {
             const body = ShippingSchema.parse(await req.json()); const totalWeight = body.itens.reduce((s, i) => s + (i.weightKg * i.quantity), 0)
-            const tokenRes = await fetch('https://api.correios.com.br/token/v1/autentica/cartaopostagem', { method: 'POST', headers: { Authorization: 'Basic ' + Buffer.from(`${process.env.CORREIOS_USER}:${process.env.CORREIOS_PASSWORD}`).toString('base64'), 'Content-Type': 'application/json' }, body: JSON.stringify({ numero: process.env.CORREIOS_NUMERO_CARTAO_POSTAGEM }) })
+            const { Buffer } = await import('node:buffer')
+            const auth = Buffer.from(`${process.env.CORREIOS_USER}:${process.env.CORREIOS_PASSWORD}`).toString('base64')
+            const tokenRes = await fetch('https://api.correios.com.br/token/v1/autentica/cartaopostagem', {
+                method: 'POST',
+                headers: {
+                    Authorization: 'Basic ' + auth,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ numero: process.env.CORREIOS_NUMERO_CARTAO_POSTAGEM })
+            })
             if (!tokenRes.ok) return NextResponse.json({ options: [] })
             const { token } = await tokenRes.json()
             const precoRes = await fetch(`https://api.correios.com.br/preco/v1/nacional/03298,03220?cepOrigem=${process.env.CORREIOS_CEP_ORIGEM ?? '77006002'}&cepDestino=${body.cepDestino}&psObjeto=${Math.ceil(totalWeight * 1000)}&tpObjeto=2&comprimento=20&largura=15&altura=5`, { headers: { Authorization: `Bearer ${token}` } })
