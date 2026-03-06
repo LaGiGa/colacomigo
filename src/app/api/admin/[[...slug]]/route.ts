@@ -6,7 +6,7 @@ import { sendEmail } from '@/lib/email'
 
 /**
  * RECURSO CENTRALIZADO PARA REDUÇÃO DE BUNDLE (CLOUDFLARE 3MB LIMIT)
- * Este arquivo unifica todas as rotas da API Admin para compartilhar o mesmo Worker/Boilerplate.
+ * Este arquivo unifica todas as rotas da API Admin para compartilhar o mesmo Worker.
  */
 
 // --- SCHEMAS ---
@@ -56,10 +56,22 @@ const RESOURCES: Record<string, string> = {
     collections: 'collections',
     coupons: 'coupons',
     testimonials: 'testimonials',
-    profiles: 'profiles'
+    profiles: 'profiles',
+    orders: 'orders'
 }
 
-// --- HELPERS ---
+const SINGULAR_MAP: Record<string, string> = {
+    banners: 'banner',
+    brands: 'brand',
+    categories: 'category',
+    collections: 'collection',
+    coupons: 'coupon',
+    products: 'product',
+    testimonials: 'testimonial',
+    profiles: 'profile',
+    orders: 'order'
+}
+
 // --- GET DISPATCHER ---
 export async function GET(req: NextRequest, { params }: { params: Promise<{ slug?: string[] }> }) {
     try {
@@ -68,6 +80,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
         const id = slug[1]
         const supabase = createServiceClient()
 
+        // 1. Recursos Especiais
         if (resource === 'financeiro') {
             const { data: orders, error } = await supabase.from('orders').select('id, total, status, created_at, items:order_items(id)').order('created_at', { ascending: false })
             if (error) throw error
@@ -80,7 +93,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
                 if (error || !product) return NextResponse.json({ error: 'Produto não encontrado' }, { status: 404 })
                 return NextResponse.json({ product })
             }
-            const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false })
+            const { data, error } = await supabase.from('products').select('*, category:categories(id, name), brand:brands(id, name), images:product_images(id, url, is_main)').order('created_at', { ascending: false })
             if (error) throw error
             return NextResponse.json({ products: data ?? [] })
         }
@@ -101,56 +114,19 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
             return NextResponse.json({ settings: data })
         }
 
+        // 2. Recursos Genéricos
         const table = RESOURCES[resource]
         if (table) {
             if (id) {
                 const { data, error } = await supabase.from(table as any).select('*').eq('id', id).single()
                 if (error) throw error
-                return NextResponse.json(data)
+                const key = SINGULAR_MAP[resource] || resource
+                return NextResponse.json({ [key]: data })
             }
 
-            // Consultas explícitas para evitar erros de tipagem dinâmica do Supabase
-            if (resource === 'categories') {
-                const { data, error } = await supabase.from('categories').select('id, name').order('name')
-                if (error) throw error
-                return NextResponse.json({ categories: data })
-            }
-
-            if (resource === 'profiles') {
-                const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false })
-                if (error) throw error
-                return NextResponse.json({ profiles: data })
-            }
-
-            if (resource === 'testimonials') {
-                const { data, error } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false })
-                if (error) throw error
-                return NextResponse.json({ testimonials: data })
-            }
-
-            if (resource === 'collections') {
-                const { data, error } = await supabase.from('collections').select('*').eq('is_active', true).order('sort_order', { ascending: true })
-                if (error) throw error
-                return NextResponse.json({ collections: data })
-            }
-
-            // Fallback genérico para outros recursos simples
-            // Buscar dados
-            let query = supabase.from(table as any).select('*')
-
-            // Se for produtos, precisamos das relações para o admin
-            if (resource === 'products') {
-                query = supabase.from('products').select('*, category:categories(id, name), brand:brands(id, name), images:product_images(id, url, is_main)').order('created_at', { ascending: false })
-            } else {
-                query = query.order('created_at', { ascending: false })
-            }
-
-            const { data, error } = await query
-
-            if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-
-            // RETORNO: O Admin espera o array direto [...] para a maioria das chamadas
-            return NextResponse.json(data)
+            const { data, error } = await supabase.from(table as any).select('*').order('created_at', { ascending: false })
+            if (error) throw error
+            return NextResponse.json({ [resource]: data ?? [] })
         }
 
         return NextResponse.json({ error: 'Endpoint não encontrado' }, { status: 404 })
@@ -188,12 +164,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
             const customerEmail = authUser.user?.email
             if (!customerEmail) throw new Error('E-mail do cliente não encontrado')
 
-            const { success } = await sendEmail({
+            await sendEmail({
                 to: customerEmail,
                 subject: `Pedido enviado! Rastreio: ${trackingCode.toUpperCase()}`,
                 html: `<h1>Pedido enviado!</h1><p>Código: ${trackingCode}</p>`
             })
-            if (!success) throw new Error('Falha no envio')
             return NextResponse.json({ success: true })
         }
 
@@ -208,22 +183,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
             if (productError) throw productError
             if (body.images.length > 0) await supabase.from('product_images').insert(body.images.map(img => ({ product_id: product.id, url: img.url, alt_text: body.name, is_primary: img.is_primary, position: img.position })))
             for (const v of body.variants) await supabase.from('product_variants').insert({ product_id: product.id, sku: v.sku || `${product.id}-${Date.now()}`, size: v.size || null, color_name: v.colorName || null, color_hex: v.colorHex || null, price: v.priceDelta, stock: v.stock, is_active: true })
-            return NextResponse.json({ id: product.id, slug: product.slug }, { status: 201 })
+            return NextResponse.json({ product }, { status: 201 })
         }
 
         const table = RESOURCES[resource]
         if (table) {
-            const body = await req.json()
-            const { data, error } = await supabase
-                .from(table as any)
-                .insert(body)
-                .select()
-                .single()
-
-            if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-
-            // Retornamos o objeto criado no formato que o componente espera (pode variar por recurso)
-            return NextResponse.json(resource === 'banners' ? { banner: data } : data)
+            const { data, error } = await supabase.from(table as any).insert(await req.json()).select().single()
+            if (error) throw error
+            const key = SINGULAR_MAP[resource] || resource
+            return NextResponse.json({ [key]: data }, { status: 201 })
         }
 
         return NextResponse.json({ error: 'N/A' }, { status: 404 })
@@ -232,10 +200,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
     }
 }
 
-// --- PATCH DISPATCHER ---
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ slug?: string[] }> }) {
+// --- PUT/PATCH DISPATCHER ---
+async function handleUpdate(req: NextRequest, slug: string[]) {
     try {
-        const { slug = [] } = await params
         const resource = slug[0]
         const id = slug[1]
         const supabase = createServiceClient()
@@ -274,16 +241,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ sl
         }
 
         if (resource === 'store-settings' || resource === 'shipping-settings') {
-            const { data, error } = await supabase.from(resource.replace('-', '_') as any).update({ ...body, updated_at: new Date().toISOString() }).eq('id', 1).select().single()
+            const table = resource.replace('-', '_')
+            const { data, error } = await supabase.from(table as any).update({ ...body, updated_at: new Date().toISOString() }).eq('id', 1).select().single()
             if (error) throw error
             return NextResponse.json({ settings: data })
         }
 
         const table = RESOURCES[resource]
         if (table && id) {
-            const { data, error } = await supabase.from(table as any).update({ ...body }).eq('id', id).select().single()
+            const { data, error } = await supabase.from(table as any).update(body).eq('id', id).select().single()
             if (error) throw error
-            const key = resource.endsWith('s') ? resource.slice(0, -1) : resource
+            const key = SINGULAR_MAP[resource] || resource
             return NextResponse.json({ [key]: data })
         }
 
@@ -291,6 +259,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ sl
     } catch (err: any) {
         return NextResponse.json({ error: err.message }, { status: 500 })
     }
+}
+
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ slug?: string[] }> }) {
+    const { slug = [] } = await params
+    return handleUpdate(req, slug)
+}
+
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ slug?: string[] }> }) {
+    const { slug = [] } = await params
+    return handleUpdate(req, slug)
 }
 
 // --- DELETE DISPATCHER ---

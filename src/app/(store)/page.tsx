@@ -74,6 +74,36 @@ export default async function PaginaInicial() {
                 <HeroCarousel initialBanners={bannersDB || []} />
             </section>
 
+            {/* Categorias */}
+            <section className="py-20 bg-black relative">
+                <div className="container-store">
+                    <div className="flex items-end justify-between mb-12 border-b border-white/10 pb-6">
+                        <div>
+                            <span className="text-[10px] font-black tracking-[0.3em] text-primary uppercase mb-2 block animate-in fade-in slide-in-from-bottom-2 duration-700">Explorar por Estilo</span>
+                            <h2 className="text-[clamp(2.5rem,6vw,5rem)] font-black tracking-tighter uppercase leading-none text-white">CATEGORIAS</h2>
+                        </div>
+                        <Link href="/categorias" className="hidden sm:flex items-center gap-2 text-[11px] font-black tracking-[0.2em] uppercase text-neutral-500 hover:text-white transition-colors group pb-2">
+                            Ver todas <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                        </Link>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 border-t border-l border-white/[0.08]">
+                    {CATEGORIAS.map((cat) => (
+                        <Link key={cat.slug} href={`/categorias/${cat.slug}`} className="group relative border-r border-b border-white/[0.08] overflow-hidden bg-black" style={{ minHeight: '230px' }}>
+                            <Image src={cat.img} alt={cat.nome} fill className="object-cover object-center scale-105 group-hover:scale-100 transition-transform duration-500 ease-out" sizes="(max-width: 640px) 50vw, 25vw" />
+                            <div className="absolute inset-0 bg-black/75 group-hover:bg-black/40 transition-colors duration-500" />
+                            <div className="absolute inset-x-0 bottom-0 h-1 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+                            <div className="absolute top-8 left-8">
+                                <span className="text-[10px] font-black tracking-widest text-white/40 block mb-1">{cat.num}</span>
+                                <h3 className="text-xl font-black tracking-tighter uppercase group-hover:text-primary transition-colors">{cat.nome}</h3>
+                                <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mt-1 opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0 duration-500">{cat.desc}</p>
+                            </div>
+                        </Link>
+                    ))}
+                </div>
+            </section>
+
             {/* Coleções */}
             {COLECOES.length > 0 && (
                 <section className="py-20 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -111,35 +141,7 @@ export default async function PaginaInicial() {
                 </section>
             )}
 
-            {/* Categorias */}
-            <section className="py-20 bg-black relative">
-                <div className="container-store">
-                    <div className="flex items-end justify-between mb-12 border-b border-white/10 pb-6">
-                        <div>
-                            <span className="text-[10px] font-black tracking-[0.3em] text-primary uppercase mb-2 block animate-in fade-in slide-in-from-bottom-2 duration-700">Explorar por Estilo</span>
-                            <h2 className="text-[clamp(2.5rem,6vw,5rem)] font-black tracking-tighter uppercase leading-none text-white">CATEGORIAS</h2>
-                        </div>
-                        <Link href="/categorias" className="hidden sm:flex items-center gap-2 text-[11px] font-black tracking-[0.2em] uppercase text-neutral-500 hover:text-white transition-colors group pb-2">
-                            Ver todas <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
-                        </Link>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 border-t border-l border-white/[0.08]">
-                    {CATEGORIAS.map((cat) => (
-                        <Link key={cat.slug} href={`/categorias/${cat.slug}`} className="group relative border-r border-b border-white/[0.08] overflow-hidden bg-black" style={{ minHeight: '230px' }}>
-                            <Image src={cat.img} alt={cat.nome} fill className="object-cover object-center scale-105 group-hover:scale-100 transition-transform duration-500 ease-out" sizes="(max-width: 640px) 50vw, 25vw" />
-                            <div className="absolute inset-0 bg-black/75 group-hover:bg-black/40 transition-colors duration-500" />
-                            <div className="absolute inset-x-0 bottom-0 h-1 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
-                            <div className="absolute top-8 left-8">
-                                <span className="text-[10px] font-black tracking-widest text-white/40 block mb-1">{cat.num}</span>
-                                <h3 className="text-xl font-black tracking-tighter uppercase group-hover:text-primary transition-colors">{cat.nome}</h3>
-                                <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mt-1 opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0 duration-500">{cat.desc}</p>
-                            </div>
-                        </Link>
-                    ))}
-                </div>
-            </section>
+            <TestimonialsSection />
 
             {/* Marcas */}
             {MARCAS.length > 0 && (
@@ -170,7 +172,7 @@ export default async function PaginaInicial() {
                                             <Image src={marca.logo} alt={marca.nome} fill className="object-contain" />
                                         </div>
                                     ) : (
-                                        <span className="text-lg font-black text-white/20 group-hover:text-primary transition-colors uppercase tracking-widest">
+                                        <span className="text-lg font-black text-white/20 group-hover:text-white transition-colors uppercase tracking-widest">
                                             {marca.nome}
                                         </span>
                                     )}
@@ -183,8 +185,6 @@ export default async function PaginaInicial() {
                     </div>
                 </section>
             )}
-
-            <TestimonialsSection />
 
             {/* Diferenciais */}
             <section className="py-24 bg-[#080808] border-y border-white/[0.05]">
