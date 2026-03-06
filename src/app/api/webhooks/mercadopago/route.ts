@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import mercadopago from '@/lib/mercadopago'
 import { Payment } from 'mercadopago'
-import crypto from 'crypto'
 import { sendEmail } from '@/lib/email'
 import { formatCurrency } from '@/lib/utils'
 
-/** Valida a assinatura HMAC SHA256 do Mercado Pago */
-function validateMpSignature(request: NextRequest): boolean {
+export const runtime = 'edge'
+
+/** Valida a assinatura HMAC SHA256 do Mercado Pago usando Web Crypto API (Edge-compatible) */
+async function validateMpSignature(request: NextRequest): Promise<boolean> {
     const xSignature = request.headers.get('x-signature')
     const xRequestId = request.headers.get('x-request-id')
     const secret = process.env.MP_WEBHOOK_SECRET
@@ -27,9 +28,29 @@ function validateMpSignature(request: NextRequest): boolean {
     const url = new URL(request.url)
     const dataId = url.searchParams.get('data.id') ?? ''
     const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`
-    const hmac = crypto.createHmac('sha256', secret).update(manifest).digest('hex')
 
-    return crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(v1))
+    // Web Crypto API implementation of HMAC-SHA256
+    const encoder = new TextEncoder()
+    const keyData = encoder.encode(secret)
+    const cryptoKey = await crypto.subtle.importKey(
+        'raw',
+        keyData,
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign']
+    )
+    const signatureBuffer = await crypto.subtle.sign(
+        'HMAC',
+        cryptoKey,
+        encoder.encode(manifest)
+    )
+
+    const hashHex = Array.from(new Uint8Array(signatureBuffer))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('')
+
+    // Simple comparison for Edge runtime
+    return hashHex === v1
 }
 
 function mapMpStatus(mpStatus: string): string {
@@ -49,7 +70,7 @@ export async function POST(request: NextRequest) {
     const rawBody = await request.text()
 
     // ─── 1. Valida assinatura ────────────────────────────────────────
-    if (!validateMpSignature(request)) {
+    if (!(await validateMpSignature(request))) {
         console.error('[MP Webhook] Assinatura inválida')
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
