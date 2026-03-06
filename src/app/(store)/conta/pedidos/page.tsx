@@ -1,4 +1,4 @@
-
+export const runtime = 'edge'
 import { ContaPedidosClient } from '@/components/store/StoreDynamicComponents'
 import type { Metadata } from 'next'
 

@@ -19,9 +19,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  experimental: {
-    optimizePackageImports: ['lucide-react', '@supabase/supabase-js', '@supabase/ssr', 'mercadopago', '@mercadopago/sdk-react', 'zod', 'sonner'],
-  },
 }
 
 export default nextConfig
