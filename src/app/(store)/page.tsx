@@ -37,7 +37,32 @@ const DIFERENCIAIS = [
 
 export default async function PaginaInicial() {
     const supabase = createServiceClient()
-    const { data: bannersDB } = await supabase.from('hero_banners').select('*').eq('is_active', true).order('sort_order')
+    const { data: bannersDB } = await supabase.from('hero_banners').select('*').eq('is_active', true).order('sort_order', { ascending: true })
+
+    // Buscar marcas do banco (ativas, ordenadas)
+    const { data: marcasDB } = await supabase
+        .from('brands')
+        .select('name, slug, logo_url')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true })
+        .limit(6)
+
+    // Buscar coleções do banco (ativas, ordenadas)
+    const { data: colecoesDB } = await supabase
+        .from('collections')
+        .select('name, slug, description')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true })
+        .limit(4)
+
+    const MARCAS = (marcasDB ?? []).map(m => ({ nome: m.name, slug: m.slug, logo: m.logo_url }))
+    const COLECOES = (colecoesDB ?? []).map((c, i) => ({
+        nome: c.name,
+        slug: c.slug,
+        descricao: c.description ?? 'Explore essa coleção exclusiva da Cola Comigo.',
+        cor: i % 2 === 0 ? 'from-blue-900/40 to-zinc-900' : 'from-zinc-800/60 to-zinc-900',
+        destaque: c.slug.replace(/-/g, ' ').toUpperCase(),
+    }))
 
     return (
         <div className="min-h-screen bg-black text-white selection:bg-primary selection:text-white">
@@ -48,6 +73,43 @@ export default async function PaginaInicial() {
             <section className="relative overflow-hidden">
                 <HeroCarousel initialBanners={bannersDB || []} />
             </section>
+
+            {/* Coleções */}
+            {COLECOES.length > 0 && (
+                <section className="py-20 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-baseline justify-between mb-10 gap-4">
+                        <div>
+                            <span className="text-primary text-[10px] font-black tracking-[0.3em] uppercase mb-2 block">Drops Exclusivos</span>
+                            <h2 className="text-4xl font-black tracking-tight uppercase leading-none">Coleções</h2>
+                        </div>
+                        <Link href="/colecoes" className="text-xs font-black tracking-widest uppercase text-primary hover:text-white transition-colors flex items-center gap-2 group">
+                            Ver tudo <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                        </Link>
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-4">
+                        {COLECOES.map((col) => (
+                            <Link
+                                key={col.slug}
+                                href={`/colecoes/${col.slug}`}
+                                className="group relative bg-zinc-900 border border-white/8 rounded-2xl p-10 overflow-hidden transition-all duration-300 hover:border-primary/30 min-h-[280px] flex flex-col justify-end"
+                            >
+                                <div className={`absolute inset-0 bg-gradient-to-br ${col.cor} rounded-2xl`} />
+                                <div className="absolute inset-x-0 bottom-0 h-1 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+                                <div className="relative">
+                                    <span className="inline-block text-[10px] font-black tracking-[0.3em] uppercase border border-primary/30 text-primary/80 px-2 py-1 mb-4">
+                                        {col.destaque}
+                                    </span>
+                                    <h3 className="text-4xl font-black tracking-tight uppercase mb-3 text-white">{col.nome}</h3>
+                                    <p className="text-sm text-neutral-400 mb-5 max-w-sm">{col.descricao}</p>
+                                    <span className="flex items-center gap-2 text-primary text-sm font-bold group-hover:gap-3 transition-all">
+                                        Ver coleção <ArrowRight className="h-4 w-4" />
+                                    </span>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                </section>
+            )}
 
             {/* Categorias */}
             <section className="py-20 bg-black relative">
@@ -78,6 +140,49 @@ export default async function PaginaInicial() {
                     ))}
                 </div>
             </section>
+
+            {/* Marcas */}
+            {MARCAS.length > 0 && (
+                <section className="py-24 border-t border-white/[0.03] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900/20 via-black to-black">
+                    <div className="container-store">
+                        <div className="flex flex-col md:flex-row items-end justify-between mb-16 gap-4">
+                            <div>
+                                <span className="text-primary text-[10px] font-black tracking-[0.3em] uppercase mb-2 block">Curadoria de Peso</span>
+                                <h2 className="text-[clamp(2.5rem,5vw,4.5rem)] font-black tracking-tighter uppercase leading-none text-white overflow-hidden">
+                                    AS MARCAS QUE <span className="text-primary italic">DOMINAM</span> O HYPE
+                                </h2>
+                            </div>
+                            <Link href="/marcas" className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-neutral-500 hover:text-white transition-colors border-b border-white/10 pb-2">
+                                Explorar Universo <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
+                            </Link>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-px bg-white/10 border border-white/10 overflow-hidden rounded-2xl shadow-2xl">
+                            {MARCAS.map((marca) => (
+                                <Link
+                                    key={marca.slug}
+                                    href={`/marcas/${marca.slug}`}
+                                    className="group relative bg-black aspect-square flex items-center justify-center grayscale-[60%] hover:grayscale-0 transition-all duration-700"
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
+                                    {marca.logo ? (
+                                        <div className="relative w-2/3 h-1/3 opacity-40 group-hover:opacity-100 transition-opacity">
+                                            <Image src={marca.logo} alt={marca.nome} fill className="object-contain" />
+                                        </div>
+                                    ) : (
+                                        <span className="text-lg font-black text-white/20 group-hover:text-primary transition-colors uppercase tracking-widest">
+                                            {marca.nome}
+                                        </span>
+                                    )}
+                                    <span className="absolute bottom-4 text-[9px] font-black uppercase tracking-[0.3em] text-primary/0 group-hover:text-primary transition-all opacity-0 group-hover:opacity-100 translate-y-3 group-hover:translate-y-0 duration-500">
+                                        Ver Marca
+                                    </span>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
 
             <TestimonialsSection />
 

@@ -135,9 +135,22 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
             }
 
             // Fallback genérico para outros recursos simples
-            const { data, error } = await supabase.from(table as any).select('*').order('sort_order', { ascending: true })
-            if (error) throw error
-            return NextResponse.json({ [resource]: data })
+            // Buscar dados
+            let query = supabase.from(table as any).select('*')
+
+            // Se for produtos, precisamos das relações para o admin
+            if (resource === 'products') {
+                query = supabase.from('products').select('*, category:categories(id, name), brand:brands(id, name), images:product_images(id, url, is_main)').order('created_at', { ascending: false })
+            } else {
+                query = query.order('created_at', { ascending: false })
+            }
+
+            const { data, error } = await query
+
+            if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+            // RETORNO: O Admin espera o array direto [...] para a maioria das chamadas
+            return NextResponse.json(data)
         }
 
         return NextResponse.json({ error: 'Endpoint não encontrado' }, { status: 404 })
@@ -200,10 +213,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
 
         const table = RESOURCES[resource]
         if (table) {
-            const { data, error } = await supabase.from(table as any).insert([await req.json()]).select().single()
-            if (error) throw error
-            const key = resource.endsWith('s') ? resource.slice(0, -1) : resource
-            return NextResponse.json({ [key]: data }, { status: 201 })
+            const body = await req.json()
+            const { data, error } = await supabase
+                .from(table as any)
+                .insert(body)
+                .select()
+                .single()
+
+            if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+            // Retornamos o objeto criado no formato que o componente espera (pode variar por recurso)
+            return NextResponse.json(resource === 'banners' ? { banner: data } : data)
         }
 
         return NextResponse.json({ error: 'N/A' }, { status: 404 })
