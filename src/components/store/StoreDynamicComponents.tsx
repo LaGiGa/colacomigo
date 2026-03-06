@@ -44,3 +44,23 @@ export const CookieConsent = dynamic(
     () => import('./CookieConsent').then(mod => mod.CookieConsent),
     { ssr: false }
 )
+
+export const HeroCarousel = dynamic(
+    () => import('./HeroCarousel').then(mod => mod.HeroCarousel),
+    { ssr: false }
+)
+
+export const AnnouncementBar = dynamic(
+    () => import('./AnnouncementBar').then(mod => mod.AnnouncementBar),
+    { ssr: false }
+)
+
+export const RecentPurchasePopup = dynamic(
+    () => import('./RecentPurchasePopup').then(mod => mod.RecentPurchasePopup),
+    { ssr: false }
+)
+
+export const TestimonialsSection = dynamic(
+    () => import('./TestimonialsSection').then(mod => mod.TestimonialsSection),
+    { ssr: false }
+)
