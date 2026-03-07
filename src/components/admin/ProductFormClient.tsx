@@ -194,10 +194,14 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
             try {
                 const res = await fetch('/api/admin/upload', { method: 'POST', body: formData })
                 const data = await res.json()
+                if (!res.ok || !data?.url) {
+                    throw new Error(data?.error || 'Falha no upload da imagem')
+                }
                 setImages((prev) => prev.map((img) => img.file === files[i] ? { ...img, uploading: false, url: data.url } : img))
             } catch (err) {
                 setImages((prev) => prev.map((img) => img.file === files[i] ? { ...img, uploading: false } : img))
-                toast.error(`Erro ao fazer upload de ${files[i].name}`)
+                const message = err instanceof Error ? err.message : 'Erro desconhecido'
+                toast.error(`Erro no upload de ${files[i].name}: ${message}`)
             }
         }
     }
@@ -217,7 +221,17 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
     }
 
     async function onSubmit(data: ProductFormValues) {
+        if (images.some((img) => img.uploading)) {
+            toast.error('Aguarde o upload das imagens terminar antes de salvar.')
+            return
+        }
+
         const uploadedImages = images.filter((img) => img.url)
+        if (images.length > 0 && uploadedImages.length === 0) {
+            toast.error('As imagens selecionadas falharam no upload. Envie novamente.')
+            return
+        }
+
         if (uploadedImages.length === 0) {
             toast.error('Adicione pelo menos uma imagem ao produto.')
             return
