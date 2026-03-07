@@ -15,7 +15,7 @@ export function WhatsAppButton() {
                 className="sm:hidden group relative flex h-14 w-14 items-center justify-center rounded-full border-2 border-white/80 bg-[#25D366] text-black shadow-[0_8px_24px_rgba(37,211,102,0.45)] transition-all hover:scale-105 hover:shadow-[0_12px_30px_rgba(37,211,102,0.55)] active:scale-95"
                 aria-label="Falar no WhatsApp"
             >
-                <span className="absolute -top-2 -right-2 rounded-full bg-[#1a8fff] px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-white">
+                <span className="absolute -top-2 -right-2 rounded-full bg-[#1a8fff] px-2 py-0.5 text-[8px] font-black uppercase tracking-widest whitespace-nowrap text-white">
                     10% PIX
                 </span>
                 <svg
@@ -37,7 +37,7 @@ export function WhatsAppButton() {
                 className="hidden sm:flex group relative h-14 items-center gap-2 rounded-full border-2 border-white/80 bg-[#25D366] px-4 text-black shadow-[0_8px_24px_rgba(37,211,102,0.45)] transition-all hover:scale-105 hover:shadow-[0_12px_30px_rgba(37,211,102,0.55)] active:scale-95"
                 aria-label="Falar no WhatsApp"
             >
-                <span className="absolute -top-2 -right-2 rounded-full bg-[#1a8fff] px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-white">
+                <span className="absolute -top-2 -right-2 rounded-full bg-[#1a8fff] px-2 py-0.5 text-[8px] font-black uppercase tracking-widest whitespace-nowrap text-white">
                     10% PIX
                 </span>
                 <span className="h-2 w-2 rounded-full bg-black/70 animate-pulse" />
