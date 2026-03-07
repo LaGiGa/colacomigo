@@ -378,7 +378,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
                 }
             }
 
-            return NextResponse.json({ paymentId: payment.id, status: payment.status, orderStatus: status })
+            const pixTransactionData = payment?.point_of_interaction?.transaction_data ?? null;
+            const pixQrCode = typeof pixTransactionData?.qr_code === 'string' ? pixTransactionData.qr_code : null;
+            const pixQrCodeBase64 = typeof pixTransactionData?.qr_code_base64 === 'string' ? pixTransactionData.qr_code_base64 : null;
+            const ticketUrl = typeof pixTransactionData?.ticket_url === 'string' ? pixTransactionData.ticket_url : null;
+
+            return NextResponse.json({
+                paymentId: payment.id,
+                status: payment.status,
+                orderStatus: status,
+                paymentMethodId: payment.payment_method_id ?? null,
+                paymentTypeId: payment.payment_type_id ?? null,
+                pixQrCode,
+                pixQrCodeBase64,
+                ticketUrl,
+            })
         }
 
         // 5. WEBHOOK MERCADO PAGO

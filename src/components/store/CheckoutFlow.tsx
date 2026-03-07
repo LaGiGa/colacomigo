@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency } from '@/lib/utils'
-import { Loader2, ChevronRight, ChevronLeft, ShoppingBag, MapPin, CreditCard, Lock, Truck } from 'lucide-react'
+import { Loader2, ChevronRight, ChevronLeft, ShoppingBag, MapPin, CreditCard, Lock, Truck, Copy, CheckCircle2 } from 'lucide-react'
 import Image from 'next/image'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
@@ -44,6 +44,13 @@ interface ShippingOption {
     estimatedDays: number
 }
 
+interface PendingPaymentData {
+    paymentId: string
+    status: string
+    pixQrCode?: string | null
+    pixQrCodeBase64?: string | null
+}
+
 export function CheckoutFlow() {
     const router = useRouter()
     const { items, subtotal, clearCart } = useCartStore()
@@ -52,6 +59,7 @@ export function CheckoutFlow() {
     const [preferenceId, setPreferenceId] = useState<string | null>(null)
     const [orderId, setOrderId] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
+    const [pendingPayment, setPendingPayment] = useState<PendingPaymentData | null>(null)
 
     // Coupon states
     const [couponCode, setCouponCode] = useState('')
@@ -189,9 +197,25 @@ export function CheckoutFlow() {
     }
 
     function handlePaymentSuccess(paymentId: string) {
+        setPendingPayment(null)
         clearCart()
         setStep('success')
         toast.success('Pagamento aprovado! 🎉')
+    }
+
+    function handlePendingPayment(payload: PendingPaymentData) {
+        setPendingPayment(payload)
+        toast.info('PIX gerado! Escaneie o QR Code ou copie o codigo para pagar.')
+    }
+
+    async function copyPixCode() {
+        if (!pendingPayment?.pixQrCode) return
+        try {
+            await navigator.clipboard.writeText(pendingPayment.pixQrCode)
+            toast.success('Codigo PIX copiado!')
+        } catch {
+            toast.error('Nao foi possivel copiar o codigo PIX.')
+        }
     }
 
     function handlePaymentError(err: Error) {
@@ -481,10 +505,54 @@ export function CheckoutFlow() {
 
                 {/* Payment Brick */}
                 <div className="pt-4">
+                    {pendingPayment && (
+                        <div className="mb-6 border border-primary/30 bg-primary/5 p-5 space-y-4">
+                            <div className="flex items-center gap-2 text-primary">
+                                <CheckCircle2 className="h-4 w-4" />
+                                <p className="text-[10px] font-black uppercase tracking-widest">Pagamento PIX pendente</p>
+                            </div>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-300">
+                                Escaneie o QR Code abaixo ou use o codigo copia e cola.
+                            </p>
+                            {pendingPayment.pixQrCodeBase64 && (
+                                <div className="bg-white p-3 inline-block">
+                                    <Image
+                                        src={`data:image/png;base64,${pendingPayment.pixQrCodeBase64}`}
+                                        alt="QR Code PIX"
+                                        width={220}
+                                        height={220}
+                                        className="h-[220px] w-[220px]"
+                                    />
+                                </div>
+                            )}
+                            {pendingPayment.pixQrCode && (
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400">
+                                        PIX copia e cola
+                                    </Label>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            readOnly
+                                            value={pendingPayment.pixQrCode}
+                                            className="h-10 border-white/10 bg-black text-white rounded-none text-[10px] font-bold tracking-wide"
+                                        />
+                                        <Button type="button" className="btn-primary h-10 px-4" onClick={copyPixCode}>
+                                            <Copy className="h-4 w-4 mr-2" />
+                                            COPIAR
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">
+                                Apos o pagamento, a confirmacao acontece automaticamente.
+                            </p>
+                        </div>
+                    )}
                     <PaymentBrick
                         preferenceId={preferenceId}
                         totalAmount={orderTotal}
                         onSuccess={handlePaymentSuccess}
+                        onPendingPayment={handlePendingPayment}
                         onError={handlePaymentError}
                     />
                 </div>

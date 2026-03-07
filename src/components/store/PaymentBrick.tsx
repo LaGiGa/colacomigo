@@ -15,6 +15,7 @@ interface PaymentBrickProps {
     preferenceId: string
     totalAmount: number
     onSuccess: (paymentId: string) => void
+    onPendingPayment?: (payload: { paymentId: string; status: string; pixQrCode?: string | null; pixQrCodeBase64?: string | null }) => void
     onError: (error: Error) => void
 }
 
@@ -23,7 +24,7 @@ interface PaymentBrickProps {
  * O usuário paga diretamente na nossa página — sem redirecionamento para o MP.
  * Aceita: Cartão de crédito/débito, PIX e boleto bancário.
  */
-export function PaymentBrick({ preferenceId, totalAmount, onSuccess, onError }: PaymentBrickProps) {
+export function PaymentBrick({ preferenceId, totalAmount, onSuccess, onPendingPayment, onError }: PaymentBrickProps) {
     const containerRef = useRef<HTMLDivElement>(null)
     const brickControllerRef = useRef<{ unmount: () => void } | null>(null)
     const [sdkReady, setSdkReady] = useState(false)
@@ -99,7 +100,18 @@ export function PaymentBrick({ preferenceId, totalAmount, onSuccess, onError }: 
                     })
                     const data = await res.json()
                     if (res.ok) {
-                        onSuccess(data.paymentId)
+                        if (data.status === 'approved') {
+                            onSuccess(data.paymentId)
+                        } else if (data.status === 'pending') {
+                            onPendingPayment?.({
+                                paymentId: data.paymentId,
+                                status: data.status,
+                                pixQrCode: data.pixQrCode,
+                                pixQrCodeBase64: data.pixQrCodeBase64,
+                            })
+                        } else {
+                            onError(new Error(data.error ?? 'Pagamento não aprovado.'))
+                        }
                     } else {
                         console.error('[PaymentBrick] Payment error:', data.error);
                         onError(new Error(data.error ?? 'Erro no pagamento'))
