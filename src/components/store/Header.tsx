@@ -262,11 +262,11 @@ export function Header() {
                         </button>
                     ) : (
                         <Image
-                            src="/cc.png"
+                            src="/logo.png"
                             alt="Cola Comigo"
-                            width={36}
-                            height={36}
-                            className="h-9 w-auto object-contain"
+                            width={140}
+                            height={34}
+                            className="h-8 w-auto object-contain"
                         />
                     )}
                     <button
