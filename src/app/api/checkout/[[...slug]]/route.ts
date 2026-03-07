@@ -1,4 +1,4 @@
-// export const runtime = 'edge';
+export const runtime = 'edge';
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient, createClient } from '@/lib/supabase/server'
 import { mpCreatePreference, mpCreatePayment, mpGetPayment } from '@/lib/mercadopago'

@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 // e adicionamos O MESMO TRATAMENTO CLÁSSICO
 import { ProdutosPageClient, ProductPageClient } from '@/components/store/StoreDynamicComponents'
 
-// export const runtime = 'edge';
+export const runtime = 'edge';
 
 // Componente roteador unificado que substitui 4 arquivos independentes e remove MAIS DE 5MB DO SEU BUNDLE FREE!
 export default async function GenericStorePage({
