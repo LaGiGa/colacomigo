@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Minus, Plus, ShoppingBag, MessageCircle, Truck, Shield, RefreshCw } from 'lucide-react'
+import { Minus, Plus, ShoppingBag, MessageCircle, Truck, Shield, RefreshCw, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
@@ -67,6 +67,8 @@ export function ProductActions({
     const currentPrice = basePrice + (selectedVariant?.price_delta ?? 0)
     const hasDiscount = comparePrice && comparePrice > currentPrice
     const discountPct = hasDiscount ? Math.round(((comparePrice - currentPrice) / comparePrice) * 100) : 0
+    const pixPrice = currentPrice * 0.9
+    const pixSavings = Math.max(0, currentPrice - pixPrice)
     const inStock = variants.length === 0
         ? true
         : !!selectedVariant && (selectedVariant.stock === undefined || selectedVariant.stock > 0)
@@ -118,8 +120,15 @@ export function ProductActions({
                 <p className="text-[11px] font-bold text-neutral-500 uppercase tracking-widest">
                     no cartão em até <span className="text-white">12x</span> (juros do Mercado Pago podem variar)
                 </p>
-                <p className="text-[11px] font-black uppercase tracking-widest text-[#1a8fff]">
-                    {formatCurrency(currentPrice * 0.9)} no PIX (10% OFF)
+                <p className="text-[11px] font-black uppercase tracking-widest text-[#1a8fff] inline-flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#1a8fff] text-black text-[9px] tracking-widest">
+                        <Zap className="h-3 w-3" />
+                        PIX -10%
+                    </span>
+                    {formatCurrency(pixPrice)} no PIX
+                </p>
+                <p className="text-[10px] font-bold text-[#1a8fff]/85 uppercase tracking-widest">
+                    economize {formatCurrency(pixSavings)} pagando no pix
                 </p>
             </div>
 

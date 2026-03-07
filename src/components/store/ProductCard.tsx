@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { ShoppingBag } from 'lucide-react'
+import { ShoppingBag, Zap } from 'lucide-react'
 import { useCartStore } from '@/store/useCartStore'
 import { useUIStore } from '@/store/useUIStore'
 import { formatCurrency } from '@/lib/utils'
@@ -43,6 +43,7 @@ export function ProductCard({
     const hasDiscount = comparePrice && comparePrice > price
     const discountPct = hasDiscount ? Math.round(((comparePrice - price) / comparePrice) * 100) : 0
     const pixPrice = price * 0.9
+    const pixSavings = Math.max(0, price - pixPrice)
 
     function handleQuickAdd(e: React.MouseEvent) {
         e.preventDefault()
@@ -156,11 +157,19 @@ export function ProductCard({
                             )}
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="px-1.5 py-0.5 bg-[#1a8fff]/15 text-[#1a8fff] text-[9px] font-black uppercase tracking-widest">PIX 10%</span>
+                            <span className="px-1.5 py-0.5 bg-[#1a8fff] text-black text-[9px] font-black uppercase tracking-widest inline-flex items-center gap-1">
+                                <Zap className="h-2.5 w-2.5" />
+                                PIX -10%
+                            </span>
                             <span className="text-[10px] text-[#1a8fff] font-black tracking-widest">
                                 {formatCurrency(pixPrice)}
                             </span>
                         </div>
+                        {pixSavings > 0 && (
+                            <p className="text-[9px] text-[#1a8fff]/85 font-bold tracking-wide uppercase">
+                                economize {formatCurrency(pixSavings)} no pix
+                            </p>
+                        )}
                     </div>
                 </div>
             </div>

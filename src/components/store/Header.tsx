@@ -97,7 +97,7 @@ export function Header() {
                         {/* Hamburguer (somente mobile) */}
                         <button
                             onClick={openDrawer}
-                            className="tap-target text-white lg:hidden flex-shrink-0"
+                            className="tap-target text-white md:hidden flex-shrink-0"
                             aria-label="Abrir menu"
                         >
                             <Menu className="h-5 w-5" />
