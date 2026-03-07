@@ -98,7 +98,7 @@ export function ContaPedidosClient() {
                             return (
                                 <Link
                                     key={order.id}
-                                    href={`/conta/pedidos/${order.id}`}
+                                    href={`/conta/pedidos?pedido=${order.id}`}
                                     className="block bg-zinc-950 border border-white/8 rounded-2xl p-6 hover:border-primary/40 transition-all group"
                                 >
                                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
