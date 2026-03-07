@@ -244,7 +244,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
                 }
             }
             const { error: variantsError } = await supabase.from('product_variants').insert(
-                body.variants.map(v => ({ ...v, product_id: product.id }))
+                body.variants.map((v: any) => {
+                    const { id: _id, ...variantWithoutId } = v
+                    return { ...variantWithoutId, product_id: product.id }
+                })
             )
             if (variantsError) {
                 await supabase.from('products').delete().eq('id', product.id)
@@ -359,7 +362,10 @@ async function handleUpdate(req: NextRequest, resource: string, id: string) {
             }
             await supabase.from('product_variants').delete().eq('product_id', id)
             const { error: variantsError } = await supabase.from('product_variants').insert(
-                (body.variants ?? []).map((v: any) => ({ ...v, product_id: id, id: undefined }))
+                (body.variants ?? []).map((v: any) => {
+                    const { id: _id, ...variantWithoutId } = v
+                    return { ...variantWithoutId, product_id: id }
+                })
             )
             if (variantsError) throw variantsError
             return NextResponse.json({ success: true })
