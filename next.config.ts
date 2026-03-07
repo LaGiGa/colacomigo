@@ -1,6 +1,28 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'colacomigoshop.com.br' }],
+        destination: 'https://www.colacomigoshop.com.br/:path*',
+        permanent: true,
+      },
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'colacomigoshop.com' }],
+        destination: 'https://www.colacomigoshop.com.br/:path*',
+        permanent: true,
+      },
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.colacomigoshop.com' }],
+        destination: 'https://www.colacomigoshop.com.br/:path*',
+        permanent: true,
+      },
+    ]
+  },
   images: {
     unoptimized: true,
     remotePatterns: [
