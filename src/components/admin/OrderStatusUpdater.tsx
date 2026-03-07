@@ -55,22 +55,27 @@ export function OrderStatusUpdater({
     }
 
     function sendWhatsAppTracking() {
-        if (!trackingCode) {
-            toast.error('Insira o código de rastreio primeiro.')
+        if (!customerPhone) {
+            toast.error('Cliente não possui telefone cadastrado.')
             return
         }
-        const cleanPhone = customerPhone.replace(/\D/g, '')
-        const msg = `Olá ${customerName}! 👋\nSeu pedido na *Cola Comigo* já foi enviado! 🚀\n\nCódigo de Rastreio: *${trackingCode.toUpperCase()}*\nVocê pode rastrear pelo site dos Correios.\n\nQualquer dúvida, estamos à disposição!`
-        window.open(`https://wa.me/55${cleanPhone}?text=${encodeURIComponent(msg)}`, '_blank')
+
+        const digits = customerPhone.replace(/\D/g, '')
+        const cleanPhone = digits.startsWith('55') ? digits : `55${digits}`
+        let msg = ''
+
+        if (trackingCode) {
+            msg = `Olá ${customerName || 'campeão'}! 👋\nSeu pedido na *Cola Comigo* já foi enviado! 🚀\n\nCódigo de Rastreio: *${trackingCode.toUpperCase()}*\nVocê pode rastrear pelo site dos Correios.\n\nQualquer dúvida, estamos à disposição!`
+        } else {
+            msg = `Olá ${customerName || 'campeão'}! 👋\nPassando para confirmar que seu pedido na *Cola Comigo* já está sendo processado! 🚀\n\nEm breve enviaremos o seu código de rastreio por aqui e por e-mail.\n\nQualquer dúvida, estamos à disposição!`
+        }
+
+        window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, '_blank')
     }
 
     function sendEmailTracking() {
-        if (!trackingCode) {
-            toast.error('Insira o código de rastreio primeiro.')
-            return
-        }
         startTransition(async () => {
-            const res = await fetch(`/api/admin/orders/${orderId}/send-tracking`, {
+            const res = await fetch(`/api/admin/orders/${orderId}/send-email`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ trackingCode }),

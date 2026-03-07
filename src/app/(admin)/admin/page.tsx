@@ -1,52 +1,76 @@
-export const runtime = 'edge';
-import { TrendingUp, ShoppingCart, Users, Package, DollarSign, Clock, ArrowRight } from 'lucide-react'
+'use client'
+
+import { useState, useEffect } from 'react'
+import { TrendingUp, ShoppingCart, Users, Package, DollarSign, Clock, ArrowRight, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
-
-const METRICS = [
-    {
-        title: 'Receita Total',
-        value: 'R$ 0,00',
-        change: '—',
-        icon: DollarSign,
-        color: 'text-green-400',
-        href: '/admin/financeiro'
-    },
-    {
-        title: 'Pedidos Hoje',
-        value: '0',
-        change: '—',
-        icon: ShoppingCart,
-        color: 'text-blue-400',
-        href: '/admin/pedidos'
-    },
-    {
-        title: 'Clientes',
-        value: '0',
-        change: '—',
-        icon: Users,
-        color: 'text-purple-400',
-        href: '/admin/clientes'
-    },
-    {
-        title: 'Produtos Ativos',
-        value: '0',
-        change: '—',
-        icon: Package,
-        color: 'text-orange-400',
-        href: '/admin/produtos'
-    },
-]
-
-const ORDER_STATUSES = [
-    { label: 'Pendentes', value: '0', color: 'bg-yellow-500/20 text-yellow-400', href: '/admin/pedidos?status=pending' },
-    { label: 'Pagos', value: '0', color: 'bg-green-500/20 text-green-400', href: '/admin/pedidos?status=paid' },
-    { label: 'Enviados', value: '0', color: 'bg-blue-500/20 text-blue-400', href: '/admin/pedidos?status=shipped' },
-    { label: 'Entregues', value: '0', color: 'bg-emerald-500/20 text-emerald-400', href: '/admin/pedidos?status=delivered' },
-]
+import { formatCurrency } from '@/lib/utils'
 
 export default function AdminDashboard() {
+    const [stats, setStats] = useState<any>(null)
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        fetch('/api/admin/stats')
+            .then(res => res.json())
+            .then(data => {
+                setStats(data)
+                setLoading(false)
+            })
+            .catch(() => setLoading(false))
+    }, [])
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center p-20">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        )
+    }
+
+    const metrics = [
+        {
+            title: 'Receita Total',
+            value: formatCurrency(stats?.metrics?.revenue ?? 0),
+            change: 'Pedidos pagos',
+            icon: DollarSign,
+            color: 'text-green-400',
+            href: '/admin/financeiro'
+        },
+        {
+            title: 'Pedidos Hoje',
+            value: stats?.metrics?.ordersToday ?? 0,
+            change: 'Novos pedidos',
+            icon: ShoppingCart,
+            color: 'text-blue-400',
+            href: '/admin/pedidos'
+        },
+        {
+            title: 'Clientes',
+            value: stats?.metrics?.customers ?? 0,
+            change: 'E-mails únicos',
+            icon: Users,
+            color: 'text-purple-400',
+            href: '/admin/clientes'
+        },
+        {
+            title: 'Produtos Ativos',
+            value: stats?.metrics?.products ?? 0,
+            change: 'Em estoque',
+            icon: Package,
+            color: 'text-orange-400',
+            href: '/admin/produtos'
+        },
+    ]
+
+    const statusList = [
+        { label: 'Pendentes', value: stats?.statusCounts?.pending ?? 0, color: 'bg-yellow-500/20 text-yellow-400', href: '/admin/pedidos?status=pending' },
+        { label: 'Pagos', value: stats?.statusCounts?.paid ?? 0, color: 'bg-green-500/20 text-green-400', href: '/admin/pedidos?status=paid' },
+        { label: 'Enviados', value: stats?.statusCounts?.shipped ?? 0, color: 'bg-blue-500/20 text-blue-400', href: '/admin/pedidos?status=shipped' },
+        { label: 'Entregues', value: stats?.statusCounts?.delivered ?? 0, color: 'bg-emerald-500/20 text-emerald-400', href: '/admin/pedidos?status=delivered' },
+    ]
+
     return (
         <div className="space-y-8">
             <div>
@@ -58,7 +82,7 @@ export default function AdminDashboard() {
 
             {/* Métricas principais */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                {METRICS.map(({ title, value, change, icon: Icon, color, href }) => (
+                {metrics.map(({ title, value, change, icon: Icon, color, href }) => (
                     <Link key={title} href={href} className="block group">
                         <Card className="bg-card border-border h-full transition-all group-hover:border-primary/50 group-hover:bg-primary/[0.02]">
                             <CardHeader className="flex flex-row items-center justify-between pb-1 sm:pb-2 pt-3 sm:pt-6 px-3 sm:px-6">
@@ -90,7 +114,7 @@ export default function AdminDashboard() {
                     </CardHeader>
                     <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
                         <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                            {ORDER_STATUSES.map(({ label, value, color, href }) => (
+                            {statusList.map(({ label, value, color, href }) => (
                                 <Link key={label} href={href} className="block group">
                                     <div className={`rounded-xl p-3 sm:p-4 transition-all hover:ring-2 hover:ring-primary/20 ${color.split(' ')[0]}`}>
                                         <div className={`text-xl sm:text-2xl font-black ${color.split(' ')[1]}`}>

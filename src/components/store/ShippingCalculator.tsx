@@ -31,9 +31,10 @@ interface ShippingCalculatorProps {
     weightKg?: number
     subtotal?: number
     onSelect?: (option: ShippingOption) => void
+    externalCep?: string
 }
 
-export function ShippingCalculator({ weightKg = 0.3, subtotal = 0, onSelect }: ShippingCalculatorProps) {
+export function ShippingCalculator({ weightKg = 0.3, subtotal = 0, onSelect, externalCep }: ShippingCalculatorProps) {
     const [config, setConfig] = useState<ShippingSettings | null>(null)
     const [cep, setCep] = useState('')
     const [loading, setLoading] = useState(false)
@@ -43,36 +44,53 @@ export function ShippingCalculator({ weightKg = 0.3, subtotal = 0, onSelect }: S
     const [error, setError] = useState<string | null>(null)
     const [showCorreios, setShowCorreios] = useState(false)
 
+    // Sync com CEP externo (vindo do formulário de endereço)
+    useEffect(() => {
+        if (externalCep && externalCep.length === 8 && externalCep !== cep.replace(/\D/g, '')) {
+            setCep(formatCepInternal(externalCep))
+            // Auto-trigger calculation
+            const timeout = setTimeout(() => {
+                calcularCorreiosInternal(externalCep)
+            }, 500)
+            return () => clearTimeout(timeout)
+        }
+    }, [externalCep])
+
     // Lê configurações do admin
     useEffect(() => {
-        fetch('/api/admin/shipping-settings')
+        const fallback: ShippingSettings = {
+            free_shipping_enabled: true,
+            free_shipping_threshold: 399,
+            store_pickup_enabled: true,
+            store_pickup_label: 'Retirar na Loja',
+            local_delivery_enabled: true,
+            local_delivery_label: 'Entrega em Palmas-TO',
+            local_delivery_price: 15,
+            local_delivery_days: 1,
+            correios_enabled: true,
+        }
+
+        fetch('/api/store/settings')
             .then(r => r.json())
             .then(data => {
-                if (data.settings) setConfig(data.settings)
+                if (data.shipping) {
+                    setConfig(data.shipping)
+                } else {
+                    console.warn('[ShippingCalculator] No settings found, using fallback.')
+                    setConfig(fallback)
+                }
             })
-            .catch(() => {
-                // Fallback com valores padrão se a API falhar
-                setConfig({
-                    free_shipping_enabled: true,
-                    free_shipping_threshold: 399,
-                    store_pickup_enabled: true,
-                    store_pickup_label: 'Retirar na Loja',
-                    local_delivery_enabled: true,
-                    local_delivery_label: 'Entrega em Palmas-TO',
-                    local_delivery_price: 15,
-                    local_delivery_days: 1,
-                    correios_enabled: true,
-                })
+            .catch((err) => {
+                console.error('[ShippingCalculator] API error, using fallback:', err)
+                setConfig(fallback)
             })
             .finally(() => setConfigLoading(false))
     }, [])
 
-    if (!config) return null
-
-    const isFreeShipping = config.free_shipping_enabled && subtotal >= config.free_shipping_threshold
+    const isFreeShipping = config?.free_shipping_enabled && subtotal >= config?.free_shipping_threshold
 
     // Monta opções fixas com base nas configs
-    const fixedOptions: ShippingOption[] = [
+    const fixedOptions: ShippingOption[] = config ? [
         ...(config.store_pickup_enabled ? [{
             serviceName: config.store_pickup_label,
             carrier: 'store_pickup' as const,
@@ -87,15 +105,15 @@ export function ShippingCalculator({ weightKg = 0.3, subtotal = 0, onSelect }: S
             estimatedDays: config.local_delivery_days,
             icon: 'moto' as const,
         }] : []),
-    ]
+    ] : []
 
-    function formatCep(value: string) {
+    function formatCepInternal(value: string) {
         const digits = value.replace(/\D/g, '').slice(0, 8)
         return digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits
     }
 
-    async function calcularCorreios() {
-        const raw = cep.replace(/\D/g, '')
+    async function calcularCorreiosInternal(forcedCep?: string) {
+        const raw = (forcedCep || cep).replace(/\D/g, '')
         if (raw.length !== 8) {
             setError('Digite um CEP válido com 8 dígitos.')
             return
@@ -142,18 +160,31 @@ export function ShippingCalculator({ weightKg = 0.3, subtotal = 0, onSelect }: S
         }
     }
 
-    function handleSelect(option: ShippingOption) {
-        setSelectedCarrier(option.carrier)
-        onSelect?.(option)
-    }
+    // Auto-seleciona a primeira opção disponível para não travar o usuário
+    useEffect(() => {
+        if (!selectedCarrier && config) {
+            if (fixedOptions.length > 0) {
+                handleSelect(fixedOptions[0])
+            } else if (correiosOptions.length > 0) {
+                handleSelect(correiosOptions[0])
+            }
+        }
+    }, [fixedOptions.length, correiosOptions.length, selectedCarrier, config])
 
     if (configLoading) {
         return (
-            <div className="flex items-center gap-3 py-6 text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-xs font-medium">Carregando opções de entrega...</span>
+            <div className="flex items-center gap-3 py-8 text-neutral-500 border border-white/5 bg-zinc-950/50 px-6">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Sincronizando opções de entrega...</span>
             </div>
         )
+    }
+
+    if (!config) return null
+
+    function handleSelect(option: ShippingOption) {
+        setSelectedCarrier(option.carrier)
+        onSelect?.(option)
     }
 
     return (
@@ -182,6 +213,7 @@ export function ShippingCalculator({ weightKg = 0.3, subtotal = 0, onSelect }: S
                     {fixedOptions.map((opt) => (
                         <button
                             key={opt.carrier}
+                            type="button"
                             onClick={() => handleSelect(opt)}
                             className={cn(
                                 'w-full flex items-center gap-4 p-4 border transition-all text-left bg-zinc-950',
@@ -238,13 +270,14 @@ export function ShippingCalculator({ weightKg = 0.3, subtotal = 0, onSelect }: S
                             <Input
                                 placeholder="CEP (apenas números)"
                                 value={cep}
-                                onChange={(e) => setCep(formatCep(e.target.value))}
-                                onKeyDown={(e) => e.key === 'Enter' && calcularCorreios()}
+                                onChange={(e) => setCep(formatCepInternal(e.target.value))}
+                                onKeyDown={(e) => e.key === 'Enter' && calcularCorreiosInternal()}
                                 maxLength={9}
                                 className="flex-1 h-12 border-white/10 bg-black text-white rounded-none focus-visible:ring-1 focus-visible:ring-white transition-all text-xs font-black tracking-widest uppercase placeholder:text-neutral-600"
                             />
                             <Button
-                                onClick={calcularCorreios}
+                                type="button"
+                                onClick={() => calcularCorreiosInternal()}
                                 disabled={loading}
                                 variant="outline"
                                 className="flex-shrink-0 h-12 rounded-none border-white/10 bg-black text-white hover:bg-white/10 hover:text-white text-xs font-black uppercase tracking-widest px-6 w-32"
@@ -260,6 +293,7 @@ export function ShippingCalculator({ weightKg = 0.3, subtotal = 0, onSelect }: S
                                 {correiosOptions.map((opt) => (
                                     <button
                                         key={opt.carrier}
+                                        type="button"
                                         onClick={() => handleSelect(opt)}
                                         className={cn(
                                             'w-full flex items-center gap-4 p-4 border transition-all text-left bg-zinc-950',

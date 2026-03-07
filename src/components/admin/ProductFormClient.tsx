@@ -232,7 +232,7 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
                     weight_kg: data.weight_kg ? parseFloat(data.weight_kg) : undefined,
                     collection_id: data.collection_id || null,
                     images: uploadedImages.map((img, i) => ({
-                        url: img.url!, is_primary: i === 0, position: i,
+                        url: img.url!, is_primary: i === 0,
                     })),
                     variants: variants.filter((v) => v.sku || v.size || v.colorName).map(v => ({
                         ...v, priceDelta: parseFloat(v.priceDelta as any) || 0

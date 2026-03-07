@@ -41,7 +41,6 @@ export function CuponsAdminClient({ initialCoupons = [] }: { initialCoupons?: Co
         }
     }, [initialCoupons])
 
-    if (loading) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
     const [showForm, setShowForm] = useState(false)
     const [editando, setEditando] = useState<Coupon | null>(null)
     const [isPending, startTransition] = useTransition()
@@ -55,6 +54,8 @@ export function CuponsAdminClient({ initialCoupons = [] }: { initialCoupons?: Co
     const [maxUses, setMaxUses] = useState('')
     const [expiresAt, setExpiresAt] = useState('')
     const [ativo, setAtivo] = useState(true)
+
+    if (loading) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
 
     function resetForm() {
         setCode(''); setDescription(''); setDiscountType('percent')

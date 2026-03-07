@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Script from 'next/script'
+import { Loader2 } from 'lucide-react'
 
 declare global {
     interface Window {
@@ -74,49 +75,53 @@ export function PaymentBrick({ preferenceId, totalAmount, onSuccess, onError }: 
                     },
                     hideFormTitle: true,
                     hidePaymentButton: false,
-                    paymentMethods: {
-                        creditCard: 'all',
-                        debitCard: 'all',
-                        ticket: 'all', // boleto
-                        bankTransfer: 'all', // pix
-                        maxInstallments: 12,
-                    },
                 },
-                callbacks: {
-                    onReady: () => {
-                        // Brick carregado
-                    },
-                    onSubmit: async (
-                        { selectedPaymentMethod, formData }: {
-                            selectedPaymentMethod: string
-                            formData: Record<string, unknown>
-                        }
-                    ) => {
-                        const res = await fetch('/api/checkout/process-payment', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ selectedPaymentMethod, formData, preferenceId }),
-                        })
-                        const data = await res.json()
-                        if (res.ok) {
-                            onSuccess(data.paymentId)
-                        } else {
-                            onError(new Error(data.error ?? 'Erro no pagamento'))
-                        }
-                    },
-                    onError: (error: Error) => {
-                        console.error('[PaymentBrick] Error', error)
-                        onError(error)
-                    },
+                paymentMethods: {
+                    creditCard: 'all',
+                    debitCard: 'all',
+                    ticket: 'all', // boleto
+                    bankTransfer: 'all', // pix
+                    maxInstallments: 12,
+                },
+            },
+            callbacks: {
+                onReady: () => {},
+                onSubmit: async (
+                    { selectedPaymentMethod, formData }: {
+                        selectedPaymentMethod: string
+                        formData: Record<string, unknown>
+                    }
+                ) => {
+                    const res = await fetch('/api/checkout/process-payment', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ selectedPaymentMethod, formData, preferenceId }),
+                    })
+                    const data = await res.json()
+                    if (res.ok) {
+                        onSuccess(data.paymentId)
+                    } else {
+                        console.error('[PaymentBrick] Payment error:', data.error);
+                        onError(new Error(data.error ?? 'Erro no pagamento'))
+                    }
+                },
+                onError: (error: any) => {
+                    console.error('[PaymentBrick] Initialization error:', error);
+                    onError(error)
                 },
             },
         }
 
-        brickControllerRef.current = await bricksBuilder.create(
-            'payment',
-            'payment-brick-container',
-            settings
-        )
+        try {
+            brickControllerRef.current = await bricksBuilder.create(
+                'payment',
+                'payment-brick-container',
+                settings
+            )
+        } catch (error) {
+            console.error('[PaymentBrick] Create instance error:', error);
+            onError(error instanceof Error ? error : new Error('Falha ao inicializar formulário de pagamento.'));
+        }
     }
 
     useEffect(() => {
@@ -130,9 +135,28 @@ export function PaymentBrick({ preferenceId, totalAmount, onSuccess, onError }: 
             <Script
                 src="https://sdk.mercadopago.com/js/v2"
                 strategy="afterInteractive"
-                onLoad={() => setSdkReady(true)}
+                onLoad={() => {
+                    setSdkReady(true);
+                }}
+                onError={(e) => {
+                    console.error('[PaymentBrick] SDK failed to load', e);
+                    onError(new Error('Falha ao carregar o SDK do Mercado Pago. Verifique sua conexão ou bloqueadores de anúncios.'));
+                }}
             />
-            <div ref={containerRef} id="payment-brick-container" className="w-full min-h-[300px]" />
+            <div
+                ref={containerRef}
+                id="payment-brick-container"
+                className="w-full min-h-[400px] transition-all duration-500"
+            />
+            {!sdkReady && (
+                <div className="flex flex-col items-center justify-center py-20 text-neutral-500 border border-white/5 bg-zinc-950/50">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+                    <p className="text-[10px] font-black uppercase tracking-widest animate-pulse">
+                        Iniciando ambiente seguro de pagamento...
+                    </p>
+                </div>
+            )}
         </>
     )
 }
+

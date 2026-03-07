@@ -2,16 +2,16 @@ import Link from 'next/link'
 import Image from 'next/image'
 
 import { ArrowRight, Zap, Shield, Truck } from 'lucide-react'
-import { Header } from '@/components/store/Header'
-import { Footer } from '@/components/store/Footer'
 import {
     HeroCarousel,
-    AnnouncementBar,
-    RecentPurchasePopup,
     TestimonialsSection
 } from '@/components/store/StoreDynamicComponents'
 import { createServiceClient } from '@/lib/supabase/server'
 import type { Metadata } from 'next'
+
+// export const runtime = 'edge'
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export const metadata: Metadata = {
     title: 'Cola Comigo Shop | Streetwear e Edições Limitadas em Palmas-TO',
@@ -37,15 +37,18 @@ const DIFERENCIAIS = [
 
 export default async function PaginaInicial() {
     const supabase = createServiceClient()
-    const { data: bannersDB } = await supabase.from('hero_banners').select('*').eq('is_active', true).order('sort_order', { ascending: true })
+    const [{ data: bannersDB, error: bErr }, { data: marcasDB, error: mErr }] = await Promise.all([
+        supabase.from('hero_banners').select('*').order('sort_order', { ascending: true }),
+        supabase.from('brands').select('name, slug, logo_url').order('sort_order', { ascending: true }).limit(6),
+    ]);
 
-    // Buscar marcas do banco (ativas, ordenadas)
-    const { data: marcasDB } = await supabase
-        .from('brands')
-        .select('name, slug, logo_url')
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true })
-        .limit(6)
+    // Log para depuração local
+    if (bErr || mErr) {
+        console.error('Database Error:', bErr || mErr);
+    }
+
+    const BANNERS = bannersDB || []
+    const MARCAS = (marcasDB || []).map(m => ({ nome: m.name, slug: m.slug, logo: m.logo_url }))
 
     // Buscar coleções do banco (ativas, ordenadas)
     const { data: colecoesDB } = await supabase
@@ -64,7 +67,6 @@ export default async function PaginaInicial() {
         .order('sort_order', { ascending: true })
         .limit(8)
 
-    const MARCAS = (marcasDB ?? []).map(m => ({ nome: m.name, slug: m.slug, logo: m.logo_url }))
     const COLECOES = (colecoesDB ?? []).map((c, i) => ({
         nome: c.name,
         slug: c.slug,
@@ -81,13 +83,9 @@ export default async function PaginaInicial() {
 
 
     return (
-        <div className="min-h-screen bg-black text-white selection:bg-primary selection:text-white">
-            <AnnouncementBar />
-            <Header />
-            <RecentPurchasePopup />
-
+        <>
             <section className="relative overflow-hidden">
-                <HeroCarousel initialBanners={bannersDB || []} />
+                <HeroCarousel initialBanners={BANNERS || []} />
             </section>
 
             {/* Categorias */}
@@ -176,26 +174,38 @@ export default async function PaginaInicial() {
                             </Link>
                         </div>
 
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-px bg-white/10 border border-white/10 overflow-hidden rounded-2xl shadow-2xl">
-                            {MARCAS.map((marca) => (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                            {MARCAS.map((marca, i) => (
                                 <Link
                                     key={marca.slug}
                                     href={`/marcas/${marca.slug}`}
-                                    className="group relative bg-black aspect-square flex items-center justify-center grayscale-[100%] hover:grayscale-0 transition-all duration-700 border-r border-b border-white/5"
+                                    className="group relative h-28 sm:h-32 flex items-center justify-center overflow-hidden rounded-xl border border-white/5 bg-zinc-900/50 hover:bg-zinc-800/80 transition-all duration-500"
                                 >
-                                    <div className="absolute inset-0 bg-zinc-950 group-hover:bg-primary/10 transition-colors duration-500" />
-                                    {marca.logo ? (
-                                        <div className="relative w-2/3 h-1/3 opacity-30 group-hover:opacity-100 transition-opacity duration-500">
-                                            <Image src={marca.logo} alt={marca.nome} fill className="object-contain" />
-                                        </div>
-                                    ) : (
-                                        <span className="text-xl font-black text-white/10 group-hover:text-white transition-all duration-500 uppercase tracking-widest">
-                                            {marca.nome}
-                                        </span>
-                                    )}
-                                    <div className="absolute inset-x-0 bottom-0 h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
-                                </Link>
+                                    {/* Background Decorativo no Hover */}
+                                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/30 via-transparent to-transparent" />
 
+                                    <div className="relative flex flex-col items-center transition-all duration-500 ease-out group-hover:scale-110 group-hover:-translate-y-1 transform-gpu antialiased">
+                                        {marca.logo ? (
+                                            <div className="relative w-24 h-12 opacity-40 group-hover:opacity-100 transition-all duration-300">
+                                                <Image src={marca.logo} alt={marca.nome} fill className="object-contain" />
+                                            </div>
+                                        ) : (
+                                            <span className="text-xl sm:text-2xl font-black italic tracking-tighter text-zinc-600 group-hover:text-white transition-all duration-300 uppercase leading-none">
+                                                {marca.nome}
+                                            </span>
+                                        )}
+
+                                        {/* Texto que surge no hover */}
+                                        <span className="text-[9px] font-black tracking-[0.2em] text-primary opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-1 transition-all duration-500 uppercase mt-2">
+                                            VER DROP
+                                        </span>
+                                    </div>
+
+                                    {/* Badge Corner (Número do Índice) */}
+                                    <span className="absolute top-2 right-3 text-[8px] font-mono text-zinc-800 group-hover:text-primary transition-colors">
+                                        {(i + 1).toString().padStart(2, '0')}
+                                    </span>
+                                </Link>
                             ))}
                         </div>
                     </div>
@@ -221,7 +231,6 @@ export default async function PaginaInicial() {
                 </div>
             </section>
 
-            <Footer />
-        </div>
+        </>
     )
 }

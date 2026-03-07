@@ -1,3 +1,4 @@
+// export const runtime = 'edge';
 import { ProductFormClient } from '@/components/admin/AdminDynamicComponents'
 import { ChevronLeft } from 'lucide-react'
 import Link from 'next/link'

@@ -39,7 +39,6 @@ export function BannersAdminClient({ banners: initial = [] }: { banners?: Banner
         }
     }, [initial])
 
-    if (loading) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
     const [showForm, setShowForm] = useState(false)
     const [editando, setEditando] = useState<Banner | null>(null)
     const [isPending, startTransition] = useTransition()
@@ -53,6 +52,8 @@ export function BannersAdminClient({ banners: initial = [] }: { banners?: Banner
     const [linkUrl, setLinkUrl] = useState('')
     const [ctaText, setCtaText] = useState('VER MAIS')
     const [ativa, setAtiva] = useState(true)
+
+    if (loading) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
 
     function abrirNovo() {
         setEditando(null)

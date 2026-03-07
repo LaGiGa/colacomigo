@@ -9,6 +9,7 @@ import { formatCurrency, cn } from '@/lib/utils'
 import { useCartStore } from '@/store/useCartStore'
 import { useUIStore } from '@/store/useUIStore'
 import { toast } from 'sonner'
+import { ShippingCalculator } from './ShippingCalculator'
 
 interface Variant {
     id: string
@@ -31,6 +32,7 @@ interface ProductActionsProps {
     variants: Variant[]
     description?: string | null
     whatsappNumber?: string // (63) 99131-2913 da Cola Comigo
+    weightKg?: number
 }
 
 export function ProductActions({
@@ -43,6 +45,7 @@ export function ProductActions({
     variants,
     description,
     whatsappNumber = '5563991312913',
+    weightKg = 0.3,
 }: ProductActionsProps) {
     const addItem = useCartStore((s) => s.addItem)
     const openCart = useUIStore((s) => s.openCart)
@@ -54,9 +57,7 @@ export function ProductActions({
 
     const [selectedSize, setSelectedSize] = useState<string | null>(sizes[0] ?? null)
     const [selectedColor, setSelectedColor] = useState<string | null>(colors[0] ?? null)
-    const [quantity, setQuantity] = useState(1)
 
-    // Encontra a variante correspondente à seleção atual
     const selectedVariant = variants.find((v) => {
         const sizeMatch = !sizes.length || v.size === selectedSize
         const colorMatch = !colors.length || v.color_name === selectedColor
@@ -64,8 +65,8 @@ export function ProductActions({
     }) ?? variants.find((v) => v.is_active)
 
     const currentPrice = basePrice + (selectedVariant?.price_delta ?? 0)
-    const hasDiscount = comparePrice && comparePrice > basePrice
-    const discountPct = hasDiscount ? Math.round(((comparePrice - basePrice) / comparePrice) * 100) : 0
+    const hasDiscount = comparePrice && comparePrice > currentPrice
+    const discountPct = hasDiscount ? Math.round(((comparePrice - currentPrice) / comparePrice) * 100) : 0
     const inStock = selectedVariant && (selectedVariant.stock === undefined || selectedVariant.stock > 0)
 
     function handleAddToCart() {
@@ -74,21 +75,19 @@ export function ProductActions({
             return
         }
         startTransition(() => {
-            for (let i = 0; i < quantity; i++) {
-                addItem({
-                    variantId: selectedVariant.id,
-                    productId,
-                    productName,
-                    productSlug,
-                    variantSku: selectedVariant.sku,
-                    size: selectedVariant.size,
-                    colorName: selectedVariant.color_name,
-                    colorHex: selectedVariant.color_hex,
-                    price: currentPrice,
-                    imageUrl: imageUrl ?? null,
-                })
-            }
-            toast.success(`${quantity}x ${productName} adicionado ao carrinho!`)
+            addItem({
+                variantId: selectedVariant.id,
+                productId,
+                productName,
+                productSlug,
+                variantSku: selectedVariant.sku,
+                size: selectedVariant.size,
+                colorName: selectedVariant.color_name,
+                colorHex: selectedVariant.color_hex,
+                price: currentPrice,
+                imageUrl: imageUrl ?? null,
+            })
+            toast.success(`${productName} adicionado ao carrinho!`)
             openCart()
         })
     }
@@ -100,56 +99,45 @@ export function ProductActions({
         window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`, '_blank')
     }
 
-    function handleRestockWhatsApp() {
-        const sizeText = selectedSize ? ` no tamanho ${selectedSize}` : ''
-        const msg = `Olá, vi que o produto *${productName}* esgotou${sizeText}, quando chega mais?`
-        window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`, '_blank')
-    }
-
     return (
-        <div className="space-y-8">
-            {/* Preço Brutalista */}
-            <div className="space-y-2">
-                <div className="flex items-end gap-3 flex-wrap">
-                    <span className="text-[clamp(2rem,4vw,3rem)] leading-none font-black tracking-tighter text-white">{formatCurrency(currentPrice)}</span>
+        <div className="space-y-10">
+            {/* Preço e Parcelamento */}
+            <div className="space-y-1">
+                <div className="flex items-center gap-3">
+                    <span className="text-4xl font-black tracking-tighter text-white">
+                        {formatCurrency(currentPrice)}
+                    </span>
                     {hasDiscount && (
-                        <div className="flex flex-col mb-1">
-                            <span className="text-sm text-neutral-500 line-through font-bold">{formatCurrency(comparePrice!)}</span>
-                            <span className="text-[10px] font-black tracking-widest text-primary uppercase mt-0.5">-{discountPct}% OFF</span>
-                        </div>
+                        <span className="text-lg text-neutral-600 line-through font-bold">
+                            {formatCurrency(comparePrice!)}
+                        </span>
                     )}
                 </div>
-                <div className="flex flex-col gap-1 mt-4">
-                    <p className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">
-                        OU 12X DE <span className="text-white">{formatCurrency(currentPrice / 12)}</span>
-                    </p>
-                    <p className="text-[10px] uppercase font-black tracking-widest text-primary">
-                        {formatCurrency(currentPrice * 0.95)} NO PIX
-                    </p>
-                </div>
+                <p className="text-[11px] font-bold text-neutral-500 uppercase tracking-widest">
+                    ou em até <span className="text-white">12x de {formatCurrency(currentPrice / 12)}</span> sem juros
+                </p>
+                <p className="text-[11px] font-bold text-primary uppercase tracking-widest">
+                    {formatCurrency(currentPrice * 0.9)} no Pix (10% de desconto)
+                </p>
             </div>
 
-            <Separator className="bg-white/10" />
-
-            {/* Seletor de Cor */}
+            {/* Seletor de Cores */}
             {colors.length > 0 && (
                 <div className="space-y-4">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">
-                        COR <span className="text-white ml-2">{selectedColor}</span>
-                    </p>
-                    <div className="flex flex-wrap gap-3">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">Cores Disponíveis</p>
+                    <div className="flex flex-wrap gap-2">
                         {colors.map((color) => {
-                            const colorVariant = variants.find((v) => v.color_name === color)
+                            const v = variants.find((v) => v.color_name === color)
                             return (
                                 <button
                                     key={color}
                                     onClick={() => setSelectedColor(color)}
-                                    title={color}
                                     className={cn(
-                                        'h-10 w-10 transition-all outline outline-1 outline-offset-4',
-                                        selectedColor === color ? 'outline-white' : 'outline-transparent hover:outline-white/30'
+                                        "h-10 w-10 border-2 transition-all",
+                                        selectedColor === color ? "border-primary scale-110 shadow-[0_0_15px_rgba(26,143,255,0.3)]" : "border-transparent opacity-60 hover:opacity-100"
                                     )}
-                                    style={{ backgroundColor: colorVariant?.color_hex ?? '#888' }}
+                                    style={{ backgroundColor: v?.color_hex ?? '#333' }}
+                                    title={color}
                                 />
                             )
                         })}
@@ -157,27 +145,28 @@ export function ProductActions({
                 </div>
             )}
 
-            {/* Seletor de Tamanho */}
+            {/* Seletor de Tamanhos (Estilo Burj) */}
             {sizes.length > 0 && (
                 <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">TAMANHO</p>
+                    <div className="flex items-center justify-between">
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">Selecione o Tamanho</p>
+                        <button className="text-[9px] font-black tracking-widest text-primary hover:underline uppercase">Guia de Medidas</button>
                     </div>
-                    <div className="grid grid-cols-4 sm:flex sm:flex-wrap gap-2">
+                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
                         {sizes.map((size) => {
-                            const sizeVariant = variants.find((v) => v.size === size && v.is_active)
-                            const outOfStock = sizeVariant?.stock === 0
+                            const v = variants.find((v) => v.size === size)
+                            const outOfStock = v?.stock === 0
                             return (
                                 <button
                                     key={size}
                                     disabled={outOfStock}
                                     onClick={() => setSelectedSize(size)}
                                     className={cn(
-                                        'h-12 border text-xs font-black tracking-widest uppercase transition-all flex items-center justify-center',
+                                        "h-12 border flex items-center justify-center text-xs font-black transition-all",
                                         selectedSize === size
-                                            ? 'border-white bg-white text-black'
-                                            : 'border-white/10 text-white hover:border-white/50 bg-black',
-                                        outOfStock && 'opacity-30 cursor-not-allowed bg-[url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100%\' height=\'100%\'><line x1=\'0\' y1=\'100%\' x2=\'100%\' y2=\'0\' stroke=\'rgba(255,255,255,0.2)\' stroke-width=\'1\'/></svg>")]'
+                                            ? "bg-white text-black border-white"
+                                            : "bg-black text-white border-white/10 hover:border-white/40",
+                                        outOfStock && "opacity-20 cursor-not-allowed"
                                     )}
                                 >
                                     {size}
@@ -188,72 +177,56 @@ export function ProductActions({
                 </div>
             )}
 
-            <div className="flex gap-4 items-end">
-                {/* Quantidade Brutalista */}
-                <div className="space-y-4 w-1/3 max-w-[120px]">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">QTD</p>
-                    <div className="flex items-center h-14 border border-white/10 bg-black">
-                        <button
-                            onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                            className="flex-1 h-full flex items-center justify-center text-white hover:bg-white/5 transition-colors"
-                        >
-                            <Minus className="h-4 w-4" />
-                        </button>
-                        <span className="text-sm font-black w-10 text-center text-white">{quantity}</span>
-                        <button
-                            onClick={() => setQuantity((q) => q + 1)}
-                            className="flex-1 h-full flex items-center justify-center text-white hover:bg-white/5 transition-colors"
-                        >
-                            <Plus className="h-4 w-4" />
-                        </button>
-                    </div>
-                </div>
+            {/* Botão de Compra Principal */}
+            <div className="space-y-3">
+                {inStock ? (
+                    <Button
+                        size="lg"
+                        onClick={handleAddToCart}
+                        disabled={isPending}
+                        className="w-full h-16 bg-white text-black hover:bg-neutral-200 font-black tracking-[0.2em] text-xs transition-all rounded-none"
+                    >
+                        ADICIONAR AO CARRINHO
+                    </Button>
+                ) : (
+                    <Button
+                        size="lg"
+                        disabled
+                        className="w-full h-16 bg-zinc-900 text-zinc-600 font-black tracking-[0.2em] text-xs rounded-none"
+                    >
+                        PRODUTO ESGOTADO
+                    </Button>
+                )}
 
-                {/* Botões de ação Brutalistas */}
-                <div className="flex-1">
-                    {inStock ? (
-                        <Button
-                            size="lg"
-                            onClick={handleAddToCart}
-                            disabled={isPending}
-                            className="btn-primary w-full"
-                        >
-                            ADICIONAR AO CARRINHO
-                        </Button>
-                    ) : (
-                        <Button
-                            size="lg"
-                            onClick={handleRestockWhatsApp}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black tracking-widest uppercase border-0 rounded-none h-14"
-                        >
-                            ESGOTADO - CONSULTAR REESTOQUE
-                        </Button>
-                    )}
-                </div>
+                <Button
+                    variant="outline"
+                    onClick={handleWhatsApp}
+                    className="w-full h-14 border-white/5 bg-transparent text-white hover:bg-white/5 font-black tracking-[0.2em] text-[10px] rounded-none flex items-center gap-3"
+                >
+                    <MessageCircle className="h-4 w-4 text-green-500" />
+                    DÚVIDAS? CHAME NO WHATSAPP
+                </Button>
             </div>
 
-            <Button
-                variant="outline"
-                size="lg"
-                onClick={handleWhatsApp}
-                className="btn-ghost w-full flex items-center justify-center gap-2 border-white/10 text-white hover:border-white hover:bg-white/5"
-            >
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-[10px] font-black tracking-widest uppercase">COMPRAR COM ATENDENTE</span>
-            </Button>
+            {/* Cálculo de Frete Real */}
+            <div className="pt-6 border-t border-white/5">
+                <ShippingCalculator weightKg={weightKg} subtotal={currentPrice} />
+            </div>
 
-            {/* Garantias */}
-            <div className="grid grid-cols-3 gap-0 border border-white/10 divide-x divide-white/10 pt-0 mt-8 bg-zinc-950">
-                {[
-                    { icon: Truck, text: 'ENTREGA BRASIL' },
-                    { icon: Shield, text: 'PAGAMENTO SEGURO' },
-                    { icon: RefreshCw, text: 'TROCA EM 7 DIAS' },
-                ].map(({ icon: Icon, text }) => (
-                    <div key={text} className="flex flex-col items-center justify-center gap-3 text-center p-6">
-                        <Icon className="h-5 w-5 text-neutral-500" strokeWidth={1.5} />
-                        <span className="text-[9px] font-black tracking-widest uppercase text-neutral-400">{text}</span>
-                    </div>
-                ))}
+            {/* Garantias Burj Style */}
+            <div className="grid grid-cols-3 border-y border-white/5 divide-x divide-white/5 py-4">
+                <div className="flex flex-col items-center justify-center p-2 text-center lg:px-4">
+                    <Truck className="h-4 w-4 text-primary mb-2" />
+                    <span className="text-[8px] font-black uppercase tracking-widest text-neutral-500">Frete Rápido</span>
+                </div>
+                <div className="flex flex-col items-center justify-center p-2 text-center lg:px-4">
+                    <Shield className="h-4 w-4 text-primary mb-2" />
+                    <span className="text-[8px] font-black uppercase tracking-widest text-neutral-500">Compra Segura</span>
+                </div>
+                <div className="flex flex-col items-center justify-center p-2 text-center lg:px-4">
+                    <RefreshCw className="h-4 w-4 text-primary mb-2" />
+                    <span className="text-[8px] font-black uppercase tracking-widest text-neutral-500">7 Dias p/ Troca</span>
+                </div>
             </div>
         </div>
     )

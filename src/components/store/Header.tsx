@@ -138,7 +138,7 @@ export function Header() {
                         <div className="flex items-center gap-0.5 ml-auto">
                             {/* Conta (desktop) */}
                             <Link
-                                href="/login"
+                                href="/conta/pedidos"
                                 className="tap-target text-neutral-400 hover:text-white transition-colors hidden lg:flex"
                                 aria-label="Minha conta"
                             >
@@ -349,6 +349,7 @@ export function Header() {
                                 Institucional
                             </p>
                             {[
+                                { label: 'Minha Conta / Pedidos', href: '/conta/pedidos' },
                                 { label: 'Pagamento e Frete', href: '/institucional/pagamento-e-frete' },
                                 { label: 'Trocas e Devoluções', href: '/institucional/trocas-e-devolucoes' },
                                 { label: 'Política de Privacidade', href: '/institucional/politica-de-privacidade' },

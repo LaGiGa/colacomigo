@@ -40,6 +40,24 @@ export default function Error({
                 </div>
             </div>
 
+            {/* Debug Info for Admin */}
+            <div className="mt-8 p-4 bg-white/5 rounded border border-white/10 text-left max-w-2xl w-full">
+                <p className="text-[10px] text-zinc-500 font-mono mb-2 uppercase tracking-widest">Debug Console</p>
+                <p className="text-red-400 font-mono text-xs break-all mb-1">
+                    Error: {error.message || "Unknown error"}
+                </p>
+                {error.digest && (
+                    <p className="text-zinc-500 font-mono text-[10px]">
+                        Digest: {error.digest}
+                    </p>
+                )}
+                {process.env.NODE_ENV === 'development' && (
+                    <pre className="text-[10px] text-zinc-600 font-mono mt-4 overflow-auto max-h-40">
+                        {error.stack}
+                    </pre>
+                )}
+            </div>
+
             {/* Decoração Brutalista */}
             <div className="absolute top-10 right-10 text-[10px] font-black text-white/5 uppercase tracking-[1em] -rotate-90 origin-right">
                 CRITICAL_FAILURE // ACTION_REQUIRED

@@ -38,7 +38,6 @@ export function MarcasAdminClient({ initialMarcas = [] }: { initialMarcas?: Marc
         }
     }, [initialMarcas])
 
-    if (loading) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
     const [showForm, setShowForm] = useState(false)
     const [editando, setEditando] = useState<Marca | null>(null)
     const [isPending, startTransition] = useTransition()
@@ -47,6 +46,8 @@ export function MarcasAdminClient({ initialMarcas = [] }: { initialMarcas?: Marc
     const [descricao, setDescricao] = useState('')
     const [website, setWebsite] = useState('')
     const [ativa, setAtiva] = useState(true)
+
+    if (loading) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
 
     function slugify(text: string) {
         return text

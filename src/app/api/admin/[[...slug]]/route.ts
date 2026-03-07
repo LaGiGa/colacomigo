@@ -1,52 +1,39 @@
-export const runtime = 'edge';
+// export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient, createAdminClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
-import { sendEmail } from '@/lib/email'
+import { sendEmail, getPurchaseEmailHtml, getShippingEmailHtml, formatCurrencyString } from '@/lib/email'
 
 /**
- * RECURSO CENTRALIZADO PARA REDUÇÃO DE BUNDLE (CLOUDFLARE 3MB LIMIT)
- * Este arquivo unifica todas as rotas da API Admin para compartilhar o mesmo Worker.
+ * RECURSO CENTRALIZADO PARA REDUÇÃO DE BUNDLE (CLOUDFLARE 25MB LIMIT)
  */
 
-// --- SCHEMAS ---
-const VariantSchema = z.object({
-    id: z.string().uuid().optional(),
-    sku: z.string(),
-    size: z.string().optional(),
-    colorName: z.string().optional(),
-    colorHex: z.string().optional(),
-    priceDelta: z.number().default(0),
-    stock: z.number().int().min(0).default(0),
-})
-
-const ImageSchema = z.object({
-    id: z.string().uuid().optional(),
-    url: z.string().url(),
-    is_primary: z.boolean().default(false),
-    position: z.number().int().default(0),
-})
-
 const ProductSchema = z.object({
-    name: z.string().min(2),
-    slug: z.string().min(2),
+    name: z.string().min(1),
+    slug: z.string().min(1),
     sku: z.string().optional(),
     description: z.string().optional(),
-    price: z.number().positive(),
-    compare_price: z.number().positive().optional(),
-    category_id: z.string().uuid().optional(),
-    brand_id: z.string().uuid().optional(),
-    collection_id: z.string().uuid().nullable().optional(),
-    weight_kg: z.number().positive().optional(),
+    price: z.number().min(0),
+    compare_price: z.number().optional().nullable(),
+    category_id: z.string().uuid().optional().nullable(),
+    brand_id: z.string().uuid().optional().nullable(),
+    collection_id: z.string().uuid().optional().nullable(),
     is_active: z.boolean().default(true),
-    is_new: z.boolean().default(false),
-    images: z.array(ImageSchema),
-    variants: z.array(VariantSchema),
-})
-
-const UpdateOrderSchema = z.object({
-    status: z.string().optional(),
-    trackingCode: z.string().optional(),
+    images: z.array(z.object({
+        url: z.string().url(),
+        is_primary: z.boolean().default(false)
+    })).default([]),
+    variants: z.array(z.object({
+        id: z.string().uuid().optional(),
+        sku: z.string().optional(),
+        size: z.string().optional(),
+        color_name: z.string().optional(),
+        color_hex: z.string().optional(),
+        price_delta: z.number().default(0),
+        stock: z.number().int().min(0).default(0)
+    })).default([])
 })
 
 const RESOURCES: Record<string, string> = {
@@ -69,21 +56,57 @@ const SINGULAR_MAP: Record<string, string> = {
     products: 'product',
     testimonials: 'testimonial',
     profiles: 'profile',
-    orders: 'order'
+    orders: 'order',
+    'store-settings': 'settings',
+    'shipping-settings': 'settings',
+    stats: 'stats'
 }
 
 // --- GET DISPATCHER ---
 export async function GET(req: NextRequest, { params }: { params: Promise<{ slug?: string[] }> }) {
+    const { slug = [] } = await params
+    const resource = slug[0]
+    const id = slug[1]
+
     try {
-        const { slug = [] } = await params
-        const resource = slug[0]
-        const id = slug[1]
         const supabase = createServiceClient()
 
         // 1. Recursos Especiais
-        if (resource === 'financeiro') {
-            const { data: orders, error } = await supabase.from('orders').select('id, total, status, created_at, items:order_items(id)').order('created_at', { ascending: false })
+        if (resource === 'financeiro' || resource === 'stats') {
+            const { data: orders, error } = await supabase.from('orders').select('id, total, status, created_at, customer_name, customer_email').order('created_at', { ascending: false })
             if (error) throw error
+
+            if (resource === 'stats') {
+                const today = new Date()
+                today.setHours(0, 0, 0, 0)
+
+                const paidOrders = orders?.filter(o => o.status === 'paid' || o.status === 'shipped' || o.status === 'delivered') ?? []
+                const todayOrders = orders?.filter(o => new Date(o.created_at) >= today).length ?? 0
+                const totalRevenue = paidOrders.reduce((acc, o) => acc + (o.total || 0), 0)
+
+                const uniqueCustomers = new Set(orders?.map(o => o.customer_email).filter(Boolean)).size
+
+                const { count: activeProducts } = await supabase.from('products').select('*', { count: 'exact', head: true }).eq('is_active', true)
+
+                const statusCounts = {
+                    pending: orders?.filter(o => o.status === 'awaiting_payment' || o.status === 'pending').length ?? 0,
+                    paid: orders?.filter(o => o.status === 'paid').length ?? 0,
+                    preparing: orders?.filter(o => o.status === 'preparing').length ?? 0,
+                    shipped: orders?.filter(o => o.status === 'shipped').length ?? 0,
+                    delivered: orders?.filter(o => o.status === 'delivered').length ?? 0,
+                }
+
+                return NextResponse.json({
+                    metrics: {
+                        revenue: totalRevenue,
+                        ordersToday: todayOrders,
+                        customers: uniqueCustomers,
+                        products: activeProducts ?? 0
+                    },
+                    statusCounts
+                })
+            }
+
             return NextResponse.json({ orders: orders ?? [] })
         }
 
@@ -99,7 +122,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
         }
 
         if (resource === 'orders' && id) {
-            const { data: order, error } = await supabase.from('orders').select(`*, shipping_address:addresses(*), items:order_items(id, quantity, unit_price, total_price, variant:product_variants(sku, size, color_name, product:products(name, slug))), transactions:payment_transactions(id, mp_payment_id, amount, method, status, created_at), shipment:shipments(id, tracking_code, carrier, status, shipped_at, delivered_at)`).eq('id', id).single()
+            const { data: order, error } = await supabase.from('orders').select(`*, shipping_address:addresses!address_id(*), items:order_items(id, quantity, unit_price, total_price, variant:product_variants(sku, size, color_name, product:products(name, slug))), transactions:payment_transactions(id, mp_payment_id, amount, method, status, created_at), shipment:shipments(id, tracking_code, carrier, status, shipped_at, delivered_at)`).eq('id', id).single()
             if (error) throw error
             return NextResponse.json({ order })
         }
@@ -130,7 +153,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
             const { data, error } = await supabase.from(table as any).select('*').order('created_at', { ascending: false })
             if (error) {
                 console.error(`[API ADMIN GET ERROR] Failed listing ${table}:`, error)
-                // Retorna 200 com array vazio em caso de erro (ex: tabela não existe) para não quebrar a UI
                 return NextResponse.json({ [resource]: [], _error: error.message })
             }
             return NextResponse.json({ [resource]: data ?? [] })
@@ -138,53 +160,43 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
 
         return NextResponse.json({ error: 'Endpoint não encontrado' }, { status: 404 })
     } catch (err: any) {
-        console.error('[API ADMIN GET CATCH]', err)
-        // Se der crash na função, ainda retorna [] para as listas poderem funcionar e não dar 500 bruto
-        const { slug = [] } = await params
-        const resource = slug[0]
-        if (resource && RESOURCES[resource]) {
-            return NextResponse.json({ [resource]: [], _fallback_error: err.message })
+        console.error(`[API ADMIN GET CATCH] [${resource}]`, err)
+        if (resource && (RESOURCES[resource] || ['products', 'financeiro', 'store-settings', 'shipping-settings'].includes(resource))) {
+            return NextResponse.json({
+                [resource]: [],
+                _error: true,
+                _message: err.message,
+                _stack: err.stack
+            })
         }
-        return NextResponse.json({ error: err.message }, { status: 500 })
+        return NextResponse.json({ error: err.message, stack: err.stack }, { status: 500 })
     }
-
 }
 
 // --- POST DISPATCHER ---
 export async function POST(req: NextRequest, { params }: { params: Promise<{ slug?: string[] }> }) {
+    const { slug = [] } = await params
+    const resource = slug[0]
+    const id = slug[1]
+
     try {
-        const { slug = [] } = await params
-        const resource = slug[0]
-        const id = slug[1]
-        const action = slug[2]
         const supabase = createServiceClient()
 
         if (resource === 'upload') {
             const formData = await req.formData()
             const file = formData.get('file') as File
-            const folder = (formData.get('folder') as string) ?? 'products'
-            const filename = `${folder}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`
-            const { error } = await supabase.storage.from('cola-comigo').upload(filename, await file.arrayBuffer(), { contentType: file.type })
+            const folder = formData.get('folder') as string || 'uploads'
+            if (!file) return NextResponse.json({ error: 'Nenhum arquivo enviado' }, { status: 400 })
+
+            const ext = file.name.split('.').pop()
+            const fileName = `${crypto.randomUUID()}.${ext}`
+            const filePath = `${folder}/${fileName}`
+
+            const { data, error } = await supabase.storage.from('public').upload(filePath, file)
             if (error) throw error
-            const { data: { publicUrl } } = supabase.storage.from('cola-comigo').getPublicUrl(filename)
-            return NextResponse.json({ url: publicUrl, path: filename })
-        }
 
-        if (resource === 'orders' && id && action === 'send-tracking') {
-            const { trackingCode } = await req.json()
-            if (!trackingCode) throw new Error('Código de rastreio obrigatório')
-            const adminSupabase = await createAdminClient()
-            const { data: order } = await adminSupabase.from('orders').select('*, address:addresses(*)').eq('id', id).single()
-            const { data: authUser } = await adminSupabase.auth.admin.getUserById(order.user_id)
-            const customerEmail = authUser.user?.email
-            if (!customerEmail) throw new Error('E-mail do cliente não encontrado')
-
-            await sendEmail({
-                to: customerEmail,
-                subject: `Pedido enviado! Rastreio: ${trackingCode.toUpperCase()}`,
-                html: `<h1>Pedido enviado!</h1><p>Código: ${trackingCode}</p>`
-            })
-            return NextResponse.json({ success: true })
+            const { data: { publicUrl } } = supabase.storage.from('public').getPublicUrl(filePath)
+            return NextResponse.json({ url: publicUrl })
         }
 
         if (resource === 'products') {
@@ -193,135 +205,154 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
                 name: body.name, slug: body.slug, sku: body.sku, description: body.description,
                 price: body.price, compare_price: body.compare_price, category_id: body.category_id || null,
                 brand_id: body.brand_id || null, collection_id: body.collection_id || null,
-                weight_kg: body.weight_kg, is_active: body.is_active, is_new: body.is_new,
+                is_active: body.is_active,
             }).select().single()
             if (productError) throw productError
-            if (body.images.length > 0) await supabase.from('product_images').insert(body.images.map(img => ({ product_id: product.id, url: img.url, alt_text: body.name, is_primary: img.is_primary, position: img.position })))
-            for (const v of body.variants) await supabase.from('product_variants').insert({
-                product_id: product.id,
-                sku: v.sku || `${product.id}-${Date.now()}`,
-                size: v.size || null,
-                color_name: v.colorName || null,
-                color_hex: v.colorHex || null,
-                price_delta: v.priceDelta,
-                stock: v.stock,
-                is_active: true
-            })
-            return NextResponse.json({ product }, { status: 201 })
+            if (body.images.length > 0) await supabase.from('product_images').insert(body.images.map(img => ({ product_id: product.id, url: img.url, alt: body.name, is_primary: img.is_primary })))
+            if (body.variants.length > 0) await supabase.from('product_variants').insert(body.variants.map(v => ({ ...v, product_id: product.id })))
+            return NextResponse.json({ product })
+        }
 
+        if (resource === 'orders' && slug[2] === 'send-email') {
+            const orderId = id
+            const { trackingCode } = await req.json()
+            const { data: order, error: orderError } = await supabase.from('orders').select('*').eq('id', orderId).single()
+            if (orderError || !order) throw orderError || new Error('Pedido não encontrado')
+
+            const to = order.customer_email;
+            if (!to) return NextResponse.json({ error: 'Pedido sem e-mail cadastrado' }, { status: 400 })
+
+            if (trackingCode) {
+                // Tracking Email
+                await sendEmail({
+                    to,
+                    subject: `Oba! Seu pedido #${orderId.slice(0, 8).toUpperCase()} foi enviado! 🚀`,
+                    html: getShippingEmailHtml(orderId, order.customer_name || 'Família', trackingCode)
+                })
+            } else {
+                // Confirmation (Resend)
+                const { data: items } = await supabase
+                    .from('order_items')
+                    .select('quantity, total_price, variant:product_variants(size, color_name, product:products(name))')
+                    .eq('order_id', orderId);
+
+                let itemsHtml = '';
+                if (items) {
+                    itemsHtml = items.map((it: any) => `
+                        <div style="padding: 10px 0; border-bottom: 1px solid #222;">
+                            <p style="margin: 0; font-weight: 900;">${it.variant?.product?.name} x ${it.quantity}</p>
+                            <p style="margin: 0; font-size: 12px; color: #888;">${it.variant?.size ? `Tamanho: ${it.variant.size}` : ''} ${it.variant?.color_name ? ` · Cor: ${it.variant.color_name}` : ''}</p>
+                            <p style="margin: 5px 0 0 0; color: #1a8fff; font-weight: 700;">${formatCurrencyString(it.total_price)}</p>
+                        </div>
+                    `).join('');
+                }
+
+                await sendEmail({
+                    to,
+                    subject: `Pagamento Confirmado! Pedido #${orderId.slice(0, 8).toUpperCase()}`,
+                    html: getPurchaseEmailHtml(orderId, order.customer_name || 'Família', itemsHtml, order.total || 0)
+                })
+            }
+
+            return NextResponse.json({ success: true })
         }
 
         const table = RESOURCES[resource]
         if (table) {
-            const { data, error } = await supabase.from(table as any).insert(await req.json()).select().single()
+            const body = await req.json()
+            const { data, error } = await supabase.from(table).insert(body).select().single()
             if (error) throw error
-            const key = SINGULAR_MAP[resource] || resource
-            return NextResponse.json({ [key]: data }, { status: 201 })
+            return NextResponse.json({ [SINGULAR_MAP[resource] || resource]: data })
         }
 
-        return NextResponse.json({ error: 'N/A' }, { status: 404 })
+        return NextResponse.json({ error: 'Endpoint não encontrado' }, { status: 404 })
     } catch (err: any) {
-        return NextResponse.json({ error: err.message }, { status: 500 })
+        console.error(`[API ADMIN POST CATCH] [${resource}]`, err)
+        return NextResponse.json({ error: err.message, stack: err.stack }, { status: 500 })
     }
 }
 
-// --- PUT/PATCH DISPATCHER ---
-async function handleUpdate(req: NextRequest, slug: string[]) {
+// --- UPDATE / DELETE ---
+async function handleUpdate(req: NextRequest, resource: string, id: string) {
+    if (!id) return NextResponse.json({ error: 'ID necessário' }, { status: 400 })
     try {
-        const resource = slug[0]
-        const id = slug[1]
         const supabase = createServiceClient()
-        const body = await req.json()
+        const table = resource === 'products' ? 'products' : resource === 'shipping-settings' ? 'shipping_settings' : resource === 'store-settings' ? 'store_settings' : RESOURCES[resource]
+        if (!table) return NextResponse.json({ error: 'Recurso não suportado' }, { status: 404 })
 
-        if (resource === 'products' && id) {
-            const data = ProductSchema.parse(body)
+        let body = await req.json()
+
+        if (resource === 'orders') {
+            const { trackingCode, ...orderUpdates } = body;
+            const { data, error } = await supabase.from('orders').update(orderUpdates).eq('id', id).select().single()
+            if (error) throw error
+
+            if (trackingCode !== undefined) {
+                if (trackingCode.trim() === '') {
+                    // Optional: remove shipment or ignore
+                } else {
+                    const { data: existingShipment } = await supabase.from('shipments').select('id').eq('order_id', id).single();
+                    if (existingShipment) {
+                        await supabase.from('shipments').update({ tracking_code: trackingCode, status: orderUpdates.status === 'shipped' ? 'shipped' : 'preparing' }).eq('id', existingShipment.id);
+                    } else {
+                        await supabase.from('shipments').insert({ order_id: id, tracking_code: trackingCode, carrier: 'Correios', status: orderUpdates.status === 'shipped' ? 'shipped' : 'preparing', shipped_at: new Date().toISOString() });
+                    }
+                }
+            }
+            return NextResponse.json({ [SINGULAR_MAP[resource] || resource]: data })
+        }
+
+        if (resource === 'products') {
             const { error: productError } = await supabase.from('products').update({
-                name: data.name, slug: data.slug, sku: data.sku, description: data.description,
-                price: data.price, compare_price: data.compare_price, category_id: data.category_id || null,
-                brand_id: data.brand_id || null, collection_id: data.collection_id || null,
-                weight_kg: data.weight_kg, is_active: data.is_active, is_new: data.is_new,
+                name: body.name, slug: body.slug, sku: body.sku, description: body.description,
+                price: body.price, compare_price: body.compare_price, category_id: body.category_id || null,
+                brand_id: body.brand_id || null, collection_id: body.collection_id || null,
+                is_active: body.is_active,
             }).eq('id', id)
             if (productError) throw productError
             await supabase.from('product_images').delete().eq('product_id', id)
-            if (data.images.length > 0) await supabase.from('product_images').insert(data.images.map(img => ({ product_id: id, url: img.url, alt_text: data.name, is_primary: img.is_primary, position: img.position })))
-            const sentVariantIds = data.variants.map(v => v.id).filter(Boolean) as string[]
-            await supabase.from('product_variants').delete().eq('product_id', id).not('id', 'in', `(${sentVariantIds.join(',')})`)
-            for (const v of data.variants) {
-                const vData = {
-                    sku: v.sku,
-                    size: v.size || null,
-                    color_name: v.colorName || null,
-                    color_hex: v.colorHex || null,
-                    price_delta: v.priceDelta || 0,
-                    stock: v.stock || 0,
-                    is_active: true
-                }
-                if (v.id) await supabase.from('product_variants').update(vData).eq('id', v.id)
-                else await supabase.from('product_variants').insert({ ...vData, product_id: id })
-            }
-
+            if (body.images?.length > 0) await supabase.from('product_images').insert(body.images.map((img: any) => ({ product_id: id, url: img.url, alt: body.name, is_primary: img.is_primary })))
+            await supabase.from('product_variants').delete().eq('product_id', id)
+            if (body.variants?.length > 0) await supabase.from('product_variants').insert(body.variants.map((v: any) => ({ ...v, product_id: id, id: undefined })))
             return NextResponse.json({ success: true })
         }
 
-        if (resource === 'orders' && id) {
-            const data = UpdateOrderSchema.parse(body)
-            if (data.status) await supabase.from('orders').update({ status: data.status }).eq('id', id)
-            if (data.trackingCode) {
-                const { data: existing } = await supabase.from('shipments').select('id').eq('order_id', id).single()
-                if (existing) await supabase.from('shipments').update({ tracking_code: data.trackingCode, shipped_at: data.status === 'shipped' ? new Date().toISOString() : undefined }).eq('order_id', id)
-                else await supabase.from('shipments').insert({ order_id: id, tracking_code: data.trackingCode, carrier: 'correios', status: 'shipped', shipped_at: new Date().toISOString() })
-            }
-            return NextResponse.json({ success: true })
-        }
-
-        if (resource === 'store-settings' || resource === 'shipping-settings') {
-            const table = resource.replace('-', '_')
-            const { data, error } = await supabase.from(table as any).update({ ...body, updated_at: new Date().toISOString() }).eq('id', 1).select().single()
-            if (error) throw error
-            return NextResponse.json({ settings: data })
-        }
-
-        const table = RESOURCES[resource]
-        if (table && id) {
-            const { data, error } = await supabase.from(table as any).update(body).eq('id', id).select().single()
-            if (error) throw error
-            const key = SINGULAR_MAP[resource] || resource
-            return NextResponse.json({ [key]: data })
-        }
-
-        return NextResponse.json({ error: 'N/A' }, { status: 404 })
+        const { data, error } = await supabase.from(table).update(body).eq('id', id).select().single()
+        if (error) throw error
+        return NextResponse.json({ [SINGULAR_MAP[resource] || resource]: data })
     } catch (err: any) {
-        return NextResponse.json({ error: err.message }, { status: 500 })
+        console.error(`[API ADMIN UPDATE CATCH] [${resource}]`, err)
+        return NextResponse.json({ error: err.message, stack: err.stack }, { status: 500 })
     }
-}
-
-export async function PUT(req: NextRequest, { params }: { params: Promise<{ slug?: string[] }> }) {
-    const { slug = [] } = await params
-    return handleUpdate(req, slug)
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ slug?: string[] }> }) {
     const { slug = [] } = await params
-    return handleUpdate(req, slug)
+    return handleUpdate(req, slug[0], slug[1])
 }
 
-// --- DELETE DISPATCHER ---
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ slug?: string[] }> }) {
-    try {
-        const { slug = [] } = await params
-        const resource = slug[0]
-        const id = slug[1]
-        const supabase = createServiceClient()
-        if (!id) throw new Error('ID requerido')
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ slug?: string[] }> }) {
+    const { slug = [] } = await params
+    return handleUpdate(req, slug[0], slug[1])
+}
 
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ slug?: string[] }> }) {
+    const { slug = [] } = await params
+    const resource = slug[0]
+    const id = slug[1]
+    if (!id) return NextResponse.json({ error: 'ID necessário' }, { status: 400 })
+
+    try {
+        const supabase = createServiceClient()
         const table = resource === 'products' ? 'products' : RESOURCES[resource]
         if (table) {
-            const { error } = await supabase.from(table as any).delete().eq('id', id)
+            const { error } = await supabase.from(table).delete().eq('id', id)
             if (error) throw error
             return NextResponse.json({ success: true })
         }
-        return NextResponse.json({ error: 'N/A' }, { status: 404 })
+        return NextResponse.json({ error: 'Recurso não suportado' }, { status: 404 })
     } catch (err: any) {
+        console.error(`[API ADMIN DELETE CATCH] [${resource}]`, err)
         return NextResponse.json({ error: err.message }, { status: 500 })
     }
 }

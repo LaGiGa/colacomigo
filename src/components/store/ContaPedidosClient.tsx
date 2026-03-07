@@ -2,9 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { formatCurrency } from '@/lib/utils'
-import { Header } from '@/components/store/Header'
-import { Footer } from '@/components/store/Footer'
-import { CartDrawer } from '@/components/store/CartDrawer'
 import { Badge } from '@/components/ui/badge'
 import { Package, ChevronRight, Loader2, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
@@ -52,7 +49,7 @@ export function ContaPedidosClient() {
                     ),
                     shipment:shipments(tracking_code, carrier)
                 `)
-                .eq('profile_id', user.id)
+                .eq('user_id', user.id)
                 .order('created_at', { ascending: false })
 
             setOrders(data || [])
@@ -62,73 +59,68 @@ export function ContaPedidosClient() {
     }, [router])
 
     return (
-        <>
-            <Header />
-            <main className="min-h-screen py-8 bg-black text-white">
-                <div className="max-w-3xl mx-auto px-4 sm:px-6">
-                    <div className="mb-6 pb-6 border-b border-white/10">
-                        <h1 className="text-[clamp(1.5rem,4vw,2.5rem)] font-black tracking-tighter uppercase leading-none text-white">Meus Pedidos</h1>
-                        <p className="text-neutral-500 mt-2 font-bold tracking-widest uppercase text-xs">
-                            {loading ? 'Sincronizando...' : `${user?.email} · ${orders.length} pedidos`}
-                        </p>
-                    </div>
+        <main className="min-h-screen py-8 bg-black text-white">
+            <div className="max-w-3xl mx-auto px-4 sm:px-6">
+                <div className="mb-6 pb-6 border-b border-white/10">
+                    <h1 className="text-[clamp(1.5rem,4vw,2.5rem)] font-black tracking-tighter uppercase leading-none text-white">Meus Pedidos</h1>
+                    <p className="text-neutral-500 mt-2 font-bold tracking-widest uppercase text-xs">
+                        {loading ? 'Sincronizando...' : `${user?.email} · ${orders.length} pedidos`}
+                    </p>
+                </div>
 
-                    {loading ? (
-                        <div className="py-20 text-center"><Loader2 className="animate-spin text-primary inline-block h-10 w-10" /></div>
-                    ) : orders.length > 0 ? (
-                        <div className="space-y-4">
-                            {orders.map((order) => {
-                                const statusConf = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.pending
-                                const firstProduct = order.items?.[0]?.variant?.product
+                {loading ? (
+                    <div className="py-20 text-center"><Loader2 className="animate-spin text-primary inline-block h-10 w-10" /></div>
+                ) : orders.length > 0 ? (
+                    <div className="space-y-4">
+                        {orders.map((order) => {
+                            const statusConf = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.pending
+                            const firstProduct = order.items?.[0]?.variant?.product
 
-                                return (
-                                    <Link
-                                        key={order.id}
-                                        href={`/conta/pedidos/${order.id}`}
-                                        className="block bg-zinc-950 border border-white/8 rounded-2xl p-6 hover:border-primary/40 transition-all group"
-                                    >
-                                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                            <div className="flex items-center gap-4 flex-1 min-w-0 text-left">
-                                                <div className="h-12 w-12 rounded-xl bg-zinc-900 flex items-center justify-center flex-shrink-0 border border-white/5">
-                                                    <Package className="h-6 w-6 text-primary" />
-                                                </div>
-                                                <div className="min-w-0">
-                                                    <p className="font-mono text-xs font-bold text-neutral-500 mb-1">
-                                                        #{order.id.slice(0, 8).toUpperCase()}
-                                                    </p>
-                                                    <p className="text-sm font-black uppercase tracking-tight text-white mb-0.5 truncate">
-                                                        {firstProduct?.name ?? 'Pedido'}
-                                                        {(order.items?.length ?? 0) > 1 && ` +${(order.items?.length ?? 1) - 1} item(ns)`}
-                                                    </p>
-                                                    <p className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest">
-                                                        {new Date(order.created_at).toLocaleDateString('pt-BR')}
-                                                    </p>
-                                                </div>
+                            return (
+                                <Link
+                                    key={order.id}
+                                    href={`/conta/pedidos/${order.id}`}
+                                    className="block bg-zinc-950 border border-white/8 rounded-2xl p-6 hover:border-primary/40 transition-all group"
+                                >
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                        <div className="flex items-center gap-4 flex-1 min-w-0 text-left">
+                                            <div className="h-12 w-12 rounded-xl bg-zinc-900 flex items-center justify-center flex-shrink-0 border border-white/5">
+                                                <Package className="h-6 w-6 text-primary" />
                                             </div>
-
-                                            <div className="flex items-center justify-between md:flex-col md:items-end gap-3 flex-shrink-0">
-                                                <span className="font-black text-primary text-lg">{formatCurrency(order.total)}</span>
-                                                <div className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full border ${statusConf.color}`}>
-                                                    {statusConf.label}
-                                                </div>
+                                            <div className="min-w-0">
+                                                <p className="font-mono text-xs font-bold text-neutral-500 mb-1">
+                                                    #{order.id.slice(0, 8).toUpperCase()}
+                                                </p>
+                                                <p className="text-sm font-black uppercase tracking-tight text-white mb-0.5 truncate">
+                                                    {firstProduct?.name ?? 'Pedido'}
+                                                    {(order.items?.length ?? 0) > 1 && ` +${(order.items?.length ?? 1) - 1} item(ns)`}
+                                                </p>
+                                                <p className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest">
+                                                    {new Date(order.created_at).toLocaleDateString('pt-BR')}
+                                                </p>
                                             </div>
                                         </div>
-                                    </Link>
-                                )
-                            })}
-                        </div>
-                    ) : (
-                        <div className="text-center py-20 bg-zinc-950 border border-white/5 rounded-2xl">
-                            <h3 className="text-xl font-black uppercase mb-4">Nenhum Drop Encontrado</h3>
-                            <Link href="/produtos" className="btn-primary inline-flex items-center gap-2">
-                                Iniciar Compras <ArrowRight className="h-4 w-4" />
-                            </Link>
-                        </div>
-                    )}
-                </div>
-            </main>
-            <Footer />
-            <CartDrawer />
-        </>
+
+                                        <div className="flex items-center justify-between md:flex-col md:items-end gap-3 flex-shrink-0">
+                                            <span className="font-black text-primary text-lg">{formatCurrency(order.total)}</span>
+                                            <div className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full border ${statusConf.color}`}>
+                                                {statusConf.label}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Link>
+                            )
+                        })}
+                    </div>
+                ) : (
+                    <div className="text-center py-20 bg-zinc-950 border border-white/5 rounded-2xl">
+                        <h3 className="text-xl font-black uppercase mb-4">Nenhum Drop Encontrado</h3>
+                        <Link href="/produtos" className="btn-primary inline-flex items-center gap-2">
+                            Iniciar Compras <ArrowRight className="h-4 w-4" />
+                        </Link>
+                    </div>
+                )}
+            </div>
+        </main>
     )
 }

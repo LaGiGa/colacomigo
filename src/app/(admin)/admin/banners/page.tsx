@@ -1,4 +1,4 @@
-export const runtime = 'edge';
+// export const runtime = 'edge';
 import { BannersAdminClient } from '@/components/admin/AdminDynamicComponents'
 
 export default function BannersPage() {

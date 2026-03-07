@@ -1,3 +1,4 @@
+// export const runtime = 'edge';
 import { ClientesAdminClient } from '@/components/admin/AdminDynamicComponents'
 
 export default function AdminClientsPage() {

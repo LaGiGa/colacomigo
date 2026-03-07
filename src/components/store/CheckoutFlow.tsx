@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency } from '@/lib/utils'
-import { Loader2, ChevronRight, ChevronLeft, ShoppingBag, MapPin, CreditCard, Lock } from 'lucide-react'
+import { Loader2, ChevronRight, ChevronLeft, ShoppingBag, MapPin, CreditCard, Lock, Truck } from 'lucide-react'
 import Image from 'next/image'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
@@ -84,9 +84,14 @@ export function CheckoutFlow() {
         handleSubmit,
         watch,
         setValue,
-        formState: { errors },
+        formState: { errors, isValid },
     } = useForm<AddressForm>({
         resolver: zodResolver(AddressSchema),
+        mode: 'onChange',
+        defaultValues: {
+            email: user?.email || '',
+            name: user?.user_metadata?.display_name || '',
+        }
     })
 
     // Pre-fill user data when it becomes available
@@ -99,7 +104,7 @@ export function CheckoutFlow() {
         }
     }, [user, setValue])
 
-    const orderTotal = Math.max(0, subtotal() + (shipping?.price ?? 0) - discountValue)
+    const orderTotal = Number(Math.max(0, subtotal() + (shipping?.price ?? 0) - discountValue).toFixed(2))
     const validItems = items.filter((i) => i.quantity > 0)
 
     // Auto-preenche endereço via ViaCEP
@@ -163,7 +168,9 @@ export function CheckoutFlow() {
                     })),
                     customerInfo: data,
                     shippingCost: shipping.price,
+                    shippingMethod: shipping.serviceName,
                     discount: discountValue,
+                    coupon: appliedCoupon?.code,
                     profileId: user?.id,
                 }),
             })
@@ -275,7 +282,7 @@ export function CheckoutFlow() {
                             </div>
                             <div className="flex justify-between text-sm pt-4 border-t border-white/10 text-white">
                                 <span>TOTAL</span>
-                                <span className="text-primary">{formatCurrency(orderTotal)}</span>
+                                <span className="text-primary font-black">{formatCurrency(orderTotal)}</span>
                             </div>
                         </div>
 
@@ -359,8 +366,7 @@ export function CheckoutFlow() {
                             className="h-12 border-white/10 bg-black text-white rounded-none focus-visible:ring-1 focus-visible:ring-white focus-visible:border-white transition-all uppercase tracking-wider text-xs"
                             onChange={(e) => {
                                 const raw = e.target.value.replace(/\D/g, '')
-                                e.target.value = raw
-                                register('zipCode').onChange(e)
+                                setValue('zipCode', raw, { shouldValidate: true })
                                 if (raw.length === 8) autoFillAddress(raw)
                             }}
                         />
@@ -403,6 +409,7 @@ export function CheckoutFlow() {
                 <ShippingCalculator
                     weightKg={0.5}
                     subtotal={subtotal()}
+                    externalCep={watch('zipCode')}
                     onSelect={(opt) => setShipping(opt)}
                 />
 
@@ -434,8 +441,14 @@ export function CheckoutFlow() {
                     disabled={loading || !shipping}
                     className="btn-primary w-full h-14 mt-4 text-xs"
                 >
-                    {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CreditCard className="h-4 w-4 mr-2" />}
-                    IR PARA PAGAMENTO
+                    {loading ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : !shipping ? (
+                        <Truck className="h-4 w-4 mr-2" />
+                    ) : (
+                        <CreditCard className="h-4 w-4 mr-2" />
+                    )}
+                    {!shipping ? 'ESCOLHA UMA OPÇÃO DE FRETE' : 'IR PARA PAGAMENTO'}
                 </Button>
             </form>
         )
@@ -454,14 +467,16 @@ export function CheckoutFlow() {
                 </div>
 
                 {/* Resumo final */}
-                <div className="border border-white/10 bg-black p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
+                <div className="border border-white/10 bg-black p-6">
+                    <div className="flex justify-between items-center">
                         <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">{validItems.length} ITEM{validItems.length !== 1 ? 'S' : ''} + FRETE</p>
-                        <p className="font-black tracking-tighter text-white text-[clamp(1.5rem,3vw,2.5rem)] leading-none mt-1">{formatCurrency(orderTotal)}</p>
+                        {discountValue > 0 && (
+                            <Badge className="bg-green-500/10 text-green-500 border-0 font-bold tracking-widest text-[9px] uppercase rounded-none">
+                                -{formatCurrency(discountValue)} DESC.
+                            </Badge>
+                        )}
                     </div>
-                    <Badge className="bg-white/10 text-white border-0 font-bold tracking-widest text-[10px] uppercase rounded-none px-3 py-1">
-                        CARTÃO // PIX
-                    </Badge>
+                    <p className="font-black tracking-tighter text-white text-[clamp(1.5rem,3vw,2.5rem)] leading-none mt-1">{formatCurrency(orderTotal)}</p>
                 </div>
 
                 {/* Payment Brick */}

@@ -1,6 +1,3 @@
-import { Header } from '@/components/store/Header'
-import { Footer } from '@/components/store/Footer'
-import { WhatsAppButton } from '@/components/store/WhatsAppButton'
 import { CreditCard, Smartphone, BarChart, Truck, Package, MapPin } from 'lucide-react'
 import type { Metadata } from 'next'
 
@@ -53,9 +50,7 @@ const FRETES = [
 
 export default function PagamentoEFretePage() {
     return (
-        <div className="min-h-screen bg-black">
-            <Header />
-
+        <main className="min-h-screen bg-black">
             {/* Hero */}
             <div className="border-b border-white/5 py-16 px-4">
                 <div className="max-w-3xl mx-auto text-center">
@@ -139,9 +134,6 @@ export default function PagamentoEFretePage() {
                     </div>
                 </section>
             </div>
-
-            <Footer />
-            <WhatsAppButton />
-        </div>
+        </main>
     )
 }

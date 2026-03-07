@@ -31,26 +31,41 @@ export async function middleware(request: NextRequest) {
 
     const { pathname } = request.nextUrl
 
-    // ─── Rota /admin — exige autenticação + is_admin ──────────────────────────
-    if (pathname.startsWith('/admin')) {
+    // ─── Rota /admin e /api/admin — exige autenticação + is_admin ──────────────────────────
+    if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
         // Se for a própria página de login do admin, deixa passar
         if (pathname === '/admin/login') {
             return supabaseResponse
         }
 
         if (!user) {
+            if (pathname.startsWith('/api/')) {
+                return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+            }
             return NextResponse.redirect(new URL('/admin/login', request.url))
         }
 
         // Verifica se o usuário tem role 'admin' no profile
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('is_admin')
-            .eq('id', user.id)
-            .single()
+        try {
+            const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('is_admin')
+                .eq('id', user.id)
+                .maybeSingle()
 
-        if (!profile?.is_admin) {
-            return NextResponse.redirect(new URL('/', request.url))
+            if (error || !profile || !profile.is_admin) {
+                console.warn('Acesso negado: Usuário não é admin ou profile não encontrado.')
+                if (pathname.startsWith('/api/')) {
+                    return NextResponse.json({ error: 'Acesso Proibido' }, { status: 403 })
+                }
+                return NextResponse.redirect(new URL('/admin/login', request.url))
+            }
+        } catch (error) {
+            console.error('Middleware Auth Error:', error)
+            if (pathname.startsWith('/api/')) {
+                return NextResponse.json({ error: 'Erro de Autenticação' }, { status: 500 })
+            }
+            return NextResponse.redirect(new URL('/admin/login', request.url))
         }
     }
 

@@ -121,17 +121,17 @@ export function PedidoDetailClient({ order: initialOrder, id }: Props) {
                         orderId={order.id}
                         currentStatus={order.status}
                         currentTrackingCode={order.shipment?.[0]?.tracking_code ?? ''}
-                        customerName={order.shipping_address?.name ?? 'Cliente'}
-                        customerPhone={order.shipping_address?.phone ?? ''}
+                        customerName={order.customer_name || order.shipping_address?.name || 'Cliente'}
+                        customerPhone={order.customer_phone || order.shipping_address?.phone || ''}
                     />
                 </div>
 
-                {/* Sidebar: Cliente + Endereço */}
                 <div className="space-y-4">
                     <div className="rounded-xl border border-border p-4 space-y-2 text-sm">
                         <h2 className="font-semibold">Cliente</h2>
-                        <p>{order.shipping_address?.name ?? '—'}</p>
-                        <p className="text-muted-foreground">{order.shipping_address?.phone}</p>
+                        <p>{order.customer_name || order.shipping_address?.name || '—'}</p>
+                        <p className="text-muted-foreground">{order.customer_email || 'Sem email'}</p>
+                        <p className="text-muted-foreground">{order.customer_phone || order.shipping_address?.phone || 'Sem telefone'}</p>
                     </div>
 
                     <div className="rounded-xl border border-border p-4 space-y-2 text-sm">

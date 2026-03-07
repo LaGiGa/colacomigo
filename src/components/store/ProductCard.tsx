@@ -133,20 +133,20 @@ export function ProductCard({
                 </div>
 
                 {/* ── Info Typography ────────────────────────────────────────────── */}
-                <div className="p-4 space-y-2 border-t border-white/5">
+                <div className="p-3 sm:p-4 space-y-1.5 sm:space-y-2 border-t border-white/5">
                     {brandName && (
-                        <p className="text-[9px] font-black tracking-[0.2em] text-neutral-500 uppercase">
+                        <p className="text-[8px] sm:text-[9px] font-black tracking-[0.2em] text-neutral-500 uppercase">
                             {brandName}
                         </p>
                     )}
-                    <h3 className="text-sm font-black leading-tight line-clamp-2 uppercase tracking-tight text-white group-hover:text-primary transition-colors">
+                    <h3 className="text-xs sm:text-sm font-black leading-tight line-clamp-2 uppercase tracking-tight text-white group-hover:text-primary transition-colors">
                         {name}
                     </h3>
 
                     {/* Preços */}
                     <div className="space-y-1 pt-2">
-                        <div className="flex items-end gap-2 flex-wrap">
-                            <span className="text-lg font-black text-white tracking-widest">
+                        <div className="flex items-end gap-1.5 sm:gap-2 flex-wrap">
+                            <span className="text-base sm:text-lg font-black text-white tracking-widest">
                                 {formatCurrency(price)}
                             </span>
                             {hasDiscount && (
