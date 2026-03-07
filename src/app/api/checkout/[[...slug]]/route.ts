@@ -292,6 +292,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
                 metadata: { order_id: order.id }
             };
 
+            const selectedMethod = (body.selectedPaymentMethod || '').toLowerCase();
+
+            // Fallback para PIX quando o Brick não envia payment_method_id explicitamente.
+            if (!paymentPayload.payment_method_id && (selectedMethod === 'banktransfer' || selectedMethod === 'pix')) {
+                paymentPayload.payment_method_id = 'pix';
+            }
+
+            // O MP exige e-mail do pagador para vários meios (incluindo PIX).
+            if (!paymentPayload.payer) paymentPayload.payer = {};
+            if (!paymentPayload.payer.email && order.customer_email) {
+                paymentPayload.payer.email = order.customer_email;
+            }
+
             // Mercado Pago NÃO aceita localhost ou IPs locais na notification_url
             if (!baseUrl.includes('localhost') && !baseUrl.includes('127.0.0.1')) {
                 paymentPayload.notification_url = `${baseUrl}/api/checkout/webhook`;
