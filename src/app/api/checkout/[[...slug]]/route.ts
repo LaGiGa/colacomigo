@@ -310,7 +310,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
                 paymentPayload.notification_url = `${baseUrl}/api/checkout/webhook`;
             }
 
-            const payment = await mpCreatePayment(paymentPayload);
+            let payment: any
+            try {
+                payment = await mpCreatePayment(paymentPayload);
+            } catch (e: any) {
+                const msg = String(e?.message || '')
+                if (msg.includes('without key enabled for QR')) {
+                    return NextResponse.json(
+                        {
+                            error: 'PIX indisponível na conta Mercado Pago: habilite uma chave PIX da conta do recebedor no painel do Mercado Pago e tente novamente.'
+                        },
+                        { status: 400 }
+                    )
+                }
+                throw e
+            }
             const status = payment.status === 'approved' ? 'paid' : (payment.status === 'rejected' ? 'cancelled' : 'awaiting_payment');
 
             // Atualiza o pedido com status e ID do pagamento do MP

@@ -39,7 +39,7 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
                                 i === current ? 'border-primary opacity-100' : 'border-transparent opacity-40 hover:opacity-80'
                             )}
                         >
-                            <Image src={img.url} alt={`Foto ${i + 1}`} fill className="object-cover" />
+                            <Image src={img.url} alt={`Foto ${i + 1}`} fill className="object-contain p-1 bg-black" />
                         </button>
                     ))}
                 </div>
@@ -58,7 +58,7 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
                         src={images[current].url}
                         alt={productName}
                         fill
-                        className="object-cover"
+                        className="object-contain p-2"
                         priority
                     />
                 </div>

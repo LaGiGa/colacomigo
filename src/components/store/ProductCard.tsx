@@ -78,7 +78,7 @@ export function ProductCard({
                                 src={imageUrl}
                                 alt={name}
                                 fill
-                                className={`object-cover transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] group-hover:scale-105 ${secondImageUrl ? 'group-hover:opacity-0' : ''}`}
+                                className={`object-contain p-1.5 transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] group-hover:scale-105 ${secondImageUrl ? 'group-hover:opacity-0' : ''}`}
                                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                             />
                             {/* Segunda imagem (hover) */}
@@ -87,7 +87,7 @@ export function ProductCard({
                                     src={secondImageUrl}
                                     alt={`${name} — detalhe`}
                                     fill
-                                    className="object-cover absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] group-hover:scale-105"
+                                    className="object-contain p-1.5 absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] group-hover:scale-105"
                                     sizes="(max-width: 640px) 50vw, 25vw"
                                 />
                             )}
