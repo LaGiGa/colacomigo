@@ -51,6 +51,10 @@ const ProcessPaymentSchema = z.object({
     formData: z.record(z.string(), z.unknown()),
 })
 
+const PaymentStatusSchema = z.object({
+    paymentId: z.union([z.string(), z.number()]).transform((v) => String(v)),
+})
+
 // --- HELPERS ---
 async function validateMpSignature(request: NextRequest): Promise<boolean> {
     const xSignature = request.headers.get('x-signature'), xRequestId = request.headers.get('x-request-id'), secret = process.env.MP_WEBHOOK_SECRET
@@ -392,6 +396,33 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
                 pixQrCode,
                 pixQrCodeBase64,
                 ticketUrl,
+            })
+        }
+
+        // 4.1 CONSULTA DE STATUS DE PAGAMENTO (usado no polling do PIX)
+        if (action === 'payment-status') {
+            const body = PaymentStatusSchema.parse(await req.json())
+            const paymentId = String(body.paymentId)
+
+            const { data: order } = await supabase
+                .from('orders')
+                .select('id, status, mp_payment_id')
+                .eq('mp_payment_id', paymentId)
+                .maybeSingle()
+
+            if (order?.status === 'paid') {
+                return NextResponse.json({ paymentId, status: 'approved', orderStatus: 'paid' })
+            }
+
+            if (order?.status === 'cancelled') {
+                return NextResponse.json({ paymentId, status: 'rejected', orderStatus: 'cancelled' })
+            }
+
+            const payment = await mpGetPayment(paymentId)
+            return NextResponse.json({
+                paymentId,
+                status: payment.status,
+                orderStatus: order?.status ?? null,
             })
         }
 

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { formatCurrency } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
-import { Package, ChevronRight, Loader2, ArrowRight } from 'lucide-react'
+import { Package, Loader2, ArrowRight, LogOut } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -23,10 +23,10 @@ export function ContaPedidosClient() {
     const [loading, setLoading] = useState(true)
     const [user, setUser] = useState<any>(null)
     const router = useRouter()
+    const supabase = createClient()
 
     useEffect(() => {
         async function load() {
-            const supabase = createClient()
             const { data: { user } } = await supabase.auth.getUser()
 
             if (!user) {
@@ -56,16 +56,35 @@ export function ContaPedidosClient() {
             setLoading(false)
         }
         load()
-    }, [router])
+    }, [router, supabase])
+
+    async function handleSignOut() {
+        await supabase.auth.signOut()
+        router.push('/login')
+    }
 
     return (
         <main className="min-h-screen py-8 bg-black text-white">
             <div className="max-w-3xl mx-auto px-4 sm:px-6">
                 <div className="mb-6 pb-6 border-b border-white/10">
-                    <h1 className="text-[clamp(1.5rem,4vw,2.5rem)] font-black tracking-tighter uppercase leading-none text-white">Meus Pedidos</h1>
-                    <p className="text-neutral-500 mt-2 font-bold tracking-widest uppercase text-xs">
-                        {loading ? 'Sincronizando...' : `${user?.email} · ${orders.length} pedidos`}
-                    </p>
+                    <div className="flex items-start justify-between gap-3">
+                        <div>
+                            <h1 className="text-[clamp(1.5rem,4vw,2.5rem)] font-black tracking-tighter uppercase leading-none text-white">Meus Pedidos</h1>
+                            <p className="text-neutral-500 mt-2 font-bold tracking-widest uppercase text-xs">
+                                {loading ? 'Sincronizando...' : `${user?.email} · ${orders.length} pedidos`}
+                            </p>
+                        </div>
+                        {user && (
+                            <button
+                                type="button"
+                                onClick={handleSignOut}
+                                className="inline-flex items-center gap-2 border border-white/15 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-neutral-300 hover:text-white hover:border-white/30 transition-colors"
+                            >
+                                <LogOut className="h-3.5 w-3.5" />
+                                Sair
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {loading ? (
@@ -124,3 +143,4 @@ export function ContaPedidosClient() {
         </main>
     )
 }
+

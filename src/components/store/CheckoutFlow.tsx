@@ -218,6 +218,44 @@ export function CheckoutFlow() {
         }
     }
 
+    useEffect(() => {
+        if (!pendingPayment?.paymentId) return
+
+        let mounted = true
+
+        const checkPaymentStatus = async () => {
+            try {
+                const res = await fetch('/api/checkout/payment-status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ paymentId: pendingPayment.paymentId }),
+                })
+                const data = await res.json()
+                if (!res.ok || !mounted) return
+
+                if (data.status === 'approved' || data.orderStatus === 'paid') {
+                    handlePaymentSuccess(pendingPayment.paymentId)
+                    return
+                }
+
+                if (data.status === 'rejected' || data.orderStatus === 'cancelled') {
+                    setPendingPayment(null)
+                    toast.error('Pagamento PIX nao foi aprovado.')
+                }
+            } catch {
+                // polling silencioso para nao poluir UI
+            }
+        }
+
+        checkPaymentStatus()
+        const timer = setInterval(checkPaymentStatus, 4000)
+
+        return () => {
+            mounted = false
+            clearInterval(timer)
+        }
+    }, [pendingPayment?.paymentId])
+
     function handlePaymentError(err: Error) {
         toast.error('Erro no pagamento: ' + err.message)
     }
