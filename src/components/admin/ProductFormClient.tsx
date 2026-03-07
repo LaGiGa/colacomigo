@@ -237,6 +237,23 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
             return
         }
 
+        const normalizedVariants = variants
+            .filter((v) => v.sku || v.size || v.colorName)
+            .map(v => ({
+                sku: v.sku || undefined,
+                size: v.size || undefined,
+                color_name: v.colorName || undefined,
+                color_hex: v.colorHex || undefined,
+                price_delta: parseFloat(v.priceDelta as any) || 0,
+                stock: Number.isFinite(v.stock) ? v.stock : 0,
+                is_active: true,
+            }))
+
+        if (normalizedVariants.length === 0) {
+            toast.error('Adicione pelo menos uma variante (com SKU/tamanho/cor) para vender o produto.')
+            return
+        }
+
         startTransition(async () => {
             try {
                 const payload = {
@@ -248,15 +265,7 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
                     images: uploadedImages.map((img, i) => ({
                         url: img.url!, is_primary: i === 0,
                     })),
-                    variants: variants.filter((v) => v.sku || v.size || v.colorName).map(v => ({
-                        sku: v.sku || undefined,
-                        size: v.size || undefined,
-                        color_name: v.colorName || undefined,
-                        color_hex: v.colorHex || undefined,
-                        price_delta: parseFloat(v.priceDelta as any) || 0,
-                        stock: Number.isFinite(v.stock) ? v.stock : 0,
-                        is_active: true,
-                    })),
+                    variants: normalizedVariants,
                 }
 
                 const url = initialProduct ? `/api/admin/products/${initialProduct.id}` : '/api/admin/products'

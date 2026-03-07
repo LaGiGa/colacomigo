@@ -34,7 +34,7 @@ const ProductSchema = z.object({
         price_delta: z.number().default(0),
         stock: z.number().int().min(0).default(0),
         is_active: z.boolean().default(true),
-    })).default([])
+    })).min(1, 'Produto deve ter ao menos uma variante').default([])
 })
 
 const RESOURCES: Record<string, string> = {
@@ -234,8 +234,22 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
                 is_active: body.is_active,
             }).select().single()
             if (productError) throw productError
-            if (body.images.length > 0) await supabase.from('product_images').insert(body.images.map(img => ({ product_id: product.id, url: img.url, alt: body.name, is_primary: img.is_primary })))
-            if (body.variants.length > 0) await supabase.from('product_variants').insert(body.variants.map(v => ({ ...v, product_id: product.id })))
+            if (body.images.length > 0) {
+                const { error: imagesError } = await supabase.from('product_images').insert(
+                    body.images.map(img => ({ product_id: product.id, url: img.url, alt: body.name, is_primary: img.is_primary }))
+                )
+                if (imagesError) {
+                    await supabase.from('products').delete().eq('id', product.id)
+                    throw imagesError
+                }
+            }
+            const { error: variantsError } = await supabase.from('product_variants').insert(
+                body.variants.map(v => ({ ...v, product_id: product.id }))
+            )
+            if (variantsError) {
+                await supabase.from('products').delete().eq('id', product.id)
+                throw variantsError
+            }
             return NextResponse.json({ product })
         }
 
@@ -337,9 +351,17 @@ async function handleUpdate(req: NextRequest, resource: string, id: string) {
             }).eq('id', id)
             if (productError) throw productError
             await supabase.from('product_images').delete().eq('product_id', id)
-            if (body.images?.length > 0) await supabase.from('product_images').insert(body.images.map((img: any) => ({ product_id: id, url: img.url, alt: body.name, is_primary: img.is_primary })))
+            if (body.images?.length > 0) {
+                const { error: imagesError } = await supabase.from('product_images').insert(
+                    body.images.map((img: any) => ({ product_id: id, url: img.url, alt: body.name, is_primary: img.is_primary }))
+                )
+                if (imagesError) throw imagesError
+            }
             await supabase.from('product_variants').delete().eq('product_id', id)
-            if (body.variants?.length > 0) await supabase.from('product_variants').insert(body.variants.map((v: any) => ({ ...v, product_id: id, id: undefined })))
+            const { error: variantsError } = await supabase.from('product_variants').insert(
+                (body.variants ?? []).map((v: any) => ({ ...v, product_id: id, id: undefined }))
+            )
+            if (variantsError) throw variantsError
             return NextResponse.json({ success: true })
         }
 
