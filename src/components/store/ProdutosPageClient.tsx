@@ -310,6 +310,14 @@ export function ProdutosPageClient({ initialCategory = null, initialCollection =
                         ) : products.length > 0 ? (
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-4 lg:gap-6 w-full">
                                 {products.map((p) => (
+                                    (() => {
+                                        const activeVariants = (p.variants ?? []).filter((v: any) => v.is_active !== false)
+                                        const firstActiveVariant = activeVariants[0]
+                                        const isInStock = activeVariants.length === 0
+                                            ? true
+                                            : activeVariants.some((v: any) => (v.stock ?? 0) > 0)
+
+                                        return (
                                     <ProductCard
                                         key={p.id}
                                         id={p.id}
@@ -321,10 +329,12 @@ export function ProdutosPageClient({ initialCategory = null, initialCollection =
                                         secondImageUrl={p.images?.[1]?.url ?? null}
                                         brandName={p.brand?.name ?? null}
                                         isNew={p.is_new ?? false}
-                                        variantId={p.variants?.[0]?.id ?? null}
-                                        variantSku={p.variants?.[0]?.sku ?? null}
-                                        inStock={p.variants?.some((v: any) => (v.stock ?? 0) > 0) ?? false}
+                                        variantId={firstActiveVariant?.id ?? null}
+                                        variantSku={firstActiveVariant?.sku ?? null}
+                                        inStock={isInStock}
                                     />
+                                        )
+                                    })()
                                 ))}
                             </div>
                         ) : (

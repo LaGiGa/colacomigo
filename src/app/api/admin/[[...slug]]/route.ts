@@ -32,7 +32,8 @@ const ProductSchema = z.object({
         color_name: z.string().optional(),
         color_hex: z.string().optional(),
         price_delta: z.number().default(0),
-        stock: z.number().int().min(0).default(0)
+        stock: z.number().int().min(0).default(0),
+        is_active: z.boolean().default(true),
     })).default([])
 })
 

@@ -249,7 +249,13 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
                         url: img.url!, is_primary: i === 0,
                     })),
                     variants: variants.filter((v) => v.sku || v.size || v.colorName).map(v => ({
-                        ...v, priceDelta: parseFloat(v.priceDelta as any) || 0
+                        sku: v.sku || undefined,
+                        size: v.size || undefined,
+                        color_name: v.colorName || undefined,
+                        color_hex: v.colorHex || undefined,
+                        price_delta: parseFloat(v.priceDelta as any) || 0,
+                        stock: Number.isFinite(v.stock) ? v.stock : 0,
+                        is_active: true,
                     })),
                 }
 

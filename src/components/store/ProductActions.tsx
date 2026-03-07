@@ -52,8 +52,8 @@ export function ProductActions({
     const [isPending, startTransition] = useTransition()
 
     // Separa variantes por tamanho e cor
-    const sizes = [...new Set(variants.filter((v) => v.size && v.is_active).map((v) => v.size!))]
-    const colors = [...new Set(variants.filter((v) => v.color_name && v.is_active).map((v) => v.color_name!))]
+    const sizes = [...new Set(variants.filter((v) => v.size && (v.is_active ?? true)).map((v) => v.size!))]
+    const colors = [...new Set(variants.filter((v) => v.color_name && (v.is_active ?? true)).map((v) => v.color_name!))]
 
     const [selectedSize, setSelectedSize] = useState<string | null>(sizes[0] ?? null)
     const [selectedColor, setSelectedColor] = useState<string | null>(colors[0] ?? null)
@@ -61,13 +61,15 @@ export function ProductActions({
     const selectedVariant = variants.find((v) => {
         const sizeMatch = !sizes.length || v.size === selectedSize
         const colorMatch = !colors.length || v.color_name === selectedColor
-        return sizeMatch && colorMatch && v.is_active
-    }) ?? variants.find((v) => v.is_active)
+        return sizeMatch && colorMatch && (v.is_active ?? true)
+    }) ?? variants.find((v) => (v.is_active ?? true))
 
     const currentPrice = basePrice + (selectedVariant?.price_delta ?? 0)
     const hasDiscount = comparePrice && comparePrice > currentPrice
     const discountPct = hasDiscount ? Math.round(((comparePrice - currentPrice) / comparePrice) * 100) : 0
-    const inStock = selectedVariant && (selectedVariant.stock === undefined || selectedVariant.stock > 0)
+    const inStock = variants.length === 0
+        ? true
+        : !!selectedVariant && (selectedVariant.stock === undefined || selectedVariant.stock > 0)
 
     function handleAddToCart() {
         if (!selectedVariant) {
@@ -114,10 +116,10 @@ export function ProductActions({
                     )}
                 </div>
                 <p className="text-[11px] font-bold text-neutral-500 uppercase tracking-widest">
-                    ou em até <span className="text-white">12x de {formatCurrency(currentPrice / 12)}</span> sem juros
+                    no cartão em até <span className="text-white">12x</span> (juros do Mercado Pago podem variar)
                 </p>
-                <p className="text-[11px] font-bold text-primary uppercase tracking-widest">
-                    {formatCurrency(currentPrice * 0.9)} no Pix (10% de desconto)
+                <p className="text-[11px] font-black uppercase tracking-widest text-[#1a8fff]">
+                    {formatCurrency(currentPrice * 0.9)} no PIX (10% OFF)
                 </p>
             </div>
 

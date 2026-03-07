@@ -42,7 +42,7 @@ export function ProductCard({
 
     const hasDiscount = comparePrice && comparePrice > price
     const discountPct = hasDiscount ? Math.round(((comparePrice - price) / comparePrice) * 100) : 0
-    const pixPrice = price * 0.95
+    const pixPrice = price * 0.9
 
     function handleQuickAdd(e: React.MouseEvent) {
         e.preventDefault()
@@ -66,8 +66,8 @@ export function ProductCard({
     }
 
     return (
-        <Link href={`/produtos/${slug}`} className="block group">
-            <div className="product-card bg-black border border-white/5 hover:border-white/20 transition-all">
+        <Link href={`/produtos/${slug}`} className="block group h-full">
+            <div className="product-card h-full flex flex-col bg-black border border-white/5 hover:border-white/20 transition-all">
 
                 {/* ── Imagem Cortante ──────────────────────────────────────────── */}
                 <div className="relative overflow-hidden bg-zinc-950" style={{ aspectRatio: '3/4' }}>
@@ -133,7 +133,7 @@ export function ProductCard({
                 </div>
 
                 {/* ── Info Typography ────────────────────────────────────────────── */}
-                <div className="p-3 sm:p-4 space-y-1.5 sm:space-y-2 border-t border-white/5">
+                <div className="p-3 sm:p-4 space-y-1.5 sm:space-y-2 border-t border-white/5 flex-1 flex flex-col">
                     {brandName && (
                         <p className="text-[8px] sm:text-[9px] font-black tracking-[0.2em] text-neutral-500 uppercase">
                             {brandName}
@@ -144,7 +144,7 @@ export function ProductCard({
                     </h3>
 
                     {/* Preços */}
-                    <div className="space-y-1 pt-2">
+                    <div className="space-y-1 pt-2 mt-auto">
                         <div className="flex items-end gap-1.5 sm:gap-2 flex-wrap">
                             <span className="text-base sm:text-lg font-black text-white tracking-widest">
                                 {formatCurrency(price)}
@@ -156,8 +156,8 @@ export function ProductCard({
                             )}
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[9px] font-black uppercase tracking-widest">Pix</span>
-                            <span className="text-[10px] text-primary font-bold tracking-widest">
+                            <span className="px-1.5 py-0.5 bg-[#1a8fff]/15 text-[#1a8fff] text-[9px] font-black uppercase tracking-widest">PIX 10%</span>
+                            <span className="text-[10px] text-[#1a8fff] font-black tracking-widest">
                                 {formatCurrency(pixPrice)}
                             </span>
                         </div>
