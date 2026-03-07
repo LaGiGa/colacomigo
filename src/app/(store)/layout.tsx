@@ -15,8 +15,8 @@ export default function StoreLayout({
 }) {
     return (
         <div className="min-h-screen bg-black text-white selection:bg-primary selection:text-white">
-            <AnnouncementBar />
             <Header />
+            <AnnouncementBar />
             <RecentPurchasePopup />
             {children}
             <Footer />
