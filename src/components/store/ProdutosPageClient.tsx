@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Filter, SlidersHorizontal, Loader2, ChevronRight, X, ArrowDownUp, Plus, Minus } from 'lucide-react'
 import { ProductCard } from '@/components/store/ProductCard'
 import { createClient } from '@/lib/supabase/client'
-import { formatCurrency } from '@/lib/utils'
 
 interface Category {
     id: string
@@ -17,14 +16,26 @@ interface Props {
     initialCategory?: string | null
     initialCollection?: string | null
     initialMarca?: string | null
+    initialProducts?: any[]
+    initialCategories?: Category[]
+    initialBrands?: any[]
+    initialCollections?: any[]
 }
 
-export function ProdutosPageClient({ initialCategory = null, initialCollection = null, initialMarca = null }: Props) {
-    const [products, setProducts] = useState<any[]>([])
-    const [dbCategories, setDbCategories] = useState<Category[]>([])
-    const [dbBrands, setDbBrands] = useState<any[]>([])
-    const [dbCollections, setDbCollections] = useState<any[]>([])
-    const [loading, setLoading] = useState(true)
+export function ProdutosPageClient({
+    initialCategory = null,
+    initialCollection = null,
+    initialMarca = null,
+    initialProducts = [],
+    initialCategories,
+    initialBrands,
+    initialCollections,
+}: Props) {
+    const [products, setProducts] = useState<any[]>(initialProducts)
+    const [dbCategories, setDbCategories] = useState<Category[]>(initialCategories ?? [])
+    const [dbBrands, setDbBrands] = useState<any[]>(initialBrands ?? [])
+    const [dbCollections, setDbCollections] = useState<any[]>(initialCollections ?? [])
+    const [loading, setLoading] = useState(initialProducts.length === 0)
     const [categoria, setCategoria] = useState<string | null>(initialCategory)
     const [colecao, setColecao] = useState<string | null>(initialCollection)
     const [marca, setMarca] = useState<string | null>(initialMarca)
@@ -32,16 +43,15 @@ export function ProdutosPageClient({ initialCategory = null, initialCollection =
     const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
     const [isMobileSortOpen, setIsMobileSortOpen] = useState(false)
     const [openAccordion, setOpenAccordion] = useState<string | null>('categorias')
+    const skipFirstFetchRef = useRef(initialProducts.length > 0)
 
-    useEffect(() => {
-        // Se mudou via props externas (navegação)
-        setCategoria(initialCategory)
-        setColecao(initialCollection)
-        setMarca(initialMarca)
-    }, [initialCategory, initialCollection, initialMarca])
 
     // Carregar filtros do banco para o Sidebar
     useEffect(() => {
+        if (initialCategories !== undefined && initialBrands !== undefined && initialCollections !== undefined) {
+            return
+        }
+
         async function loadFilters() {
             const supabase = createClient()
             const [
@@ -62,6 +72,16 @@ export function ProdutosPageClient({ initialCategory = null, initialCollection =
 
     useEffect(() => {
         async function load() {
+            const initialKey = `${initialCategory ?? ''}|${initialCollection ?? ''}|${initialMarca ?? ''}|novos`
+            const currentKey = `${categoria ?? ''}|${colecao ?? ''}|${marca ?? ''}|${ordem}`
+
+            if (skipFirstFetchRef.current && currentKey === initialKey) {
+                skipFirstFetchRef.current = false
+                setLoading(false)
+                return
+            }
+            skipFirstFetchRef.current = false
+
             setLoading(true)
             const supabase = createClient()
             let query = (supabase as any)
@@ -107,7 +127,7 @@ export function ProdutosPageClient({ initialCategory = null, initialCollection =
             setLoading(false)
         }
         load()
-    }, [categoria, colecao, ordem, dbCategories.length])
+    }, [categoria, colecao, marca, ordem, dbCategories.length, initialCategory, initialCollection, initialMarca])
 
     const currentTitle = categoria
         ? dbCategories.find(c => c.slug === categoria)?.name
@@ -513,3 +533,5 @@ export function ProdutosPageClient({ initialCategory = null, initialCollection =
         </main>
     )
 }
+
+

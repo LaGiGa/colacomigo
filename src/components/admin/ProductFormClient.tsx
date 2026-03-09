@@ -187,9 +187,9 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
         }))
         setImages((prev) => [...prev, ...newPreviews])
 
-        for (let i = 0; i < files.length; i++) {
+        await Promise.all(files.map(async (file) => {
             const formData = new FormData()
-            formData.append('file', files[i])
+            formData.append('file', file)
             formData.append('folder', 'products')
             try {
                 const res = await fetch('/api/admin/upload', { method: 'POST', body: formData })
@@ -197,13 +197,13 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
                 if (!res.ok || !data?.url) {
                     throw new Error(data?.error || 'Falha no upload da imagem')
                 }
-                setImages((prev) => prev.map((img) => img.file === files[i] ? { ...img, uploading: false, url: data.url } : img))
+                setImages((prev) => prev.map((img) => img.file === file ? { ...img, uploading: false, url: data.url } : img))
             } catch (err) {
-                setImages((prev) => prev.map((img) => img.file === files[i] ? { ...img, uploading: false } : img))
+                setImages((prev) => prev.map((img) => img.file === file ? { ...img, uploading: false } : img))
                 const message = err instanceof Error ? err.message : 'Erro desconhecido'
-                toast.error(`Erro no upload de ${files[i].name}: ${message}`)
+                toast.error(`Erro no upload de ${file.name}: ${message}`)
             }
-        }
+        }))
     }
 
     function removeImage(index: number) {

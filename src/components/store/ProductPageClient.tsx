@@ -3,25 +3,48 @@
 import { useState, useEffect } from 'react'
 import { ImageGallery } from '@/components/store/ImageGallery'
 import { ProductActions } from '@/components/store/ProductActions'
-import { Badge } from '@/components/ui/badge'
-import { formatCurrency } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
-import { Loader2, ChevronRight, Filter } from 'lucide-react'
-import Image from 'next/image'
+import { Loader2, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 
-interface Category {
+interface ProductImage {
+    url: string
+    is_primary?: boolean | null
+}
+
+interface ProductVariant {
+    id: string
+    sku: string
+    size: string | null
+    color_name: string | null
+    color_hex: string | null
+    price_delta: number
+    is_active: boolean
+    stock?: number
+}
+
+interface ProductData {
     id: string
     name: string
     slug: string
-    parent_id: string | null
+    description?: string | null
+    price: number
+    compare_price?: number | null
+    weight_kg?: number
+    is_new?: boolean
+    images: ProductImage[]
+    brand?: { name: string; logo_url?: string | null } | null
+    category?: { id: string; name: string; slug: string } | null
+    variants: ProductVariant[]
 }
 
-export function ProductPageClient({ slug }: { slug: string }) {
-    const [product, setProduct] = useState<any>(null)
-    const [loading, setLoading] = useState(true)
+export function ProductPageClient({ slug, initialProduct = null }: { slug: string, initialProduct?: ProductData | null }) {
+    const [product, setProduct] = useState<ProductData | null>(initialProduct)
+    const [loading, setLoading] = useState(!initialProduct)
 
     useEffect(() => {
+        if (initialProduct) return
+
         async function load() {
             setLoading(true)
             const supabase = createClient()
@@ -49,21 +72,21 @@ export function ProductPageClient({ slug }: { slug: string }) {
             }
 
             if (prodData) {
-                setProduct(prodData)
+                setProduct(prodData as ProductData)
             } else {
                 // Tenta buscar ignorando case just in case
                 const { data: retryData } = await supabase
                     .from('products')
-                    .select('*, images:product_images(url, is_primary, position), brand:brands(name, logo_url), category:categories(id, name, slug), variants:product_variants(*)')
+                    .select('*, images:product_images(url, is_primary), brand:brands(name, logo_url), category:categories(id, name, slug), variants:product_variants(*)')
                     .ilike('slug', slug)
                     .maybeSingle();
 
-                if (retryData) setProduct(retryData);
+                if (retryData) setProduct(retryData as ProductData);
             }
             setLoading(false)
         }
         load()
-    }, [slug])
+    }, [slug, initialProduct])
 
     if (loading) return (
         <div className="min-h-screen bg-black flex flex-col items-center justify-center text-white">
@@ -80,7 +103,7 @@ export function ProductPageClient({ slug }: { slug: string }) {
         </div>
     )
 
-    const primaryImage = product.images?.find((img: any) => img.is_primary)?.url || product.images?.[0]?.url
+    const primaryImage = product.images?.find((img) => img.is_primary)?.url || product.images?.[0]?.url
 
     return (
         <main className="flex-1 bg-black">
