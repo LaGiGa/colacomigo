@@ -27,7 +27,7 @@ interface ProductFormValues {
     is_new: boolean
 }
 
-interface ImagePreview { file: File; preview: string; uploading: boolean; url?: string }
+interface ImagePreview { file: File; uploadFile: File; preview: string; uploading: boolean; url?: string }
 
 interface Variant {
     id?: string; size: string; colorName: string; colorHex: string; priceDelta: number; sku: string; stock: number
@@ -76,7 +76,7 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
     // Sincroniza estados quando o produto chega (via prop ou fetch)
     useEffect(() => {
         if (initialProduct) {
-            setImages(initialProduct.images?.map((img: any) => ({ preview: img.url, url: img.url, uploading: false })) || [])
+            setImages(initialProduct.images?.map((img: any) => ({ file: null as any, uploadFile: null as any, preview: img.url, url: img.url, uploading: false })) || [])
             setVariants(initialProduct.variants?.map((v: any) => ({
                 id: v.id, sku: v.sku, size: v.size || '', colorName: v.color_name || '', colorHex: v.color_hex || '#000000', priceDelta: v.price_delta || 0, stock: v.stock || 0
             })) || [{ size: '', colorName: '', colorHex: '#000000', priceDelta: 0, sku: '', stock: 0 }])
@@ -178,18 +178,54 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
             .replace(/\s+/g, '-')
     }
 
+    async function optimizeImageFile(file: File): Promise<File> {
+        if (!file.type.startsWith('image/')) return file
+        if (file.size <= 450 * 1024) return file
+
+        const bitmap = await createImageBitmap(file)
+        const maxSide = 1600
+        const ratio = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height))
+        const targetWidth = Math.max(1, Math.round(bitmap.width * ratio))
+        const targetHeight = Math.max(1, Math.round(bitmap.height * ratio))
+
+        const canvas = document.createElement('canvas')
+        canvas.width = targetWidth
+        canvas.height = targetHeight
+
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return file
+        ctx.drawImage(bitmap, 0, 0, targetWidth, targetHeight)
+        bitmap.close()
+
+        const webpBlob = await new Promise<Blob | null>((resolve) =>
+            canvas.toBlob(resolve, 'image/webp', 0.8)
+        )
+        if (!webpBlob) return file
+
+        const optimizedName = file.name.replace(/\.[^.]+$/, '.webp')
+        return new File([webpBlob], optimizedName, {
+            type: 'image/webp',
+            lastModified: Date.now(),
+        })
+    }
+
     async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
         const files = Array.from(e.target.files ?? [])
         if (!files.length) return
 
-        const newPreviews: ImagePreview[] = files.map((f) => ({
-            file: f, preview: URL.createObjectURL(f), uploading: true,
-        }))
+        const newPreviews: ImagePreview[] = await Promise.all(
+            files.map(async (file) => ({
+                file,
+                uploadFile: await optimizeImageFile(file),
+                preview: URL.createObjectURL(file),
+                uploading: true,
+            }))
+        )
         setImages((prev) => [...prev, ...newPreviews])
 
-        await Promise.all(files.map(async (file) => {
+        await Promise.all(newPreviews.map(async (preview) => {
             const formData = new FormData()
-            formData.append('file', file)
+            formData.append('file', preview.uploadFile)
             formData.append('folder', 'products')
             try {
                 const res = await fetch('/api/admin/upload', { method: 'POST', body: formData })
@@ -197,11 +233,11 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
                 if (!res.ok || !data?.url) {
                     throw new Error(data?.error || 'Falha no upload da imagem')
                 }
-                setImages((prev) => prev.map((img) => img.file === file ? { ...img, uploading: false, url: data.url } : img))
+                setImages((prev) => prev.map((img) => img.file === preview.file ? { ...img, uploading: false, url: data.url } : img))
             } catch (err) {
-                setImages((prev) => prev.map((img) => img.file === file ? { ...img, uploading: false } : img))
+                setImages((prev) => prev.map((img) => img.file === preview.file ? { ...img, uploading: false } : img))
                 const message = err instanceof Error ? err.message : 'Erro desconhecido'
-                toast.error(`Erro no upload de ${file.name}: ${message}`)
+                toast.error(`Erro no upload de ${preview.file.name}: ${message}`)
             }
         }))
     }

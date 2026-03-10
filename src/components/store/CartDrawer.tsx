@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { formatCurrency } from '@/lib/utils'
+import { optimizeImageUrl } from '@/lib/image'
 import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -58,7 +59,7 @@ export function CartDrawer() {
                                     <div className="relative h-28 w-24 flex-shrink-0 bg-zinc-900 border border-white/5 overflow-hidden">
                                         {item.imageUrl ? (
                                             <Image
-                                                src={item.imageUrl}
+                                                src={optimizeImageUrl(item.imageUrl, { width: 320, quality: 62 }) ?? item.imageUrl}
                                                 alt={item.productName}
                                                 fill
                                                 className="object-cover transition-transform duration-500 group-hover:scale-110 mix-blend-luminosity hover:mix-blend-normal"

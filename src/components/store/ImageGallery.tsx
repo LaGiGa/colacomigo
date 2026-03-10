@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { optimizeImageUrl } from '@/lib/image'
 
 interface ImageGalleryProps {
     images: { url: string; alt?: string }[]
@@ -13,6 +14,13 @@ interface ImageGalleryProps {
 export function ImageGallery({ images, productName }: ImageGalleryProps) {
     const [current, setCurrent] = useState(0)
     const [zoomed, setZoomed] = useState(false)
+    const [thumbsReady, setThumbsReady] = useState(false)
+    const currentMainImage = optimizeImageUrl(images[current]?.url, { width: 1400, quality: 75 })
+
+    useEffect(() => {
+        const timer = setTimeout(() => setThumbsReady(true), 1200)
+        return () => clearTimeout(timer)
+    }, [images.length])
 
     if (!images.length) {
         return (
@@ -28,7 +36,7 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
     return (
         <div className="flex flex-col-reverse lg:flex-row gap-4 items-start">
             {/* Thumbnails Verticais (Estilo Burj) */}
-            {images.length > 1 && (
+            {images.length > 1 && thumbsReady && (
                 <div className="flex lg:flex-col gap-3 w-full lg:w-24 overflow-x-auto lg:overflow-y-auto no-scrollbar py-1 shrink-0">
                     {images.map((img, i) => (
                         <button
@@ -39,7 +47,12 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
                                 i === current ? 'border-primary opacity-100' : 'border-transparent opacity-40 hover:opacity-80'
                             )}
                         >
-                            <Image src={img.url} alt={`Foto ${i + 1}`} fill className="object-contain p-1 bg-black" />
+                            <Image
+                                src={optimizeImageUrl(img.url, { width: 220, quality: 60 }) ?? img.url}
+                                alt={`Foto ${i + 1}`}
+                                fill
+                                className="object-contain p-1 bg-black"
+                            />
                         </button>
                     ))}
                 </div>
@@ -55,7 +68,7 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
                     onClick={() => setZoomed(!zoomed)}
                 >
                     <Image
-                        src={images[current].url}
+                        src={currentMainImage ?? images[current].url}
                         alt={productName}
                         fill
                         className="object-contain p-2"

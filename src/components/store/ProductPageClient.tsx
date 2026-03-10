@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { ImageGallery } from '@/components/store/ImageGallery'
 import { ProductActions } from '@/components/store/ProductActions'
 import { createClient } from '@/lib/supabase/client'
+import { optimizeImageUrl } from '@/lib/image'
 import { Loader2, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 
@@ -55,16 +56,17 @@ export function ProductPageClient({ slug, initialProduct = null }: { slug: strin
                 return;
             }
 
-            const { data: prodData, error } = await supabase
+            const { data: prodData, error } = await (supabase as any)
                 .from('products')
                 .select(`
-                    *,
+                    id, name, slug, description, price, compare_price, is_new,
                     images:product_images(url, is_primary),
                     brand:brands(name, logo_url),
                     category:categories(id, name, slug),
-                    variants:product_variants(*)
+                    variants:product_variants(id, sku, size, color_name, color_hex, price_delta, is_active, stock)
                 `)
                 .eq('slug', slug)
+                .eq('is_active', true)
                 .maybeSingle()
 
             if (error) {
@@ -75,10 +77,11 @@ export function ProductPageClient({ slug, initialProduct = null }: { slug: strin
                 setProduct(prodData as ProductData)
             } else {
                 // Tenta buscar ignorando case just in case
-                const { data: retryData } = await supabase
+                const { data: retryData } = await (supabase as any)
                     .from('products')
-                    .select('*, images:product_images(url, is_primary), brand:brands(name, logo_url), category:categories(id, name, slug), variants:product_variants(*)')
+                    .select('id, name, slug, description, price, compare_price, is_new, images:product_images(url, is_primary), brand:brands(name, logo_url), category:categories(id, name, slug), variants:product_variants(id, sku, size, color_name, color_hex, price_delta, is_active, stock)')
                     .ilike('slug', slug)
+                    .eq('is_active', true)
                     .maybeSingle();
 
                 if (retryData) setProduct(retryData as ProductData);
@@ -103,7 +106,10 @@ export function ProductPageClient({ slug, initialProduct = null }: { slug: strin
         </div>
     )
 
-    const primaryImage = product.images?.find((img) => img.is_primary)?.url || product.images?.[0]?.url
+    const primaryImage = optimizeImageUrl(
+        product.images?.find((img) => img.is_primary)?.url || product.images?.[0]?.url,
+        { width: 900, quality: 72 }
+    )
 
     return (
         <main className="flex-1 bg-black">

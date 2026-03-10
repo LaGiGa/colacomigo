@@ -6,6 +6,7 @@ import { ShoppingBag, Zap } from 'lucide-react'
 import { useCartStore } from '@/store/useCartStore'
 import { useUIStore } from '@/store/useUIStore'
 import { formatCurrency } from '@/lib/utils'
+import { optimizeImageUrl } from '@/lib/image'
 import { toast } from 'sonner'
 
 interface ProductCardProps {
@@ -44,6 +45,8 @@ export function ProductCard({
     const discountPct = hasDiscount ? Math.round(((comparePrice - price) / comparePrice) * 100) : 0
     const pixPrice = price * 0.9
     const pixSavings = Math.max(0, price - pixPrice)
+    const optimizedMainImage = optimizeImageUrl(imageUrl, { width: 640, quality: 68 })
+    const optimizedSecondImage = optimizeImageUrl(secondImageUrl, { width: 640, quality: 68 })
 
     function handleQuickAdd(e: React.MouseEvent) {
         e.preventDefault()
@@ -60,7 +63,7 @@ export function ProductCard({
             colorName: null,
             colorHex: null,
             price,
-            imageUrl: imageUrl ?? null,
+            imageUrl: optimizedMainImage ?? null,
         })
         toast.success(`${name} adicionado!`)
         openCart()
@@ -72,20 +75,20 @@ export function ProductCard({
 
                 {/* ── Imagem Cortante ──────────────────────────────────────────── */}
                 <div className="relative overflow-hidden bg-zinc-950" style={{ aspectRatio: '3/4' }}>
-                    {imageUrl ? (
+                    {optimizedMainImage ? (
                         <>
                             {/* Imagem principal */}
                             <Image
-                                src={imageUrl}
+                                src={optimizedMainImage}
                                 alt={name}
                                 fill
-                                className={`object-contain p-1.5 transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] group-hover:scale-105 ${secondImageUrl ? 'group-hover:opacity-0' : ''}`}
+                                className={`object-contain p-1.5 transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] group-hover:scale-105 ${optimizedSecondImage ? 'group-hover:opacity-0' : ''}`}
                                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                             />
                             {/* Segunda imagem (hover) */}
-                            {secondImageUrl && (
+                            {optimizedSecondImage && (
                                 <Image
-                                    src={secondImageUrl}
+                                    src={optimizedSecondImage}
                                     alt={`${name} — detalhe`}
                                     fill
                                     className="object-contain p-1.5 absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] group-hover:scale-105"
@@ -176,3 +179,4 @@ export function ProductCard({
         </Link>
     )
 }
+

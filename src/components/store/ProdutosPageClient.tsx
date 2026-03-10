@@ -40,10 +40,12 @@ export function ProdutosPageClient({
     const [colecao, setColecao] = useState<string | null>(initialCollection)
     const [marca, setMarca] = useState<string | null>(initialMarca)
     const [ordem, setOrdem] = useState<string>('novos')
+    const [visibleCount, setVisibleCount] = useState(10)
     const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
     const [isMobileSortOpen, setIsMobileSortOpen] = useState(false)
     const [openAccordion, setOpenAccordion] = useState<string | null>('categorias')
     const skipFirstFetchRef = useRef(initialProducts.length > 0)
+    const productsCacheRef = useRef<Map<string, any[]>>(new Map())
 
 
     // Carregar filtros do banco para o Sidebar
@@ -77,20 +79,27 @@ export function ProdutosPageClient({
 
             if (skipFirstFetchRef.current && currentKey === initialKey) {
                 skipFirstFetchRef.current = false
+                productsCacheRef.current.set(currentKey, initialProducts)
                 setLoading(false)
                 return
             }
             skipFirstFetchRef.current = false
+
+            if (productsCacheRef.current.has(currentKey)) {
+                setProducts(productsCacheRef.current.get(currentKey) ?? [])
+                setLoading(false)
+                return
+            }
 
             setLoading(true)
             const supabase = createClient()
             let query = (supabase as any)
                 .from('products')
                 .select(`
-                    *,
+                    id, name, slug, price, compare_price, is_new,
                     brand:brands(name),
                     images:product_images(url, is_primary),
-                    variants:product_variants(id, sku, size, color_name, color_hex, price_delta, is_active, stock)
+                    variants:product_variants(id, sku, is_active, stock)
                 `)
                 .eq('is_active', true)
 
@@ -106,13 +115,23 @@ export function ProdutosPageClient({
             }
 
             if (colecao) {
-                const { data: colData } = await supabase.from('collections').select('id').eq('slug', colecao).single()
-                if (colData) query = query.eq('collection_id', colData.id)
+                const colId = dbCollections.find((c: any) => c.slug === colecao)?.id
+                if (colId) {
+                    query = query.eq('collection_id', colId)
+                } else {
+                    const { data: colData } = await supabase.from('collections').select('id').eq('slug', colecao).single()
+                    if (colData) query = query.eq('collection_id', colData.id)
+                }
             }
 
             if (marca) {
-                const { data: brandData } = await supabase.from('brands').select('id').eq('slug', marca).single()
-                if (brandData) query = query.eq('brand_id', brandData.id)
+                const brandId = dbBrands.find((b: any) => b.slug === marca)?.id
+                if (brandId) {
+                    query = query.eq('brand_id', brandId)
+                } else {
+                    const { data: brandData } = await supabase.from('brands').select('id').eq('slug', marca).single()
+                    if (brandData) query = query.eq('brand_id', brandData.id)
+                }
             }
 
             if (ordem === 'menor') query = query.order('price', { ascending: true })
@@ -123,11 +142,14 @@ export function ProdutosPageClient({
             if (error) {
                 console.error("Erro ao carregar produtos:", error)
             }
-            setProducts(data || [])
+            const productsData = data || []
+            productsCacheRef.current.set(currentKey, productsData)
+            setProducts(productsData)
+            setVisibleCount(10)
             setLoading(false)
         }
         load()
-    }, [categoria, colecao, marca, ordem, dbCategories.length, initialCategory, initialCollection, initialMarca])
+    }, [categoria, colecao, marca, ordem, dbCategories, dbBrands, dbCollections, initialCategory, initialCollection, initialMarca, initialProducts])
 
     const currentTitle = categoria
         ? dbCategories.find(c => c.slug === categoria)?.name
@@ -136,6 +158,7 @@ export function ProdutosPageClient({
             : marca
                 ? marca.replace(/-/g, ' ').toUpperCase()
                 : 'A COLA'
+    const displayedProducts = products.slice(0, visibleCount)
 
     return (
         <main className="flex-1 bg-black">
@@ -328,34 +351,46 @@ export function ProdutosPageClient({
                         {loading ? (
                             <div className="flex items-center justify-center py-32"><Loader2 className="animate-spin text-primary w-12 h-12" /></div>
                         ) : products.length > 0 ? (
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-4 lg:gap-6 w-full">
-                                {products.map((p) => (
-                                    (() => {
-                                        const activeVariants = (p.variants ?? []).filter((v: any) => v.is_active !== false)
-                                        const firstActiveVariant = activeVariants[0]
-                                        const isInStock = activeVariants.length === 0
-                                            ? true
-                                            : activeVariants.some((v: any) => (v.stock ?? 0) > 0)
+                            <div>
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-4 lg:gap-6 w-full">
+                                    {displayedProducts.map((p) => (
+                                        (() => {
+                                            const activeVariants = (p.variants ?? []).filter((v: any) => v.is_active !== false)
+                                            const firstActiveVariant = activeVariants[0]
+                                            const isInStock = activeVariants.length === 0
+                                                ? true
+                                                : activeVariants.some((v: any) => (v.stock ?? 0) > 0)
 
-                                        return (
-                                    <ProductCard
-                                        key={p.id}
-                                        id={p.id}
-                                        name={p.name}
-                                        slug={p.slug}
-                                        price={p.price}
-                                        comparePrice={p.compare_price}
-                                        imageUrl={p.images?.[0]?.url ?? null}
-                                        secondImageUrl={p.images?.[1]?.url ?? null}
-                                        brandName={p.brand?.name ?? null}
-                                        isNew={p.is_new ?? false}
-                                        variantId={firstActiveVariant?.id ?? null}
-                                        variantSku={firstActiveVariant?.sku ?? null}
-                                        inStock={isInStock}
-                                    />
-                                        )
-                                    })()
-                                ))}
+                                            return (
+                                                <ProductCard
+                                                    key={p.id}
+                                                    id={p.id}
+                                                    name={p.name}
+                                                    slug={p.slug}
+                                                    price={p.price}
+                                                    comparePrice={p.compare_price}
+                                                    imageUrl={p.images?.[0]?.url ?? null}
+                                                    secondImageUrl={p.images?.[1]?.url ?? null}
+                                                    brandName={p.brand?.name ?? null}
+                                                    isNew={p.is_new ?? false}
+                                                    variantId={firstActiveVariant?.id ?? null}
+                                                    variantSku={firstActiveVariant?.sku ?? null}
+                                                    inStock={isInStock}
+                                                />
+                                            )
+                                        })()
+                                    ))}
+                                </div>
+                                {products.length > visibleCount && (
+                                    <div className="mt-8 flex justify-center">
+                                        <button
+                                            onClick={() => setVisibleCount((v) => v + 10)}
+                                            className="px-6 py-3 border border-white/20 text-white text-xs font-black tracking-widest uppercase hover:bg-white/5 transition-colors"
+                                        >
+                                            Carregar mais
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center py-32 text-center border border-dashed border-white/10 rounded-3xl bg-zinc-950/50">

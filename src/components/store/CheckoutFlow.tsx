@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency } from '@/lib/utils'
+import { optimizeImageUrl } from '@/lib/image'
 import { Loader2, ChevronRight, ChevronLeft, ShoppingBag, MapPin, CreditCard, Lock, Truck, Copy, CheckCircle2 } from 'lucide-react'
 import Image from 'next/image'
 import { toast } from 'sonner'
@@ -286,7 +287,12 @@ export function CheckoutFlow() {
                                 <div key={item.variantId} className="flex gap-4 p-4 bg-black hover:bg-zinc-950 transition-colors">
                                     {item.imageUrl && (
                                         <div className="relative h-20 w-16 overflow-hidden flex-shrink-0 bg-neutral-900 outline outline-1 outline-white/10">
-                                            <Image src={item.imageUrl} alt={item.productName} fill className="object-cover" />
+                                            <Image
+                                                src={optimizeImageUrl(item.imageUrl, { width: 220, quality: 60 }) ?? item.imageUrl}
+                                                alt={item.productName}
+                                                fill
+                                                className="object-cover"
+                                            />
                                         </div>
                                     )}
                                     <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
