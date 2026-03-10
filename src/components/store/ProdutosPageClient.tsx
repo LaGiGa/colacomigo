@@ -96,7 +96,7 @@ export function ProdutosPageClient({
             let query = (supabase as any)
                 .from('products')
                 .select(`
-                    id, name, slug, price, compare_price, is_new,
+                    id, name, slug, price, compare_price,
                     brand:brands(name),
                     images:product_images(url, is_primary),
                     variants:product_variants(id, sku, is_active, stock)

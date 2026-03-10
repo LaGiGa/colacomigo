@@ -59,7 +59,7 @@ export function ProductPageClient({ slug, initialProduct = null }: { slug: strin
             const { data: prodData, error } = await (supabase as any)
                 .from('products')
                 .select(`
-                    id, name, slug, description, price, compare_price, is_new,
+                    id, name, slug, description, price, compare_price,
                     images:product_images(url, is_primary),
                     brand:brands(name, logo_url),
                     category:categories(id, name, slug),
@@ -79,7 +79,7 @@ export function ProductPageClient({ slug, initialProduct = null }: { slug: strin
                 // Tenta buscar ignorando case just in case
                 const { data: retryData } = await (supabase as any)
                     .from('products')
-                    .select('id, name, slug, description, price, compare_price, is_new, images:product_images(url, is_primary), brand:brands(name, logo_url), category:categories(id, name, slug), variants:product_variants(id, sku, size, color_name, color_hex, price_delta, is_active, stock)')
+                    .select('id, name, slug, description, price, compare_price, images:product_images(url, is_primary), brand:brands(name, logo_url), category:categories(id, name, slug), variants:product_variants(id, sku, size, color_name, color_hex, price_delta, is_active, stock)')
                     .ilike('slug', slug)
                     .eq('is_active', true)
                     .maybeSingle();
