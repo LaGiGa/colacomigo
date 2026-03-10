@@ -46,6 +46,7 @@ export function ProdutosPageClient({
     const [openAccordion, setOpenAccordion] = useState<string | null>('categorias')
     const skipFirstFetchRef = useRef(initialProducts.length > 0)
     const productsCacheRef = useRef<Map<string, any[]>>(new Map())
+    const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
 
     // Carregar filtros do banco para o Sidebar
@@ -159,6 +160,24 @@ export function ProdutosPageClient({
                 ? marca.replace(/-/g, ' ').toUpperCase()
                 : 'A COLA'
     const displayedProducts = products.slice(0, visibleCount)
+
+    useEffect(() => {
+        const sentinel = loadMoreRef.current
+        if (!sentinel) return
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const first = entries[0]
+                if (first.isIntersecting) {
+                    setVisibleCount((prev) => (prev < products.length ? Math.min(prev + 10, products.length) : prev))
+                }
+            },
+            { rootMargin: '300px 0px' }
+        )
+
+        observer.observe(sentinel)
+        return () => observer.disconnect()
+    }, [products.length])
 
     return (
         <main className="flex-1 bg-black">
@@ -383,12 +402,12 @@ export function ProdutosPageClient({
                                 </div>
                                 {products.length > visibleCount && (
                                     <div className="mt-8 flex justify-center">
-                                        <button
-                                            onClick={() => setVisibleCount((v) => v + 10)}
-                                            className="px-6 py-3 border border-white/20 text-white text-xs font-black tracking-widest uppercase hover:bg-white/5 transition-colors"
+                                        <div
+                                            ref={loadMoreRef}
+                                            className="text-[10px] font-black tracking-widest uppercase text-neutral-500 py-3 px-6 border border-white/10"
                                         >
-                                            Carregar mais
-                                        </button>
+                                            Carregando mais...
+                                        </div>
                                     </div>
                                 )}
                             </div>
