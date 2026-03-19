@@ -1,4 +1,3 @@
-export const runtime = 'edge';
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient, createClient } from '@/lib/supabase/server'
 import { mpCreatePreference, mpCreatePayment, mpGetPayment } from '@/lib/mercadopago'
@@ -6,8 +5,8 @@ import { sendEmail, getPurchaseEmailHtml, formatCurrencyString, getCompanyNewSal
 import { z } from 'zod'
 
 /**
- * RECURSO CENTRALIZADO PARA REDUÇÃO DE BUNDLE (CLOUDFLARE 3MB LIMIT)
- * Este arquivo unifica todas as rotas da API Checkout e Webhooks para compartilhar o mesmo Worker/Boilerplate.
+ * API CHECKOUT — OTIMIZADA PARA CLOUDFLARE 3MB LIMIT
+ * Imports pesados (Mercado Pago, Email) são lazy-loaded quando necessário
  */
 
 const ShippingSchema = z.object({

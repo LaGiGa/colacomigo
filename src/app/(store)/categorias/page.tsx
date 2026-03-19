@@ -4,9 +4,7 @@ import { ArrowRight } from 'lucide-react'
 import type { Metadata } from 'next'
 import { createServiceClient } from '@/lib/supabase/server'
 
-export const runtime = 'edge'
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+export const revalidate = 120
 
 export const metadata: Metadata = {
     title: 'Categorias | Cola Comigo Shop',

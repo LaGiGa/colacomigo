@@ -1,0 +1,10 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Verificar tamanho do build",
+			"type": "shell",
+			"command": "npm run build 2>&1 | tail -50"
+		}
+	]
+}

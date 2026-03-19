@@ -1,4 +1,3 @@
-export const runtime = 'edge';
 import { ProductFormClient } from '@/components/admin/AdminDynamicComponents'
 
 interface Props {

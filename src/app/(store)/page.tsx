@@ -9,9 +9,7 @@ import {
 import { createServiceClient } from '@/lib/supabase/server'
 import type { Metadata } from 'next'
 
-export const runtime = 'edge'
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+export const revalidate = 120
 
 export const metadata: Metadata = {
     title: 'Cola Comigo Shop | Streetwear e Edições Limitadas em Palmas-TO',
@@ -47,13 +45,14 @@ export default async function PaginaInicial() {
         .order('sort_order', { ascending: true })
         .limit(4)
 
-    // Buscar categorias do banco
+    // Buscar categorias do banco (limitado a 8)
     const { data: categoriasDB } = await supabase
         .from('categories')
         .select('name, slug, image_url')
         .eq('is_active', true)
         .is('parent_id', null)
         .order('sort_order', { ascending: true })
+        .limit(8)
 
     const COLECOES = (colecoesDB ?? []).map((c, i) => ({
         nome: c.name,
@@ -79,13 +78,13 @@ export default async function PaginaInicial() {
             {/* Categorias */}
             <section className="py-20 bg-black relative">
                 <div className="container-store">
-                    <div className="flex items-end justify-between mb-12 border-b border-white/10 pb-6">
+                    <div className="flex items-baseline justify-between mb-12 gap-4 border-b border-white/10 pb-6">
                         <div>
                             <span className="text-[10px] font-black tracking-[0.3em] text-primary uppercase mb-2 block animate-in fade-in slide-in-from-bottom-2 duration-700">Explorar por Estilo</span>
                             <h2 className="text-[clamp(2.5rem,6vw,5rem)] font-black tracking-tighter uppercase leading-none text-white">CATEGORIAS</h2>
                         </div>
-                        <Link href="/categorias" className="hidden sm:flex items-center gap-2 text-[11px] font-black tracking-[0.2em] uppercase text-neutral-500 hover:text-white transition-colors group pb-2">
-                            Ver todas <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                        <Link href="/categorias" className="text-xs font-black tracking-widest uppercase text-primary hover:text-white transition-colors flex items-center gap-2 group whitespace-nowrap">
+                            Ver tudo <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                         </Link>
                     </div>
                 </div>
@@ -104,7 +103,6 @@ export default async function PaginaInicial() {
                         </Link>
                     ))}
                 </div>
-
             </section>
 
             {/* Coleções */}

@@ -1,4 +1,3 @@
-export const runtime = 'edge';
 import { PedidoDetailClient } from '@/components/admin/AdminDynamicComponents'
 
 interface Props {
