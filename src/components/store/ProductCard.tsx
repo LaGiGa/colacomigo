@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Icons } from '@/components/ui/icons'
+import { ShoppingBag, Zap } from '@/components/ui/icons'
 import { useCartStore } from '@/store/useCartStore'
 import { useUIStore } from '@/store/useUIStore'
 import { formatCurrency } from '@/lib/utils'
@@ -98,7 +98,7 @@ export function ProductCard({
                         </>
                     ) : (
                         <div className="absolute inset-0 flex items-center justify-center">
-                            <Icons.ShoppingBag className="h-8 w-8 text-white/10" />
+                            <ShoppingBag className="h-8 w-8 text-white/10" />
                         </div>
                     )}
 
@@ -161,7 +161,7 @@ export function ProductCard({
                         </div>
                         <div className="flex items-center gap-2">
                             <span className="px-1.5 py-0.5 bg-[#1a8fff] text-black text-[9px] font-black uppercase tracking-widest inline-flex items-center gap-1">
-                                <Icons.Zap className="h-2.5 w-2.5" />
+                                <Zap className="h-2.5 w-2.5" />
                                 PIX -10%
                             </span>
                             <span className="text-[10px] text-[#1a8fff] font-black tracking-widest">

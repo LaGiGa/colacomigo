@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Icons } from '@/components/ui/icons'
+import { ShoppingBag, X } from '@/components/ui/icons'
 import { createClient } from '@/lib/supabase/client'
 
 interface PurchasePreview {
@@ -106,7 +106,7 @@ export function RecentPurchasePopup() {
                 {/* Ícone de compra em vez de foto do produto */}
                 <div className="relative h-12 w-12 rounded-full flex-shrink-0 bg-white/5 flex items-center justify-center p-1 border border-white/5 shadow-inner">
                     <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full" />
-                    <Icons.ShoppingBag className="w-5 h-5 text-white relative z-10" />
+                    <ShoppingBag className="w-5 h-5 text-white relative z-10" />
                 </div>
 
                 {/* Textos premium */}
@@ -131,7 +131,7 @@ export function RecentPurchasePopup() {
                     onClick={() => setDismissed(true)}
                     className="absolute top-2 right-2 flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-white/30 hover:text-white hover:bg-white/10 transition-colors"
                 >
-                    <Icons.X className="h-3 w-3" />
+                    <X className="h-3 w-3" />
                 </button>
             </div>
 

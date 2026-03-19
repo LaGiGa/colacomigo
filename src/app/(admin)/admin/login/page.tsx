@@ -4,7 +4,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Icons } from '@/components/ui/icons'
+import { ArrowLeft, Loader2, Lock, Mail, Shield, ShieldCheck } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
@@ -62,7 +62,7 @@ export default function AdminLoginPage() {
             <div className="w-full max-w-md relative z-10">
                 <div className="mb-8 text-center">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-primary to-blue-600 shadow-xl shadow-primary/20 mb-6 group transition-transform hover:scale-105">
-                        <Icons.ShieldCheck className="w-8 h-8 text-white transition-transform group-hover:rotate-12" />
+                        <ShieldCheck className="w-8 h-8 text-white transition-transform group-hover:rotate-12" />
                     </div>
                     <h1 className="text-3xl font-black tracking-tighter text-white uppercase italic">
                         Painel <span className="text-primary not-italic">Admin</span>
@@ -82,7 +82,7 @@ export default function AdminLoginPage() {
                                 Identificação
                             </label>
                             <div className="relative group">
-                                <Icons.Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 transition-colors group-focus-within:text-primary" />
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 transition-colors group-focus-within:text-primary" />
                                 <Input
                                     type="email"
                                     required
@@ -99,7 +99,7 @@ export default function AdminLoginPage() {
                                 Chave de Acesso
                             </label>
                             <div className="relative group">
-                                <Icons.Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 transition-colors group-focus-within:text-primary" />
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 transition-colors group-focus-within:text-primary" />
                                 <Input
                                     type="password"
                                     required
@@ -117,7 +117,7 @@ export default function AdminLoginPage() {
                             className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-black font-black uppercase tracking-widest text-sm shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                         >
                             {isLoading ? (
-                                <Icons.Loader2 className="w-5 h-5 animate-spin" />
+                                <Loader2 className="w-5 h-5 animate-spin" />
                             ) : (
                                 'Entrar no Sistema'
                             )}
@@ -130,7 +130,7 @@ export default function AdminLoginPage() {
                         href="/"
                         className="inline-flex items-center gap-2 text-xs font-bold text-neutral-500 hover:text-white transition-colors uppercase tracking-widest"
                     >
-                        <Icons.ArrowLeft className="w-3 h-3" />
+                        <ArrowLeft className="w-3 h-3" />
                         Voltar para a Loja
                     </Link>
                 </div>

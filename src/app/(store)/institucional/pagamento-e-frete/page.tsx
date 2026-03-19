@@ -1,4 +1,4 @@
-import { Icons } from '@/components/ui/icons'
+import { BarChart, CreditCard, MapPin, Package, Smartphone, Truck } from '@/components/ui/icons'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -8,19 +8,19 @@ export const metadata: Metadata = {
 
 const PAGAMENTOS = [
     {
-        icon: Icons.Smartphone,
+        icon: Smartphone,
         titulo: 'PIX',
         descricao: 'Pagamento instantâneo com aprovação imediata. Disponível 24h por dia, 7 dias por semana.',
         destaque: 'Mais rápido',
     },
     {
-        icon: Icons.CreditCard,
+        icon: CreditCard,
         titulo: 'Cartão de Crédito',
         descricao: 'Visa, Mastercard, Elo, Hipercard e American Express. Parcelamento em até 12x com juros.',
         destaque: 'Até 12x',
     },
     {
-        icon: Icons.BarChart,
+        icon: BarChart,
         titulo: 'Boleto Bancário',
         descricao: 'Vencimento em 3 dias úteis. O pedido é processado após a confirmação do pagamento.',
         destaque: '3 dias úteis',
@@ -29,19 +29,19 @@ const PAGAMENTOS = [
 
 const FRETES = [
     {
-        icon: Icons.MapPin,
+        icon: MapPin,
         titulo: 'Entrega Relâmpago',
         descricao: 'Exclusivo para Palmas-TO. Receba seu drop via motoboy no mesmo dia (para pedidos confirmados até as 14h).',
         prazo: 'Mesmo dia',
     },
     {
-        icon: Icons.Truck,
+        icon: Truck,
         titulo: 'SEDEX — Correios',
         descricao: 'Entrega expressa para todo território nacional. Prazo médio de 2 a 5 dias úteis.',
         prazo: '2–5 dias úteis',
     },
     {
-        icon: Icons.Package,
+        icon: Package,
         titulo: 'PAC — Correios',
         descricao: 'Entrega econômica para todo o Brasil. Prazo médio de 7 a 15 dias úteis após postagem.',
         prazo: '7–15 dias úteis',

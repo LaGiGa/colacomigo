@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { Icons } from '@/components/ui/icons'
+import { GripVertical, Loader2, Pencil, Plus, Tag, Trash2 } from '@/components/ui/icons'
 
 interface Categoria {
     id: string
@@ -62,7 +62,7 @@ export function CategoriasAdminClient({ initialCategories = [] }: Props) {
 
     const [ativa, setAtiva] = useState(true)
 
-    if (loading) return <div className="flex items-center justify-center p-20"><Icons.Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
+    if (loading) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
 
     function slugify(text: string) {
         return text
@@ -210,12 +210,12 @@ export function CategoriasAdminClient({ initialCategories = [] }: Props) {
                 <div className="flex gap-2">
                     {categorias.length === 0 && (
                         <Button variant="outline" size="sm" onClick={seedCategorias} disabled={isPending}>
-                            {isPending ? <Icons.Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                            {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                             Criar Categorias Padrão
                         </Button>
                     )}
                     <Button className="gradient-brand text-white" size="sm" onClick={abrirNova}>
-                        <Icons.Plus className="h-4 w-4 mr-2" /> Nova Categoria
+                        <Plus className="h-4 w-4 mr-2" /> Nova Categoria
                     </Button>
                 </div>
             </div>
@@ -273,7 +273,7 @@ export function CategoriasAdminClient({ initialCategories = [] }: Props) {
                     </div>
                     <div className="flex gap-3">
                         <Button className="gradient-brand text-white" onClick={salvar} disabled={isPending}>
-                            {isPending ? <Icons.Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                            {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                             Salvar
                         </Button>
                         <Button variant="outline" onClick={cancelar}>Cancelar</Button>
@@ -299,13 +299,13 @@ export function CategoriasAdminClient({ initialCategories = [] }: Props) {
                             <div className="flex flex-col lg:grid lg:grid-cols-6 lg:items-center gap-4">
                                 {/* Grip/Drag icon - decorativo por enquanto */}
                                 <div className="hidden lg:block w-8">
-                                    <Icons.GripVertical className="h-4 w-4 text-muted-foreground/30" />
+                                    <GripVertical className="h-4 w-4 text-muted-foreground/30" />
                                 </div>
 
                                 {/* Nome */}
                                 <div className="flex items-center gap-3">
                                     <div className="h-10 w-10 lg:h-8 lg:w-8 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0 lg:hidden">
-                                        <Icons.Tag className="h-5 w-5 text-muted-foreground/60" />
+                                        <Tag className="h-5 w-5 text-muted-foreground/60" />
                                     </div>
                                     <div className="min-w-0">
                                         <p className="font-bold text-sm lg:text-base truncate">{cat.name}</p>
@@ -350,7 +350,7 @@ export function CategoriasAdminClient({ initialCategories = [] }: Props) {
                                         onClick={() => abrirEditar(cat)}
                                         className="flex-1 lg:flex-none h-9 lg:h-8 font-bold text-xs"
                                     >
-                                        <Icons.Pencil className="h-3.5 w-3.5 mr-2" /> Editar
+                                        <Pencil className="h-3.5 w-3.5 mr-2" /> Editar
                                     </Button>
                                     <Button
                                         variant="ghost"
@@ -358,7 +358,7 @@ export function CategoriasAdminClient({ initialCategories = [] }: Props) {
                                         className="text-destructive hover:bg-destructive/10 h-9 lg:h-8 aspect-square lg:aspect-auto"
                                         onClick={() => excluir(cat)}
                                     >
-                                        <Icons.Trash2 className="h-4 w-4" />
+                                        <Trash2 className="h-4 w-4" />
                                     </Button>
                                 </div>
                             </div>
@@ -366,7 +366,7 @@ export function CategoriasAdminClient({ initialCategories = [] }: Props) {
                     ))
                 ) : (
                     <div className="p-16 text-center text-muted-foreground bg-card border border-dashed border-border rounded-2xl">
-                        <Icons.Tag className="h-10 w-10 mx-auto mb-4 opacity-20" />
+                        <Tag className="h-10 w-10 mx-auto mb-4 opacity-20" />
                         <p className="font-bold text-lg mb-1">Nenhuma categoria cadastrada</p>
                         <p className="text-sm">Clique em &quot;Nova Categoria&quot; para começar.</p>
                     </div>

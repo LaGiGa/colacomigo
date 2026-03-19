@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Icons } from '@/components/ui/icons'
+import { Check, X } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 
 export function CookieConsent() {
@@ -39,7 +39,7 @@ export function CookieConsent() {
                                 onClick={accept}
                                 className="bg-white text-black hover:bg-white/90 text-xs font-bold uppercase tracking-widest px-6 h-9"
                             >
-                                <Icons.Check className="w-3.5 h-3.5 mr-1.5" /> Entendi e Aceito
+                                <Check className="w-3.5 h-3.5 mr-1.5" /> Entendi e Aceito
                             </Button>
                         </div>
                     </div>
@@ -47,7 +47,7 @@ export function CookieConsent() {
                         onClick={() => setVisible(false)}
                         className="text-[#52525b] hover:text-white transition-colors absolute top-4 right-4 sm:relative sm:top-0 sm:right-0"
                     >
-                        <Icons.X className="w-4 h-4" />
+                        <X className="w-4 h-4" />
                     </button>
                 </div>
             </div>

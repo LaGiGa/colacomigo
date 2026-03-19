@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Icons } from '@/components/ui/icons'
+import { ArrowDown, ArrowDownRight, ArrowUp, ArrowUpRight, DollarSign, Loader2, Package, ShoppingCart, TrendingUp } from '@/components/ui/icons'
 import { formatCurrency } from '@/lib/utils'
 
 interface Order {
@@ -34,7 +34,7 @@ export function FinanceiroAdminClient() {
     if (loading) {
         return (
             <div className="flex items-center justify-center p-20">
-                <Icons.Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
         )
     }
@@ -110,7 +110,7 @@ export function FinanceiroAdminClient() {
                     {
                         label: 'Receita Total',
                         value: formatCurrency(totalReceita),
-                        icon: Icons.DollarSign,
+                        icon: DollarSign,
                         color: 'text-green-400',
                         bg: 'bg-green-500/10',
                         sub: `${paidOrders.length} pedidos pagos`,
@@ -118,7 +118,7 @@ export function FinanceiroAdminClient() {
                     {
                         label: 'Receita do Mês',
                         value: formatCurrency(receitaMes),
-                        icon: Icons.TrendingUp,
+                        icon: TrendingUp,
                         color: 'text-blue-400',
                         bg: 'bg-blue-500/10',
                         sub: variacaoMes !== 0
@@ -129,7 +129,7 @@ export function FinanceiroAdminClient() {
                     {
                         label: 'Pedidos no Mês',
                         value: thisMonthOrders.length.toString(),
-                        icon: Icons.ShoppingCart,
+                        icon: ShoppingCart,
                         color: 'text-purple-400',
                         bg: 'bg-purple-500/10',
                         sub: `${allOrders.filter(o => o.status === 'pending').length} pendentes`,
@@ -137,7 +137,7 @@ export function FinanceiroAdminClient() {
                     {
                         label: 'Ticket Médio',
                         value: formatCurrency(ticketMedio),
-                        icon: Icons.Package,
+                        icon: Package,
                         color: 'text-orange-400',
                         bg: 'bg-orange-500/10',
                         sub: 'por pedido pago',
@@ -154,8 +154,8 @@ export function FinanceiroAdminClient() {
                         <div className="flex items-center gap-1">
                             {trend !== undefined && trend !== 0 && (
                                 trend > 0
-                                    ? <Icons.ArrowUpRight className="h-3 w-3 text-green-400" />
-                                    : <Icons.ArrowDownRight className="h-3 w-3 text-red-400" />
+                                    ? <ArrowUpRight className="h-3 w-3 text-green-400" />
+                                    : <ArrowDownRight className="h-3 w-3 text-red-400" />
                             )}
                             <p className="text-xs text-muted-foreground">{sub}</p>
                         </div>
@@ -166,7 +166,7 @@ export function FinanceiroAdminClient() {
             {/* ─── Gráfico de barras — últimos 14 dias ─────── */}
             <div className="rounded-xl border border-border p-6 bg-card">
                 <h2 className="font-bold text-sm mb-6 flex items-center gap-2">
-                    <Icons.TrendingUp className="h-4 w-4 text-primary" />
+                    <TrendingUp className="h-4 w-4 text-primary" />
                     Receita — Últimos 14 dias
                 </h2>
                 <div className="flex items-end gap-2 h-40">

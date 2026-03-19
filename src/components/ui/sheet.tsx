@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Icons } from "@/components/ui/icons"
+import { X } from '@/components/ui/icons'
 import { Dialog as SheetPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
@@ -76,7 +76,7 @@ function SheetContent({
         {children}
         {showCloseButton && (
           <SheetPrimitive.Close className="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-secondary">
-            <Icons.X className="size-4" />
+            <X className="size-4" />
             <span className="sr-only">Close</span>
           </SheetPrimitive.Close>
         )}

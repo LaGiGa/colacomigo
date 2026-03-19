@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { Icons } from '@/components/ui/icons'
+import { ArrowDown, ArrowUp, Check, CheckCircle, ExternalLink, ImagePlus, Layout, Loader2, Pencil, Plus, Trash2, X, XCircle } from '@/components/ui/icons'
 import Image from 'next/image'
 
 interface Banner {
@@ -53,7 +53,7 @@ export function BannersAdminClient({ banners: initial = [] }: { banners?: Banner
     const [ctaText, setCtaText] = useState('VER MAIS')
     const [ativa, setAtiva] = useState(true)
 
-    if (loading) return <div className="flex items-center justify-center p-20"><Icons.Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
+    if (loading) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
 
     function abrirNovo() {
         setEditando(null)
@@ -212,7 +212,7 @@ export function BannersAdminClient({ banners: initial = [] }: { banners?: Banner
                     {banners.length} banner{banners.length !== 1 ? 's' : ''} cadastrado(s)
                 </p>
                 <Button className="gradient-brand text-white" size="sm" onClick={abrirNovo}>
-                    <Icons.Plus className="h-4 w-4 mr-2" /> Novo Banner
+                    <Plus className="h-4 w-4 mr-2" /> Novo Banner
                 </Button>
             </div>
 
@@ -257,7 +257,7 @@ export function BannersAdminClient({ banners: initial = [] }: { banners?: Banner
                                         onClick={() => setImageUrl('')}
                                         className="absolute top-2 right-2 p-1.5 bg-black/60 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                                     >
-                                        <Icons.XCircle className="h-4 w-4" />
+                                        <XCircle className="h-4 w-4" />
                                     </button>
                                 </div>
                             ) : (
@@ -266,7 +266,7 @@ export function BannersAdminClient({ banners: initial = [] }: { banners?: Banner
                                     disabled={uploading}
                                     className="w-full aspect-[21/9] rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-2 hover:bg-secondary/50 transition-colors"
                                 >
-                                    {uploading ? <Icons.Loader2 className="h-8 w-8 animate-spin text-primary" /> : <Icons.ImagePlus className="h-8 w-8 text-muted-foreground" />}
+                                    {uploading ? <Loader2 className="h-8 w-8 animate-spin text-primary" /> : <ImagePlus className="h-8 w-8 text-muted-foreground" />}
                                     <span className="text-xs font-medium text-muted-foreground">Clique para subir imagem</span>
                                 </button>
                             )}
@@ -277,7 +277,7 @@ export function BannersAdminClient({ banners: initial = [] }: { banners?: Banner
 
                     <div className="flex gap-3 pt-2">
                         <Button className="gradient-brand text-white" onClick={salvar} disabled={isPending || uploading}>
-                            {isPending && <Icons.Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                            {isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                             Salvar Banner
                         </Button>
                         <Button variant="outline" onClick={cancelar}>Cancelar</Button>
@@ -305,16 +305,16 @@ export function BannersAdminClient({ banners: initial = [] }: { banners?: Banner
                                 </div>
                                 <div className="flex gap-1 flex-shrink-0">
                                     <Button variant="ghost" size="sm" onClick={() => mover(banner, 'sobe')} disabled={i === 0}>
-                                        <Icons.ArrowUp className="h-4 w-4" />
+                                        <ArrowUp className="h-4 w-4" />
                                     </Button>
                                     <Button variant="ghost" size="sm" onClick={() => mover(banner, 'desce')} disabled={i === banners.length - 1}>
-                                        <Icons.ArrowDown className="h-4 w-4" />
+                                        <ArrowDown className="h-4 w-4" />
                                     </Button>
                                     <Button variant="ghost" size="sm" onClick={() => abrirEditar(banner)}>
-                                        <Icons.Pencil className="h-4 w-4" />
+                                        <Pencil className="h-4 w-4" />
                                     </Button>
                                     <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10" onClick={() => excluir(banner)}>
-                                        <Icons.Trash2 className="h-4 w-4" />
+                                        <Trash2 className="h-4 w-4" />
                                     </Button>
                                 </div>
                             </div>
@@ -323,14 +323,14 @@ export function BannersAdminClient({ banners: initial = [] }: { banners?: Banner
                                 <div className="flex items-center gap-1.5 text-muted-foreground">
                                     <Badge variant="outline" className="font-bold">{banner.cta_text}</Badge>
                                     <span className="flex items-center gap-1 truncate max-w-[150px]">
-                                        <Icons.ExternalLink className="h-3 w-3" /> {banner.link_url}
+                                        <ExternalLink className="h-3 w-3" /> {banner.link_url}
                                     </span>
                                 </div>
                                 <button onClick={() => toggleAtivo(banner)} className="flex items-center gap-1.5 ml-auto">
                                     {banner.is_active ? (
-                                        <><Icons.CheckCircle className="h-4 w-4 text-green-400" /><span className="text-green-400 font-medium">Visível</span></>
+                                        <><CheckCircle className="h-4 w-4 text-green-400" /><span className="text-green-400 font-medium">Visível</span></>
                                     ) : (
-                                        <><Icons.XCircle className="h-4 w-4 text-neutral-500" /><span className="text-neutral-500 font-medium">Oculto</span></>
+                                        <><XCircle className="h-4 w-4 text-neutral-500" /><span className="text-neutral-500 font-medium">Oculto</span></>
                                     )}
                                 </button>
                             </div>
@@ -340,7 +340,7 @@ export function BannersAdminClient({ banners: initial = [] }: { banners?: Banner
 
                 {banners.length === 0 && !showForm && (
                     <div className="text-center py-20 border-2 border-dashed border-border rounded-3xl">
-                        <Icons.Layout className="h-10 w-10 mx-auto text-muted-foreground mb-4 opacity-20" />
+                        <Layout className="h-10 w-10 mx-auto text-muted-foreground mb-4 opacity-20" />
                         <p className="font-bold">Nenhum banner cadastrado</p>
                         <p className="text-sm text-muted-foreground mt-1">Crie seu primeiro banner para destaque na Home.</p>
                         <Button className="mt-6 gradient-brand text-white" onClick={abrirNovo}>Começar agora</Button>

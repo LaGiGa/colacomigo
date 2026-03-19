@@ -2,7 +2,7 @@ export const runtime = 'edge'
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Icons } from '@/components/ui/icons'
+import { ArrowRight } from '@/components/ui/icons'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 
@@ -61,7 +61,7 @@ export default async function CategoriasPage() {
                                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-black/20" />
-                            <Icons.ArrowRight className="absolute top-5 right-5 h-5 w-5 text-neutral-400 opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 z-20" />
+                            <ArrowRight className="absolute top-5 right-5 h-5 w-5 text-neutral-400 opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 z-20" />
 
                             <div className="relative z-10 p-5 flex flex-col h-full">
                                 <span className="text-[10px] font-black tracking-widest text-primary mb-2">{cat.num}</span>

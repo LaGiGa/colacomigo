@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Icons } from '@/components/ui/icons'
+import { Loader2, LogIn, User, UserPlus } from '@/components/ui/icons'
 import { toast } from 'sonner'
 import Link from 'next/link'
 
@@ -121,11 +121,11 @@ export function LoginContent() {
                         className="w-full gradient-brand text-white font-bold h-11"
                     >
                         {isPending ? (
-                            <Icons.Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
                         ) : mode === 'login' ? (
-                            <Icons.LogIn className="h-4 w-4 mr-2" />
+                            <LogIn className="h-4 w-4 mr-2" />
                         ) : (
-                            <Icons.UserPlus className="h-4 w-4 mr-2" />
+                            <UserPlus className="h-4 w-4 mr-2" />
                         )}
                         {mode === 'login' ? 'Entrar' : 'Criar Conta'}
                     </Button>

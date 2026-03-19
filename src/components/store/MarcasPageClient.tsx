@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Icons } from '@/components/ui/icons'
+import { ArrowRight, Loader2 } from '@/components/ui/icons'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
@@ -46,7 +46,7 @@ export function MarcasPageClient() {
 
             <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 {loading ? (
-                    <div className="py-24 text-center"><Icons.Loader2 className="animate-spin text-primary inline-block h-10 w-10" /></div>
+                    <div className="py-24 text-center"><Loader2 className="animate-spin text-primary inline-block h-10 w-10" /></div>
                 ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                         {marcas.map((marca) => (
@@ -58,7 +58,7 @@ export function MarcasPageClient() {
                                 <span className="text-sm font-black uppercase tracking-tight text-neutral-400 group-hover:text-white transition-colors">
                                     {marca.name}
                                 </span>
-                                <Icons.ArrowRight className="h-3.5 w-3.5 text-neutral-700 mt-2 opacity-0 group-hover:opacity-100 group-hover:text-primary transition-all" />
+                                <ArrowRight className="h-3.5 w-3.5 text-neutral-700 mt-2 opacity-0 group-hover:opacity-100 group-hover:text-primary transition-all" />
                             </Link>
                         ))}
                     </div>

@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
-import { Icons } from '@/components/ui/icons'
+import { Save, Truck } from '@/components/ui/icons'
 
 const ORDER_STATUSES = [
     { value: 'pending', label: 'Pendente' },
@@ -91,7 +91,7 @@ export function OrderStatusUpdater({
     return (
         <div className="rounded-xl border border-border p-4 space-y-4">
             <h2 className="font-semibold flex items-center gap-2">
-                <Icons.Truck className="h-4 w-4 text-primary" />
+                <Truck className="h-4 w-4 text-primary" />
                 Atualizar Pedido
             </h2>
 
@@ -127,7 +127,7 @@ export function OrderStatusUpdater({
                     disabled={isPending}
                     className="gradient-brand text-white font-semibold"
                 >
-                    <Icons.Save className="h-4 w-4 mr-2" />
+                    <Save className="h-4 w-4 mr-2" />
                     {isPending ? 'Salvando...' : 'Salvar Alterações'}
                 </Button>
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Icons } from '@/components/ui/icons'
+import { ArrowRight, Clock, DollarSign, Loader2, Package, ShoppingCart, User, Users } from '@/components/ui/icons'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
@@ -24,7 +24,7 @@ export default function AdminDashboard() {
     if (loading) {
         return (
             <div className="flex items-center justify-center p-20">
-                <Icons.Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
         )
     }
@@ -34,7 +34,7 @@ export default function AdminDashboard() {
             title: 'Receita Total',
             value: formatCurrency(stats?.metrics?.revenue ?? 0),
             change: 'Pedidos pagos',
-            icon: Icons.DollarSign,
+            icon: DollarSign,
             color: 'text-green-400',
             href: '/admin/financeiro'
         },
@@ -42,7 +42,7 @@ export default function AdminDashboard() {
             title: 'Pedidos Hoje',
             value: stats?.metrics?.ordersToday ?? 0,
             change: 'Novos pedidos',
-            icon: Icons.ShoppingCart,
+            icon: ShoppingCart,
             color: 'text-blue-400',
             href: '/admin/pedidos'
         },
@@ -50,7 +50,7 @@ export default function AdminDashboard() {
             title: 'Clientes',
             value: stats?.metrics?.customers ?? 0,
             change: 'E-mails únicos',
-            icon: Icons.Users,
+            icon: Users,
             color: 'text-purple-400',
             href: '/admin/clientes'
         },
@@ -58,7 +58,7 @@ export default function AdminDashboard() {
             title: 'Produtos Ativos',
             value: stats?.metrics?.products ?? 0,
             change: 'Em estoque',
-            icon: Icons.Package,
+            icon: Package,
             color: 'text-orange-400',
             href: '/admin/produtos'
         },
@@ -95,7 +95,7 @@ export default function AdminDashboard() {
                                 <div className="text-lg sm:text-2xl font-black">{value}</div>
                                 <div className="flex items-center justify-between mt-0.5 sm:mt-1">
                                     <p className="text-[10px] sm:text-xs text-muted-foreground">{change}</p>
-                                    <Icons.ArrowRight className="h-2.5 w-2.5 sm:h-3 w-3 text-primary opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0" />
+                                    <ArrowRight className="h-2.5 w-2.5 sm:h-3 w-3 text-primary opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0" />
                                 </div>
                             </CardContent>
                         </Card>
@@ -108,7 +108,7 @@ export default function AdminDashboard() {
                 <Card className="bg-card border-border overflow-hidden">
                     <CardHeader className="py-4 sm:py-6">
                         <CardTitle className="flex items-center gap-2 text-base sm:text-xl">
-                            <Icons.Clock className="h-4 w-4 text-primary" />
+                            <Clock className="h-4 w-4 text-primary" />
                             Status dos Pedidos
                         </CardTitle>
                     </CardHeader>
@@ -122,7 +122,7 @@ export default function AdminDashboard() {
                                         </div>
                                         <div className="flex items-center justify-between mt-0.5 sm:mt-1">
                                             <div className="text-[11px] sm:text-sm text-muted-foreground font-medium">{label}</div>
-                                            <Icons.ArrowRight className="h-3 w-3 opacity-0 -translate-x-1 transition-all group-hover:opacity-50 group-hover:translate-x-0" />
+                                            <ArrowRight className="h-3 w-3 opacity-0 -translate-x-1 transition-all group-hover:opacity-50 group-hover:translate-x-0" />
                                         </div>
                                     </div>
                                 </Link>

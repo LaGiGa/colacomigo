@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { Icons } from '@/components/ui/icons'
+import { Boxes, Layers, Layout, LayoutDashboard, LogOut, MessageCircle, MoreHorizontal, Package, Settings2, ShoppingCart, Store, Tag, Ticket, TrendingUp, Truck, User, Users, X } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { useState } from 'react'
@@ -12,23 +12,23 @@ import { AdminSalesNotifier } from '@/components/admin/AdminSalesNotifier'
 
 // ─── Itens principais (bottom nav mobile) ──────────────
 const MAIN_NAV = [
-    { label: 'Dashboard', href: '/admin', icon: Icons.LayoutDashboard },
-    { label: 'Pedidos', href: '/admin/pedidos', icon: Icons.ShoppingCart },
-    { label: 'Produtos', href: '/admin/produtos', icon: Icons.Package },
-    { label: 'Financeiro', href: '/admin/financeiro', icon: Icons.TrendingUp },
+    { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+    { label: 'Pedidos', href: '/admin/pedidos', icon: ShoppingCart },
+    { label: 'Produtos', href: '/admin/produtos', icon: Package },
+    { label: 'Financeiro', href: '/admin/financeiro', icon: TrendingUp },
 ]
 
 // ─── Itens secundários (Categorizados por Ordem Alfabética) ───────────
 const SECONDARY_NAV = [
-    { label: 'Banners', href: '/admin/banners', icon: Icons.Layout },
-    { label: 'Categorias', href: '/admin/categorias', icon: Icons.Tag },
-    { label: 'Clientes', href: '/admin/clientes', icon: Icons.Users },
-    { label: 'Coleções', href: '/admin/colecoes', icon: Icons.Layers },
-    { label: 'Configurações', href: '/admin/configuracoes', icon: Icons.Settings2 },
-    { label: 'Cupons', href: '/admin/cupons', icon: Icons.Ticket },
-    { label: 'Depoimentos', href: '/admin/depoimentos', icon: Icons.MessageCircle },
-    { label: 'Frete', href: '/admin/frete', icon: Icons.Truck },
-    { label: 'Marcas', href: '/admin/marcas', icon: Icons.Boxes },
+    { label: 'Banners', href: '/admin/banners', icon: Layout },
+    { label: 'Categorias', href: '/admin/categorias', icon: Tag },
+    { label: 'Clientes', href: '/admin/clientes', icon: Users },
+    { label: 'Coleções', href: '/admin/colecoes', icon: Layers },
+    { label: 'Configurações', href: '/admin/configuracoes', icon: Settings2 },
+    { label: 'Cupons', href: '/admin/cupons', icon: Ticket },
+    { label: 'Depoimentos', href: '/admin/depoimentos', icon: MessageCircle },
+    { label: 'Frete', href: '/admin/frete', icon: Truck },
+    { label: 'Marcas', href: '/admin/marcas', icon: Boxes },
 ]
 
 // ALL_NAV para o Sidebar (Dashboard + Alfabético)
@@ -85,12 +85,12 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
                         href="/"
                         className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
                     >
-                        <Icons.Store className="h-4 w-4" />
+                        <Store className="h-4 w-4" />
                         Ver Loja
                     </Link>
                     <form action="/api/auth/signout" method="POST">
                         <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
-                            <Icons.LogOut className="h-4 w-4" />
+                            <LogOut className="h-4 w-4" />
                             Sair
                         </button>
                     </form>
@@ -108,7 +108,7 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
                     </Link>
                     <div className="flex items-center gap-2">
                         <Link href="/" className="p-2 rounded-lg text-muted-foreground hover:bg-secondary transition-colors">
-                            <Icons.Store className="h-5 w-5" />
+                            <Store className="h-5 w-5" />
                         </Link>
                     </div>
                 </header>
@@ -153,7 +153,7 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
                                 : 'text-muted-foreground'
                         )}
                     >
-                        <Icons.MoreHorizontal className="h-5 w-5" />
+                        <MoreHorizontal className="h-5 w-5" />
                         <span className="text-[10px] font-medium">Mais</span>
                         {SECONDARY_NAV.some(n => isActive(n.href)) && (
                             <span className="h-0.5 w-4 rounded-full bg-primary mt-0.5" />
@@ -184,7 +184,7 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
                                 onClick={() => setDrawerOpen(false)}
                                 className="p-2 rounded-lg text-muted-foreground hover:bg-secondary"
                             >
-                                <Icons.X className="h-4 w-4" />
+                                <X className="h-4 w-4" />
                             </button>
                         </div>
                         <div className="px-4 pb-4 grid grid-cols-3 gap-2">
@@ -210,7 +210,7 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
                                 onClick={() => setDrawerOpen(false)}
                                 className="flex flex-col items-center gap-2 p-4 rounded-xl border border-border text-muted-foreground hover:bg-secondary text-sm font-medium transition-colors"
                             >
-                                <Icons.Store className="h-6 w-6" />
+                                <Store className="h-6 w-6" />
                                 <span className="text-xs">Ver Loja</span>
                             </Link>
                         </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Icons } from '@/components/ui/icons'
+import { ArrowRight, Loader2 } from '@/components/ui/icons'
 import { createClient } from '@/lib/supabase/client'
 
 const CORES = [
@@ -51,7 +51,7 @@ export function ColecoesPageClient() {
 
             <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 {loading ? (
-                    <div className="py-24 text-center"><Icons.Loader2 className="animate-spin text-primary inline-block h-10 w-10" /></div>
+                    <div className="py-24 text-center"><Loader2 className="animate-spin text-primary inline-block h-10 w-10" /></div>
                 ) : colecoes.length > 0 ? (
                     <div className="grid md:grid-cols-2 gap-6">
                         {colecoes.map((col) => (
@@ -69,7 +69,7 @@ export function ColecoesPageClient() {
                                     <h2 className="text-4xl font-black tracking-tight uppercase mb-3 text-white">{col.nome}</h2>
                                     <p className="text-sm text-neutral-400 mb-5 max-w-sm">{col.descricao}</p>
                                     <span className="flex items-center gap-2 text-primary text-sm font-bold group-hover:gap-3 transition-all">
-                                        Ver coleção <Icons.ArrowRight className="h-4 w-4" />
+                                        Ver coleção <ArrowRight className="h-4 w-4" />
                                     </span>
                                 </div>
                             </Link>

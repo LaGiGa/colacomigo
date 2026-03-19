@@ -14,7 +14,7 @@ const ProductActions = dynamic(() => import('@/components/store/ProductActions')
     loading: () => <div className="h-96 bg-zinc-950 animate-pulse" />
 })
 import { optimizeImageUrl } from '@/lib/image'
-import { Icons } from '@/components/ui/icons'
+import { ChevronRight, Loader2 } from '@/components/ui/icons'
 import Link from 'next/link'
 
 interface ProductImage {
@@ -101,7 +101,7 @@ export function ProductPageClient({ slug, initialProduct = null }: { slug: strin
 
     if (loading) return (
         <div className="min-h-screen bg-black flex flex-col items-center justify-center text-white">
-            <Icons.Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+            <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 animate-pulse">CARREGANDO DROP...</p>
         </div>
     )
@@ -125,15 +125,15 @@ export function ProductPageClient({ slug, initialProduct = null }: { slug: strin
             <div className="bg-[#050505] border-b border-white/5">
                 <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-neutral-500">
                     <Link href="/" className="hover:text-white transition-colors">HOME</Link>
-                    <Icons.ChevronRight className="h-3 w-3" />
+                    <ChevronRight className="h-3 w-3" />
                     <Link href="/produtos" className="hover:text-white transition-colors">PRODUTOS</Link>
                     {product.category && (
                         <>
-                            <Icons.ChevronRight className="h-3 w-3" />
+                            <ChevronRight className="h-3 w-3" />
                             <Link href={`/categorias/${product.category.slug}`} className="hover:text-white transition-colors">{product.category.name}</Link>
                         </>
                     )}
-                    <Icons.ChevronRight className="h-3 w-3" />
+                    <ChevronRight className="h-3 w-3" />
                     <span className="text-neutral-200 truncate">{product.name}</span>
                 </div>
             </div>

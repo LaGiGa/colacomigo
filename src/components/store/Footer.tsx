@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { Icons } from '@/components/ui/icons'
+import { Instagram, MessageCircle } from '@/components/ui/icons'
 
 export function Footer() {
     return (
@@ -32,7 +32,7 @@ export function Footer() {
                                 rel="noopener noreferrer"
                                 className="w-9 h-9 border border-[#222] flex items-center justify-center text-[#555] hover:text-white hover:border-[#444] transition-colors"
                             >
-                                <Icons.Instagram className="h-4 w-4" />
+                                <Instagram className="h-4 w-4" />
                             </a>
                             <a
                                 href="https://wa.me/5563991312913"
@@ -40,7 +40,7 @@ export function Footer() {
                                 rel="noopener noreferrer"
                                 className="w-9 h-9 border border-[#222] flex items-center justify-center text-[#555] hover:text-green-400 hover:border-green-400/40 transition-colors"
                             >
-                                <Icons.MessageCircle className="h-4 w-4" />
+                                <MessageCircle className="h-4 w-4" />
                             </a>
                         </div>
                     </div>

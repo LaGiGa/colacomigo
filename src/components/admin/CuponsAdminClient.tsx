@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { Icons } from '@/components/ui/icons'
+import { Check, CheckCircle, DollarSign, Loader2, Pencil, Percent, Plus, Ticket, Trash2, X, XCircle } from '@/components/ui/icons'
 import { formatCurrency } from '@/lib/utils'
 
 interface Coupon {
@@ -55,7 +55,7 @@ export function CuponsAdminClient({ initialCoupons = [] }: { initialCoupons?: Co
     const [expiresAt, setExpiresAt] = useState('')
     const [ativo, setAtivo] = useState(true)
 
-    if (loading) return <div className="flex items-center justify-center p-20"><Icons.Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
+    if (loading) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
 
     function resetForm() {
         setCode(''); setDescription(''); setDiscountType('percent')
@@ -122,7 +122,7 @@ export function CuponsAdminClient({ initialCoupons = [] }: { initialCoupons?: Co
             <div className="flex items-center justify-between gap-4">
                 <p className="text-sm text-muted-foreground">{coupons.length} cupons · {coupons.filter(c => c.is_active).length} ativos</p>
                 <Button className="gradient-brand text-white" size="sm" onClick={abrirNovo}>
-                    <Icons.Plus className="h-4 w-4 mr-2" /> Novo Cupom
+                    <Plus className="h-4 w-4 mr-2" /> Novo Cupom
                 </Button>
             </div>
 
@@ -141,7 +141,7 @@ export function CuponsAdminClient({ initialCoupons = [] }: { initialCoupons?: Co
                                 {(['percent', 'fixed'] as const).map(t => (
                                     <button key={t} onClick={() => setDiscountType(t)}
                                         className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border text-sm font-medium transition-colors ${discountType === t ? 'bg-primary/10 border-primary text-primary' : 'border-border text-muted-foreground'}`}>
-                                        {t === 'percent' ? <><Icons.Percent className="h-4 w-4" /> Percentual</> : <><Icons.DollarSign className="h-4 w-4" /> Valor Fixo</>}
+                                        {t === 'percent' ? <><Percent className="h-4 w-4" /> Percentual</> : <><DollarSign className="h-4 w-4" /> Valor Fixo</>}
                                     </button>
                                 ))}
                             </div>
@@ -175,7 +175,7 @@ export function CuponsAdminClient({ initialCoupons = [] }: { initialCoupons?: Co
                     </div>
                     <div className="flex gap-3">
                         <Button className="gradient-brand text-white" onClick={salvar} disabled={isPending}>
-                            {isPending && <Icons.Loader2 className="h-4 w-4 animate-spin mr-2" />} Salvar
+                            {isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />} Salvar
                         </Button>
                         <Button variant="outline" onClick={() => { setShowForm(false); setEditando(null) }}>Cancelar</Button>
                     </div>
@@ -209,16 +209,16 @@ export function CuponsAdminClient({ initialCoupons = [] }: { initialCoupons?: Co
                         </div>
                         <div className="flex gap-2">
                             <Button variant="outline" size="sm" className="flex-1" onClick={() => toggleAtivo(c)}>
-                                {c.is_active ? <Icons.XCircle className="h-4 w-4 mr-1 text-muted-foreground" /> : <Icons.CheckCircle className="h-4 w-4 mr-1 text-green-400" />}
+                                {c.is_active ? <XCircle className="h-4 w-4 mr-1 text-muted-foreground" /> : <CheckCircle className="h-4 w-4 mr-1 text-green-400" />}
                                 {c.is_active ? 'Desativar' : 'Ativar'}
                             </Button>
-                            <Button variant="outline" size="sm" onClick={() => abrirEditar(c)}><Icons.Pencil className="h-4 w-4" /></Button>
-                            <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10" onClick={() => excluir(c)}><Icons.Trash2 className="h-4 w-4" /></Button>
+                            <Button variant="outline" size="sm" onClick={() => abrirEditar(c)}><Pencil className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10" onClick={() => excluir(c)}><Trash2 className="h-4 w-4" /></Button>
                         </div>
                     </div>
                 )) : (
                     <div className="rounded-xl border border-border p-12 text-center text-muted-foreground">
-                        <Icons.Ticket className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                        <Ticket className="h-8 w-8 mx-auto mb-2 opacity-30" />
                         <p>Nenhum cupom criado.</p>
                     </div>
                 )}
@@ -254,20 +254,20 @@ export function CuponsAdminClient({ initialCoupons = [] }: { initialCoupons?: Co
                                 <td className="p-4">
                                     <button onClick={() => toggleAtivo(c)} className="flex items-center gap-1.5 hover:opacity-70 transition-opacity">
                                         {c.is_active
-                                            ? <><Icons.CheckCircle className="h-4 w-4 text-green-400" /><Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">Ativo</Badge></>
-                                            : <><Icons.XCircle className="h-4 w-4 text-neutral-500" /><Badge variant="secondary" className="text-xs">Inativo</Badge></>}
+                                            ? <><CheckCircle className="h-4 w-4 text-green-400" /><Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">Ativo</Badge></>
+                                            : <><XCircle className="h-4 w-4 text-neutral-500" /><Badge variant="secondary" className="text-xs">Inativo</Badge></>}
                                     </button>
                                 </td>
                                 <td className="p-4">
                                     <div className="flex gap-1">
-                                        <Button variant="ghost" size="sm" onClick={() => abrirEditar(c)}><Icons.Pencil className="h-4 w-4" /></Button>
-                                        <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10" onClick={() => excluir(c)}><Icons.Trash2 className="h-4 w-4" /></Button>
+                                        <Button variant="ghost" size="sm" onClick={() => abrirEditar(c)}><Pencil className="h-4 w-4" /></Button>
+                                        <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10" onClick={() => excluir(c)}><Trash2 className="h-4 w-4" /></Button>
                                     </div>
                                 </td>
                             </tr>
                         )) : (
                             <tr><td colSpan={7} className="p-16 text-center text-muted-foreground">
-                                <Icons.Ticket className="h-8 w-8 mx-auto mb-3 opacity-30" />
+                                <Ticket className="h-8 w-8 mx-auto mb-3 opacity-30" />
                                 <p>Nenhum cupom criado. Clique em &quot;Novo Cupom&quot; para começar.</p>
                             </td></tr>
                         )}

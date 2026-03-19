@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { formatCurrency } from '@/lib/utils'
-import { Icons } from '@/components/ui/icons'
+import { ArrowRight, Calendar, ChevronLeft, Loader2, LogOut, MapPin, Package, ShoppingCart, Truck } from '@/components/ui/icons'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -72,7 +72,7 @@ export function ContaPedidosClient() {
     if (loading) {
         return (
             <main className="min-h-screen py-12 bg-black text-white flex items-center justify-center">
-                <Icons.Loader2 className="animate-spin text-primary h-10 w-10" />
+                <Loader2 className="animate-spin text-primary h-10 w-10" />
             </main>
         )
     }
@@ -88,7 +88,7 @@ export function ContaPedidosClient() {
                         onClick={() => router.push('/conta/pedidos')}
                         className="flex items-center gap-2 text-neutral-500 hover:text-white mb-8 group transition-colors uppercase text-[10px] font-black tracking-widest"
                     >
-                        <Icons.ChevronLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+                        <ChevronLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
                         Voltar para a Lista
                     </button>
 
@@ -115,7 +115,7 @@ export function ContaPedidosClient() {
                         {/* Itens do Pedido */}
                         <div className="space-y-4">
                             <h3 className="text-sm font-black uppercase tracking-widest flex items-center gap-2 mb-6">
-                                <Icons.ShoppingCart className="h-4 w-4 text-primary" /> Itens do Drop
+                                <ShoppingCart className="h-4 w-4 text-primary" /> Itens do Drop
                             </h3>
                             {selectedOrder.items.map((item: any) => (
                                 <div key={item.id} className="flex gap-4 p-4 bg-zinc-950 border border-white/5 rounded-2xl group hover:border-white/15 transition-colors">
@@ -123,7 +123,7 @@ export function ContaPedidosClient() {
                                         {item.variant?.product?.product_images?.[0]?.url ? (
                                             <img src={item.variant.product.product_images[0].url} alt={item.variant.product.name} className="w-full h-full object-cover" />
                                         ) : (
-                                            <Icons.Package className="h-8 w-8 text-neutral-800 m-auto" />
+                                            <Package className="h-8 w-8 text-neutral-800 m-auto" />
                                         )}
                                     </div>
                                     <div className="flex-1 py-1 text-left">
@@ -165,7 +165,7 @@ export function ContaPedidosClient() {
                         <div className="space-y-6">
                             <div className="p-6 bg-zinc-950 border border-white/5 rounded-2xl text-left">
                                 <h3 className="text-sm font-black uppercase tracking-widest flex items-center gap-2 mb-6">
-                                    <Icons.MapPin className="h-4 w-4 text-primary" /> Endereço de Entrega
+                                    <MapPin className="h-4 w-4 text-primary" /> Endereço de Entrega
                                 </h3>
                                 {selectedOrder.address ? (
                                     <div className="space-y-1">
@@ -186,7 +186,7 @@ export function ContaPedidosClient() {
 
                             <div className="p-6 bg-zinc-950 border border-white/5 rounded-2xl text-left">
                                 <h3 className="text-sm font-black uppercase tracking-widest flex items-center gap-2 mb-6">
-                                    <Icons.Truck className="h-4 w-4 text-primary" /> Entrega
+                                    <Truck className="h-4 w-4 text-primary" /> Entrega
                                 </h3>
                                 {selectedOrder.shipment ? (
                                     <div className="space-y-4">
@@ -203,7 +203,7 @@ export function ContaPedidosClient() {
                                     </div>
                                 ) : (
                                     <div className="flex items-center gap-3 p-4 bg-zinc-900/50 rounded-xl border border-white/5">
-                                        <Icons.Calendar className="h-5 w-5 text-neutral-600" />
+                                        <Calendar className="h-5 w-5 text-neutral-600" />
                                         <p className="text-neutral-500 text-xs font-bold uppercase tracking-widest leading-relaxed">
                                             Aguardando processamento logístico.
                                         </p>
@@ -234,7 +234,7 @@ export function ContaPedidosClient() {
                                 onClick={handleSignOut}
                                 className="inline-flex items-center gap-2 border border-white/15 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-neutral-400 hover:text-white hover:border-white/30 transition-all rounded-full"
                             >
-                                <Icons.LogOut className="h-3.5 w-3.5" />
+                                <LogOut className="h-3.5 w-3.5" />
                                 Sair da Conta
                             </button>
                         )}
@@ -256,7 +256,7 @@ export function ContaPedidosClient() {
                                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                         <div className="flex items-center gap-4 flex-1 min-w-0 text-left">
                                             <div className="h-14 w-14 rounded-xl bg-zinc-900 flex items-center justify-center flex-shrink-0 border border-white/5 relative">
-                                                <Icons.Package className="h-6 w-6 text-primary" />
+                                                <Package className="h-6 w-6 text-primary" />
                                                 <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
                                             </div>
                                             <div className="min-w-0">
@@ -281,7 +281,7 @@ export function ContaPedidosClient() {
                                         <div className="flex items-center justify-between md:flex-col md:items-end gap-3 flex-shrink-0">
                                             <span className="font-black text-primary text-xl tracking-tighter">{formatCurrency(order.total)}</span>
                                             <div className="flex items-center gap-1 text-[10px] font-bold text-neutral-500 uppercase tracking-widest group-hover:text-white transition-colors">
-                                                Ver Detalhes <Icons.ArrowRight className="h-3 w-3" />
+                                                Ver Detalhes <ArrowRight className="h-3 w-3" />
                                             </div>
                                         </div>
                                     </div>
@@ -292,12 +292,12 @@ export function ContaPedidosClient() {
                 ) : (
                     <div className="text-center py-24 bg-zinc-950/50 border border-white/5 rounded-3xl">
                         <div className="h-20 w-20 bg-zinc-900 border border-white/5 rounded-2xl flex items-center justify-center mx-auto mb-6 text-left">
-                            <Icons.ShoppingCart className="h-10 w-10 text-neutral-800" />
+                            <ShoppingCart className="h-10 w-10 text-neutral-800" />
                         </div>
                         <h3 className="text-xl font-black uppercase tracking-tighter mb-2">Nenhum Drop Encontrado</h3>
                         <p className="text-neutral-500 text-sm font-bold uppercase tracking-widest mb-8">Você ainda não realizou compras conosco.</p>
                         <Link href="/produtos" className="inline-flex items-center gap-3 bg-primary hover:bg-primary-dark text-black text-[10px] font-black uppercase tracking-[0.2em] px-8 py-4 rounded-full transition-all hover:scale-105 active:scale-95">
-                            Explorar Coleção <Icons.ArrowRight className="h-4 w-4" />
+                            Explorar Coleção <ArrowRight className="h-4 w-4" />
                         </Link>
                     </div>
                 )}

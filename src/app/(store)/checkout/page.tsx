@@ -1,5 +1,5 @@
 import { CheckoutFlow } from '@/components/store/StoreDynamicComponents'
-import { Icons } from '@/components/ui/icons'
+import { Lock, Shield, ShieldCheck } from '@/components/ui/icons'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -14,7 +14,7 @@ export default function CheckoutPage() {
                 {/* Header Brutalista */}
                 <div className="text-center mb-12 border-b border-white/5 pb-12">
                     <div className="flex items-center justify-center gap-2 mb-4">
-                        <Icons.ShieldCheck className="h-5 w-5 text-green-500" />
+                        <ShieldCheck className="h-5 w-5 text-green-500" />
                         <span className="text-[10px] font-black tracking-widest text-green-500 uppercase">AMBIENTE 100% SEGURO</span>
                     </div>
                     <h1 className="text-[clamp(2.5rem,5vw,4rem)] font-black tracking-tighter leading-none text-white uppercase">Checkout</h1>
@@ -45,7 +45,7 @@ export default function CheckoutPage() {
 
                 {/* Selos de segurança */}
                 <div className="mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-[9px] font-black tracking-widest text-neutral-500 uppercase">
-                    <span className="flex items-center gap-1.5"><Icons.Lock className="w-3 h-3" /> SSL 256 BITS</span>
+                    <span className="flex items-center gap-1.5"><Lock className="w-3 h-3" /> SSL 256 BITS</span>
                     <span className="flex items-center gap-1.5">💳 MERCADO PAGO</span>
                     <span className="flex items-center gap-1.5">📦 CORREIOS</span>
                     <span className="flex items-center gap-1.5 text-green-500">✅ COMPRA GARANTIDA</span>

@@ -2,7 +2,7 @@
 // export const runtime = 'edge';
 
 import { useState, useEffect } from 'react'
-import { Icons } from '@/components/ui/icons'
+import { GripVertical, Loader2, Plus, Save, Settings2, Trash2 } from '@/components/ui/icons'
 import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -107,7 +107,7 @@ export default function GlobalSettingsAdminPage() {
     if (loading || !settings) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
-                <Icons.Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
         )
     }
@@ -117,7 +117,7 @@ export default function GlobalSettingsAdminPage() {
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center">
-                        <Icons.Settings2 className="h-6 w-6 text-primary" />
+                        <Settings2 className="h-6 w-6 text-primary" />
                     </div>
                     <div>
                         <h1 className="text-2xl font-black tracking-tight">Configurações Gerais</h1>
@@ -127,7 +127,7 @@ export default function GlobalSettingsAdminPage() {
                     </div>
                 </div>
                 <Button onClick={save} disabled={saving} className="gap-2">
-                    {saving ? <Icons.Loader2 className="h-4 w-4 animate-spin" /> : <Icons.Save className="h-4 w-4" />}
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                     SALVAR TUDO
                 </Button>
             </div>
@@ -147,7 +147,7 @@ export default function GlobalSettingsAdminPage() {
                     {settings.announcements.map((row, i) => (
                         <div key={i} className="flex items-center gap-2">
                             <span className="text-muted-foreground flex-shrink-0 cursor-grab px-1">
-                                <Icons.GripVertical className="h-4 w-4" />
+                                <GripVertical className="h-4 w-4" />
                             </span>
                             <Input
                                 value={row}
@@ -156,12 +156,12 @@ export default function GlobalSettingsAdminPage() {
                                 placeholder="🚀 NOVA MENSAGEM AQUI"
                             />
                             <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-destructive/10" onClick={() => removeAnnouncement(i)}>
-                                <Icons.Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-4 w-4" />
                             </Button>
                         </div>
                     ))}
                     <Button variant="outline" size="sm" onClick={addAnnouncement} className="mt-2 text-xs h-8">
-                        <Icons.Plus className="h-3 w-3 mr-1" /> Adicionar Frase
+                        <Plus className="h-3 w-3 mr-1" /> Adicionar Frase
                     </Button>
                 </div>
             </div>
@@ -188,13 +188,13 @@ export default function GlobalSettingsAdminPage() {
                                     placeholder="Ex: João Silva"
                                 />
                                 <button type="button" onClick={() => removeName(i)} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity p-1">
-                                    <Icons.Trash2 className="h-3 w-3" />
+                                    <Trash2 className="h-3 w-3" />
                                 </button>
                             </div>
                         ))}
                     </div>
                     <Button variant="outline" size="sm" onClick={addName} className="mt-4 text-xs h-8">
-                        <Icons.Plus className="h-3 w-3 mr-1" /> Adicionar Nome
+                        <Plus className="h-3 w-3 mr-1" /> Adicionar Nome
                     </Button>
                 </div>
             </div>

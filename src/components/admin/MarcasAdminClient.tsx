@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { Icons } from '@/components/ui/icons'
+import { Boxes, Globe, Loader2, Pencil, Plus, Trash2 } from '@/components/ui/icons'
 
 interface Marca {
     id: string
@@ -47,7 +47,7 @@ export function MarcasAdminClient({ initialMarcas = [] }: { initialMarcas?: Marc
     const [website, setWebsite] = useState('')
     const [ativa, setAtiva] = useState(true)
 
-    if (loading) return <div className="flex items-center justify-center p-20"><Icons.Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
+    if (loading) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
 
     function slugify(text: string) {
         return text
@@ -168,7 +168,7 @@ export function MarcasAdminClient({ initialMarcas = [] }: { initialMarcas?: Marc
                     {marcas.length} marca{marcas.length !== 1 ? 's' : ''} · {marcas.filter((m) => m.is_active).length} ativa{marcas.filter((m) => m.is_active).length !== 1 ? 's' : ''}
                 </p>
                 <Button className="gradient-brand text-white" size="sm" onClick={abrirNova}>
-                    <Icons.Plus className="h-4 w-4 mr-2" /> Nova Marca
+                    <Plus className="h-4 w-4 mr-2" /> Nova Marca
                 </Button>
             </div>
 
@@ -226,7 +226,7 @@ export function MarcasAdminClient({ initialMarcas = [] }: { initialMarcas?: Marc
                     </div>
                     <div className="flex gap-3">
                         <Button className="gradient-brand text-white" onClick={salvar} disabled={isPending}>
-                            {isPending ? <Icons.Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                            {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                             Salvar
                         </Button>
                         <Button variant="outline" onClick={cancelar}>Cancelar</Button>
@@ -252,7 +252,7 @@ export function MarcasAdminClient({ initialMarcas = [] }: { initialMarcas?: Marc
                                 {/* Informações principais */}
                                 <div className="flex items-center gap-3">
                                     <div className="h-10 w-10 lg:h-8 lg:w-8 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
-                                        <Icons.Boxes className="h-5 w-5 lg:h-4 lg:w-4 text-muted-foreground/60" />
+                                        <Boxes className="h-5 w-5 lg:h-4 lg:w-4 text-muted-foreground/60" />
                                     </div>
                                     <div className="min-w-0">
                                         <p className="font-bold text-sm lg:text-base truncate">{marca.name}</p>
@@ -281,7 +281,7 @@ export function MarcasAdminClient({ initialMarcas = [] }: { initialMarcas?: Marc
                                             rel="noopener noreferrer"
                                             className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
                                         >
-                                            <Icons.Globe className="h-3.5 w-3.5" />
+                                            <Globe className="h-3.5 w-3.5" />
                                             <span className="truncate max-w-[150px]">{new URL(marca.website).hostname}</span>
                                         </a>
                                     ) : (
@@ -312,7 +312,7 @@ export function MarcasAdminClient({ initialMarcas = [] }: { initialMarcas?: Marc
                                         onClick={() => abrirEditar(marca)}
                                         className="flex-1 lg:flex-none h-9 lg:h-8 font-bold text-xs"
                                     >
-                                        <Icons.Pencil className="h-3.5 w-3.5 mr-2" /> Editar
+                                        <Pencil className="h-3.5 w-3.5 mr-2" /> Editar
                                     </Button>
                                     <Button
                                         variant="ghost"
@@ -320,7 +320,7 @@ export function MarcasAdminClient({ initialMarcas = [] }: { initialMarcas?: Marc
                                         className="text-destructive hover:bg-destructive/10 h-9 lg:h-8 aspect-square lg:aspect-auto"
                                         onClick={() => excluir(marca)}
                                     >
-                                        <Icons.Trash2 className="h-4 w-4" />
+                                        <Trash2 className="h-4 w-4" />
                                     </Button>
                                 </div>
                             </div>
@@ -328,7 +328,7 @@ export function MarcasAdminClient({ initialMarcas = [] }: { initialMarcas?: Marc
                     ))
                 ) : (
                     <div className="p-16 text-center text-muted-foreground bg-card border border-dashed border-border rounded-2xl">
-                        <Icons.Boxes className="h-10 w-10 mx-auto mb-4 opacity-20" />
+                        <Boxes className="h-10 w-10 mx-auto mb-4 opacity-20" />
                         <p className="font-bold text-lg mb-1">Nenhuma marca cadastrada</p>
                         <p className="text-sm">Clique em &quot;Nova Marca&quot; para começar.</p>
                     </div>

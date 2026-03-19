@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { formatCurrency } from '@/lib/utils'
 import { optimizeImageUrl } from '@/lib/image'
-import { Icons } from '@/components/ui/icons'
+import { ShoppingBag, Minus, Plus, Trash2 } from '@/components/ui/icons'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -21,7 +21,7 @@ export function CartDrawer() {
                 <SheetHeader className="p-6 border-b border-white/10">
                     <SheetTitle className="flex items-center justify-between text-white font-black tracking-widest uppercase">
                         <div className="flex items-center gap-2">
-                            <Icons.ShoppingBag className="h-5 w-5 text-primary" />
+                            <ShoppingBag className="h-5 w-5 text-primary" />
                             SACOLA
                         </div>
                         {items.length > 0 && (
@@ -35,7 +35,7 @@ export function CartDrawer() {
                 {items.length === 0 ? (
                     <div className="flex flex-col items-center justify-center flex-1 gap-6 p-6">
                         <div className="h-24 w-24 rounded-full bg-white/5 flex items-center justify-center">
-                            <Icons.ShoppingBag className="h-10 w-10 text-neutral-600" />
+                            <ShoppingBag className="h-10 w-10 text-neutral-600" />
                         </div>
                         <div className="text-center space-y-2">
                             <p className="text-white font-bold tracking-widest uppercase">Sacola Vazia</p>
@@ -66,7 +66,7 @@ export function CartDrawer() {
                                             />
                                         ) : (
                                             <div className="flex items-center justify-center h-full">
-                                                <Icons.ShoppingBag className="h-8 w-8 text-neutral-700" />
+                                                <ShoppingBag className="h-8 w-8 text-neutral-700" />
                                             </div>
                                         )}
                                     </div>
@@ -98,20 +98,20 @@ export function CartDrawer() {
                                                     onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
                                                     className="h-8 w-8 flex items-center justify-center text-neutral-400 hover:text-white hover:bg-white/5 transition-colors"
                                                 >
-                                                    <Icons.Minus className="h-3 w-3" />
+                                                    <Minus className="h-3 w-3" />
                                                 </button>
                                                 <span className="text-xs font-bold text-white w-6 text-center">{item.quantity}</span>
                                                 <button
                                                     onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
                                                     className="h-8 w-8 flex items-center justify-center text-neutral-400 hover:text-white hover:bg-white/5 transition-colors"
                                                 >
-                                                    <Icons.Plus className="h-3 w-3" />
+                                                    <Plus className="h-3 w-3" />
                                                 </button>
                                                 <button
                                                     onClick={() => removeItem(item.variantId)}
                                                     className="h-8 w-8 flex items-center justify-center text-neutral-500 hover:text-primary hover:bg-primary/10 transition-colors border-l border-white/10"
                                                 >
-                                                    <Icons.Trash2 className="h-3 w-3" />
+                                                    <Trash2 className="h-3 w-3" />
                                                 </button>
                                             </div>
                                         </div>

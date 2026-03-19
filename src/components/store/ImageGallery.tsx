@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { Icons } from '@/components/ui/icons'
+import { ChevronLeft, ChevronRight, ZoomIn } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { optimizeImageUrl } from '@/lib/image'
 
@@ -83,20 +83,20 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
                             onClick={(e) => { e.stopPropagation(); prev() }}
                             className="absolute left-4 top-1/2 -translate-y-1/2 h-12 w-12 bg-black/50 hover:bg-black text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all border border-white/10"
                         >
-                            <Icons.ChevronLeft className="h-6 w-6" />
+                            <ChevronLeft className="h-6 w-6" />
                         </button>
                         <button
                             onClick={(e) => { e.stopPropagation(); next() }}
                             className="absolute right-4 top-1/2 -translate-y-1/2 h-12 w-12 bg-black/50 hover:bg-black text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all border border-white/10"
                         >
-                            <Icons.ChevronRight className="h-6 w-6" />
+                            <ChevronRight className="h-6 w-6" />
                         </button>
                     </>
                 )}
 
                 {/* Zoom Hint */}
                 <div className="absolute top-4 right-4 h-10 w-10 bg-black/50 backdrop-blur-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity border border-white/10 pointer-events-none">
-                    <Icons.ZoomIn className="h-4 w-4 text-white" />
+                    <ZoomIn className="h-4 w-4 text-white" />
                 </div>
 
                 {/* Contador Burj Style */}

@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useCartStore } from '@/store/useCartStore'
 import { Button } from '@/components/ui/button'
-import { Icons } from '@/components/ui/icons'
+import { Check, CheckCircle, Package } from '@/components/ui/icons'
 import Link from 'next/link'
 
 export function CheckoutSucessoContent() {
@@ -21,7 +21,7 @@ export function CheckoutSucessoContent() {
             <div className="text-center max-w-md space-y-6">
                 <div className="relative">
                     <div className="absolute inset-0 bg-green-500/20 rounded-full blur-3xl" />
-                    <Icons.CheckCircle className="relative h-20 w-20 text-green-400 mx-auto" />
+                    <CheckCircle className="relative h-20 w-20 text-green-400 mx-auto" />
                 </div>
 
                 <div>
@@ -41,7 +41,7 @@ export function CheckoutSucessoContent() {
 
                 <div className="glass rounded-xl p-4 text-sm text-left space-y-2">
                     <div className="flex items-start gap-2 text-muted-foreground">
-                        <Icons.Package className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                        <Package className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
                         <span>
                             Você receberá um e-mail com a confirmação e o código de rastreamento.
                         </span>

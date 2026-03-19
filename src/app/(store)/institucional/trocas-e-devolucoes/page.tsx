@@ -1,4 +1,4 @@
-import { Icons } from '@/components/ui/icons'
+import { Check, CheckCircle, Clock, Mail, RefreshCw, X, XCircle } from '@/components/ui/icons'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 const PRAZOS = [
     {
-        icon: Icons.Clock,
+        icon: Clock,
         titulo: 'Arrependimento',
         prazo: '7 dias corridos',
         descricao: 'Você tem 7 dias corridos a partir do recebimento para solicitar a devolução por arrependimento, sem precisar justificar o motivo.',
@@ -16,7 +16,7 @@ const PRAZOS = [
         bg: 'bg-blue-400/10',
     },
     {
-        icon: Icons.RefreshCw,
+        icon: RefreshCw,
         titulo: 'Defeito de Fabricação',
         prazo: 'Até 90 dias',
         descricao: 'Produtos com vício ou defeito de fabricação podem ser trocados em até 90 dias corridos após o recebimento.',
@@ -82,7 +82,7 @@ export default function TrocasEDevolucoesPage() {
                 <section className="grid sm:grid-cols-2 gap-8">
                     <div>
                         <h2 className="text-lg font-black uppercase tracking-tight mb-6 flex items-center gap-2">
-                            <Icons.CheckCircle className="h-5 w-5 text-green-400" /> Aceitamos
+                            <CheckCircle className="h-5 w-5 text-green-400" /> Aceitamos
                         </h2>
                         <ul className="space-y-3">
                             {ACEITOS.map((item) => (
@@ -97,7 +97,7 @@ export default function TrocasEDevolucoesPage() {
                     </div>
                     <div>
                         <h2 className="text-lg font-black uppercase tracking-tight mb-6 flex items-center gap-2">
-                            <Icons.XCircle className="h-5 w-5 text-red-400" /> Não Aceitamos
+                            <XCircle className="h-5 w-5 text-red-400" /> Não Aceitamos
                         </h2>
                         <ul className="space-y-3">
                             {NAO_ACEITOS.map((item) => (
@@ -153,7 +153,7 @@ export default function TrocasEDevolucoesPage() {
 
                 {/* CTA contato */}
                 <section className="bg-zinc-950 border border-white/8 p-8 text-center">
-                    <Icons.Mail className="h-8 w-8 text-primary mx-auto mb-4" />
+                    <Mail className="h-8 w-8 text-primary mx-auto mb-4" />
                     <h2 className="text-xl font-black uppercase tracking-tight mb-2">Dúvidas?</h2>
                     <p className="text-neutral-400 text-sm mb-6 max-w-sm mx-auto">
                         Nossa equipe está disponível de segunda a sexta, das 9h às 22h, pelo WhatsApp ou e-mail.

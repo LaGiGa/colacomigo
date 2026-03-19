@@ -49,7 +49,7 @@ const nextConfig: NextConfig = {
   // ─── Excluir pacotes pesados do bundle do servidor ───────────────────────
   serverExternalPackages: ['source-map-support', 'sharp'],
   
-  bundlePagesRouterDependencies: false,
+  bundlePagesRouterDependencies: true,
 
   experimental: {
     optimizePackageImports: [

@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { Icons } from '@/components/ui/icons'
+import { ChevronDown, ImagePlus, Loader2, Plus, Save, X } from '@/components/ui/icons'
 import Image from 'next/image'
 
 interface ProductFormValues {
@@ -53,7 +53,7 @@ const SelectField = ({
             >
                 {children}
             </select>
-            <Icons.ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
         </div>
     </div>
 )
@@ -163,7 +163,7 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
         }
     }, [initialProduct, reset])
 
-    if (loadingProduct) return <div className="flex items-center justify-center p-20"><Icons.Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
+    if (loadingProduct) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
 
     function generateSlug(name: string) {
         return name
@@ -332,7 +332,7 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
                             <Image src={img.preview} alt={`Foto ${i + 1}`} fill className="object-cover" />
                             {img.uploading && (
                                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                    <Icons.Loader2 className="h-5 w-5 animate-spin text-white" />
+                                    <Loader2 className="h-5 w-5 animate-spin text-white" />
                                 </div>
                             )}
                             {i === 0 && !img.uploading && (
@@ -342,7 +342,7 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
                                 type="button" onClick={() => removeImage(i)}
                                 className="absolute top-1 right-1 h-5 w-5 rounded-full bg-destructive text-white flex items-center justify-center"
                             >
-                                <Icons.X className="h-3 w-3" />
+                                <X className="h-3 w-3" />
                             </button>
                         </div>
                     ))}
@@ -350,7 +350,7 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
                         type="button" onClick={() => fileInputRef.current?.click()}
                         className="h-24 w-24 rounded-xl border-2 border-dashed border-border hover:border-primary/60 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-primary transition-colors"
                     >
-                        <Icons.ImagePlus className="h-6 w-6" />
+                        <ImagePlus className="h-6 w-6" />
                         <span className="text-xs">Adicionar</span>
                     </button>
                 </div>
@@ -455,7 +455,7 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
                         <p className="text-xs text-muted-foreground">Tamanho, cor e SKU por variante. Deixe em branco se não houver.</p>
                     </div>
                     <Button type="button" variant="outline" size="sm" onClick={addVariant}>
-                        <Icons.Plus className="h-4 w-4 mr-1" /> Adicionar Variante
+                        <Plus className="h-4 w-4 mr-1" /> Adicionar Variante
                     </Button>
                 </div>
 
@@ -468,7 +468,7 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
                                     type="button" onClick={() => removeVariant(i)}
                                     className="sm:hidden absolute top-2 right-2 h-8 w-8 rounded-lg bg-destructive/10 text-destructive flex items-center justify-center"
                                 >
-                                    <Icons.X className="h-4 w-4" />
+                                    <X className="h-4 w-4" />
                                 </button>
                             )}
 
@@ -507,7 +507,7 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
                                         <Input value={v.priceDelta} onChange={(e) => updateVariant(i, 'priceDelta', parseFloat(e.target.value) || 0)} type="number" step="0.01" className="h-9 text-xs flex-1" />
                                         {variants.length > 1 && (
                                             <button type="button" onClick={() => removeVariant(i)} className="hidden sm:flex h-9 w-9 flex-shrink-0 rounded-lg border border-destructive/50 text-destructive items-center justify-center hover:bg-destructive/10 transition-colors">
-                                                <Icons.X className="h-4 w-4" />
+                                                <X className="h-4 w-4" />
                                             </button>
                                         )}
                                     </div>
@@ -523,7 +523,7 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
             {/* Botões */}
             <div className="flex gap-3 pb-6">
                 <Button type="submit" disabled={isPending} className="gradient-brand text-white font-bold">
-                    {isPending ? <Icons.Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Icons.Save className="h-4 w-4 mr-2" />}
+                    {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
                     Salvar Produto
                 </Button>
                 <Button type="button" variant="outline" onClick={() => router.back()}>Cancelar</Button>

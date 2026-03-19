@@ -3,7 +3,7 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatCurrency } from '@/lib/utils'
-import { Icons } from '@/components/ui/icons'
+import { Clock, Eye, Loader2, Package } from '@/components/ui/icons'
 import Link from 'next/link'
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
@@ -36,7 +36,7 @@ export function PedidosAdminClient({ initialOrders = [] }: { initialOrders?: any
         }
     }, [initialOrders])
 
-    if (loading) return <div className="flex items-center justify-center p-20"><Icons.Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
+    if (loading) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -88,12 +88,12 @@ export function PedidosAdminClient({ initialOrders = [] }: { initialOrders?: any
                                         <td className="p-4 text-muted-foreground">{order.items?.length ?? 0}</td>
                                         <td className="p-4"><span className="font-bold text-primary">{formatCurrency(order.total)}</span></td>
                                         <td className="p-4"><Badge variant="outline" className={`text-xs ${statusConf.color}`}>{statusConf.label}</Badge></td>
-                                        <td className="p-4"><Button variant="ghost" size="sm" asChild><Link href={`/admin/pedidos/${order.id}`}><Icons.Eye className="h-4 w-4" /></Link></Button></td>
+                                        <td className="p-4"><Button variant="ghost" size="sm" asChild><Link href={`/admin/pedidos/${order.id}`}><Eye className="h-4 w-4" /></Link></Button></td>
                                     </tr>
                                 )
                             })
                         ) : (
-                            <tr><td colSpan={7} className="p-12 text-center text-muted-foreground"><Icons.Package className="h-8 w-8 mx-auto mb-2 opacity-50" /><p>Nenhum pedido recebido ainda.</p></td></tr>
+                            <tr><td colSpan={7} className="p-12 text-center text-muted-foreground"><Package className="h-8 w-8 mx-auto mb-2 opacity-50" /><p>Nenhum pedido recebido ainda.</p></td></tr>
                         )}
                     </tbody>
                 </table>
@@ -115,7 +115,7 @@ export function PedidosAdminClient({ initialOrders = [] }: { initialOrders?: any
                                     <div className="flex flex-col text-right"><span className="text-[10px] text-muted-foreground uppercase font-bold">Total</span><span className="text-sm font-black text-primary">{formatCurrency(order.total)}</span><span className="text-[10px] text-muted-foreground">{order.items?.length ?? 0} item(ns)</span></div>
                                 </div>
                                 <div className="flex items-center justify-between pt-2 border-t border-border/40">
-                                    <div className="flex items-center gap-2 text-muted-foreground"><Icons.Clock className="h-3 w-3" /><span className="text-[10px]">{date.toLocaleDateString('pt-BR')} às {date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span></div>
+                                    <div className="flex items-center gap-2 text-muted-foreground"><Clock className="h-3 w-3" /><span className="text-[10px]">{date.toLocaleDateString('pt-BR')} às {date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span></div>
                                     <Button size="sm" variant="secondary" className="h-8 px-3 text-xs" asChild><Link href={`/admin/pedidos/${order.id}`}>Ver Detalhes</Link></Button>
                                 </div>
                             </div>
