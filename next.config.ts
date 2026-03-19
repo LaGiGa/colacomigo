@@ -56,7 +56,6 @@ const nextConfig: NextConfig = {
       '@supabase/supabase-js',
       '@supabase/ssr',
       'zod',
-      'sonner',
       'react-hook-form',
       'radix-ui',
       'embla-carousel-react',
@@ -69,7 +68,6 @@ const nextConfig: NextConfig = {
       'next-themes',
       'zustand',
     ],
-    optimizeCss: true,
   },
   
   turbopack: {

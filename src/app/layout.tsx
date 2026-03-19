@@ -1,6 +1,8 @@
 ﻿import type { Metadata } from 'next'
 import './globals.css'
-import { Toaster } from '@/components/ui/sonner'
+
+// Toaster removed from Server Component - will be added in StoreLayout for client
+import dynamic from 'next/dynamic'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.colacomigoshop.com.br'),
@@ -35,7 +37,6 @@ export default function RootLayout({
     <html lang="pt-BR" className="dark">
       <body>
         {children}
-        <Toaster position="bottom-right" richColors />
       </body>
     </html>
   )

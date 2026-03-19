@@ -5,7 +5,8 @@ import {
     CartDrawer,
     WhatsAppButton,
     CookieConsent,
-    RecentPurchasePopup
+    RecentPurchasePopup,
+    Toaster
 } from '@/components/store/StoreDynamicComponents'
 
 export default function StoreLayout({
@@ -24,6 +25,7 @@ export default function StoreLayout({
             <CartDrawer />
             <WhatsAppButton />
             <CookieConsent />
+            <Toaster position="bottom-right" richColors />
         </div>
     )
 }

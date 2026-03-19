@@ -75,3 +75,8 @@ export const TestimonialsSection = dynamic(
     () => import('./TestimonialsSection').then(mod => mod.TestimonialsSection),
     { ssr: false }
 )
+
+export const Toaster = dynamic(
+    () => import('@/components/ui/sonner').then(mod => mod.Toaster),
+    { ssr: false }
+)
