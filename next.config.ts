@@ -72,7 +72,11 @@ const nextConfig: NextConfig = {
     optimizeCss: true,
   },
   
-  turbopack: {},
+  turbopack: {
+    resolveAlias: {
+      '@': './src',
+    },
+  },
 }
 
 export default nextConfig
