@@ -1,4 +1,4 @@
-export const runtime = 'nodejs'
+export const runtime = 'edge'
 
 import { PedidoDetailClient } from '@/components/admin/AdminDynamicComponents'
 

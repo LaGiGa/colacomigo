@@ -1,4 +1,4 @@
-export const runtime = 'nodejs'
+export const runtime = 'edge'
 
 import { notFound } from 'next/navigation'
 import { ProdutosPageClient, ProductPageClient } from '@/components/store/StoreDynamicComponents'
