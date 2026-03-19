@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Bell, ShoppingCart } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 import { toast } from 'sonner'
 
 type OrderLite = {
@@ -100,7 +100,7 @@ export function AdminSalesNotifier() {
         <div className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 z-50 w-[320px] rounded-xl border border-primary/30 bg-background shadow-2xl">
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                 <div className="flex items-center gap-2">
-                    <Bell className="h-4 w-4 text-primary" />
+                    <Icons.Bell className="h-4 w-4 text-primary" />
                     <p className="text-sm font-semibold">Novas vendas ({unreadCount})</p>
                 </div>
                 <button onClick={markAllAsRead} className="text-xs text-muted-foreground hover:text-foreground">
@@ -115,7 +115,7 @@ export function AdminSalesNotifier() {
                         className="flex items-center gap-3 px-4 py-3 border-b border-border/50 hover:bg-secondary/40 transition-colors"
                     >
                         <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <ShoppingCart className="h-4 w-4 text-primary" />
+                            <Icons.ShoppingCart className="h-4 w-4 text-primary" />
                         </div>
                         <div className="min-w-0">
                             <p className="text-xs font-bold">#{order.id.slice(0, 8).toUpperCase()}</p>
