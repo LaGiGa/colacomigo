@@ -6,6 +6,7 @@ import { Filter, SlidersHorizontal, Loader2, ChevronRight, X, ArrowDownUp, Plus,
 import { createClient } from '@/lib/supabase/client'
 
 const ProductCard = dynamic(() => import('@/components/store/ProductCard').then(mod => mod.ProductCard), {
+    ssr: false,
     loading: () => <div className="aspect-[3/4] bg-zinc-950 animate-pulse" />
 })
 

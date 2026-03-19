@@ -5,10 +5,12 @@ import dynamic from 'next/dynamic'
 import { createClient } from '@/lib/supabase/client'
 
 const ImageGallery = dynamic(() => import('@/components/store/ImageGallery').then(mod => mod.ImageGallery), {
+    ssr: false,
     loading: () => <div className="aspect-[4/5] bg-zinc-950 animate-pulse" />
 })
 
 const ProductActions = dynamic(() => import('@/components/store/ProductActions').then(mod => mod.ProductActions), {
+    ssr: false,
     loading: () => <div className="h-96 bg-zinc-950 animate-pulse" />
 })
 import { optimizeImageUrl } from '@/lib/image'
