@@ -4,6 +4,8 @@ import { mpCreatePreference, mpCreatePayment, mpGetPayment } from '@/lib/mercado
 import { sendEmail, getPurchaseEmailHtml, formatCurrencyString, getCompanyNewSaleEmailHtml } from '@/lib/email'
 import { z } from 'zod'
 
+export const runtime = 'nodejs'
+
 /**
  * API CHECKOUT — OTIMIZADA PARA CLOUDFLARE 3MB LIMIT
  * Imports pesados (Mercado Pago, Email) são lazy-loaded quando necessário

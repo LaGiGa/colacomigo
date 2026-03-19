@@ -1,5 +1,7 @@
 import { ProductFormClient } from '@/components/admin/AdminDynamicComponents'
 
+export const runtime = 'nodejs'
+
 interface Props {
     params: Promise<{ id: string }>
 }

@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation'
 import { ProdutosPageClient, ProductPageClient } from '@/components/store/StoreDynamicComponents'
 
+export const runtime = 'nodejs'
+
 export default async function GenericStorePage({
     params,
 }: {
