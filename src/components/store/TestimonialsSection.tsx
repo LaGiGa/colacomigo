@@ -130,7 +130,7 @@ export function TestimonialsSection() {
                                         ))}
                                     </div>
                                     <p className="text-white/80 text-sm md:text-base leading-relaxed mb-6 italic">
-                                        "{t.text}"
+                                        &quot;{t.text}&quot;
                                     </p>
                                 </div>
 

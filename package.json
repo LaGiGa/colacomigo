@@ -9,6 +9,8 @@
     "lint": "eslint",
     "images:migrate:dry": "node scripts/optimize-existing-product-images.cjs --dry-run",
     "images:migrate:run": "node scripts/optimize-existing-product-images.cjs --execute",
+    "backfill:orders:addresses:dry": "node --env-file=.env.local scripts/backfill-order-addresses.cjs",
+    "backfill:orders:addresses:run": "node --env-file=.env.local scripts/backfill-order-addresses.cjs --execute",
     "pages:build": "opennextjs-cloudflare build",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy"
   },

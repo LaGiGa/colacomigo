@@ -2,8 +2,7 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient, createClient } from '@/lib/supabase/server'
 import { mpCreatePreference, mpCreatePayment, mpGetPayment } from '@/lib/mercadopago'
-import { sendEmail, getPurchaseEmailHtml, formatCurrencyString } from '@/lib/email'
-import { formatCurrency } from '@/lib/utils'
+import { sendEmail, getPurchaseEmailHtml, formatCurrencyString, getCompanyNewSaleEmailHtml } from '@/lib/email'
 import { z } from 'zod'
 
 /**
@@ -64,6 +63,115 @@ async function validateMpSignature(request: NextRequest): Promise<boolean> {
     const encoder = new TextEncoder(), key = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
     const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(manifest))
     return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('') === params.v1
+}
+
+function mapMpStatusToOrderStatus(status?: string): 'paid' | 'cancelled' | 'awaiting_payment' {
+    if (status === 'approved') return 'paid'
+    if (status === 'rejected' || status === 'cancelled') return 'cancelled'
+    return 'awaiting_payment'
+}
+
+async function notifyCompanyNewSale({
+    orderId,
+    customerName,
+    customerEmail,
+    customerPhone,
+    total,
+    paymentMethod,
+    shippingMethod,
+    items,
+}: {
+    orderId: string
+    customerName: string
+    customerEmail?: string | null
+    customerPhone?: string | null
+    total: number
+    paymentMethod?: string | null
+    shippingMethod?: string | null
+    items: Array<{ name: string; quantity: number; totalPrice: number; size?: string | null; colorName?: string | null }>
+}) {
+    const notifyEmail = process.env.COMPANY_SALES_EMAIL || process.env.NEW_SALE_NOTIFY_EMAIL || 'colacomigoshop@gmail.com'
+    if (!notifyEmail) return
+
+    await sendEmail({
+        to: notifyEmail,
+        subject: `Nova venda confirmada #${orderId.slice(0, 8).toUpperCase()}`,
+        html: getCompanyNewSaleEmailHtml({
+            orderId,
+            customerName,
+            customerEmail,
+            customerPhone,
+            total,
+            paymentMethod,
+            shippingMethod,
+            items,
+        }),
+    })
+}
+
+async function handlePaidOrderSideEffects({
+    supabase,
+    orderId,
+    paymentMethod,
+}: {
+    supabase: any
+    orderId: string
+    paymentMethod?: string | null
+}) {
+    const { data: orderData } = await supabase.from('orders').select('*').eq('id', orderId).single()
+    if (!orderData) return
+
+    const { data: items } = await supabase
+        .from('order_items')
+        .select('quantity, total_price, variant_id, variant:product_variants(size, color_name, product:products(name))')
+        .eq('order_id', orderId)
+
+    let itemsHtml = ''
+    const companyItems: Array<{ name: string; quantity: number; totalPrice: number; size?: string | null; colorName?: string | null }> = []
+    if (items) {
+        itemsHtml = items.map((it: any) => `
+            <div style="padding: 10px 0; border-bottom: 1px solid #222;">
+                <p style="margin: 0; font-weight: 900;">${it.variant?.product?.name} x ${it.quantity}</p>
+                <p style="margin: 0; font-size: 12px; color: #888;">${it.variant?.size ? `Tamanho: ${it.variant.size}` : ''} ${it.variant?.color_name ? ` Â· Cor: ${it.variant.color_name}` : ''}</p>
+                <p style="margin: 5px 0 0 0; color: #1a8fff; font-weight: 700;">${formatCurrencyString(it.total_price)}</p>
+            </div>
+        `).join('')
+
+        for (const it of items) {
+            companyItems.push({
+                name: it.variant?.product?.name || 'Produto',
+                quantity: it.quantity,
+                totalPrice: it.total_price,
+                size: it.variant?.size || null,
+                colorName: it.variant?.color_name || null,
+            })
+            try {
+                await supabase.rpc('decrement_stock', { p_variant_id: it.variant_id, p_qty: it.quantity })
+            } catch (error) {
+                console.error('[Stock] decrement failed:', error)
+            }
+        }
+    }
+
+    if (orderData.customer_email) {
+        await sendEmail({
+            to: orderData.customer_email,
+            subject: `Pagamento Confirmado! #${orderId.slice(0, 8).toUpperCase()}`,
+            html: getPurchaseEmailHtml(orderId, orderData.customer_name || 'FamÃ­lia', itemsHtml, orderData.total || 0),
+        })
+    }
+
+    await notifyCompanyNewSale({
+        orderId,
+        customerName: orderData.customer_name || 'Cliente',
+        customerEmail: orderData.customer_email,
+        customerPhone: orderData.customer_phone,
+        total: orderData.total || 0,
+        paymentMethod: paymentMethod || null,
+        shippingMethod: orderData.notes || null,
+        items: companyItems,
+    })
+
 }
 
 // --- MAIN DISPATCHER ---
@@ -150,7 +258,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
                 const { data: addr, error: addrError } = await supabase.from('addresses').upsert({
                     user_id: user?.id || body.profileId,
                     name: body.customerInfo.name,
-                    email: body.customerInfo.email,
                     phone: body.customerInfo.phone,
                     street: body.customerInfo.street,
                     number: body.customerInfo.number,
@@ -163,10 +270,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
 
                 if (addrError) {
                     // Fallback se o upsert falhar por falta de constraint
-                    const { data: addr2 } = await supabase.from('addresses').insert({
+                    const { data: addr2, error: addrInsertError } = await supabase.from('addresses').insert({
                         user_id: user?.id || body.profileId,
                         name: body.customerInfo.name,
-                        email: body.customerInfo.email,
                         phone: body.customerInfo.phone,
                         street: body.customerInfo.street,
                         number: body.customerInfo.number,
@@ -176,6 +282,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
                         state: body.customerInfo.state,
                         zip_code: body.customerInfo.zipCode,
                     }).select('id').single();
+                    if (addrInsertError || !addr2?.id) {
+                        throw new Error(`Falha ao salvar endereço: ${addrInsertError?.message || addrError.message}`)
+                    }
                     address_id = addr2?.id;
                 } else {
                     address_id = addr.id;
@@ -329,7 +438,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
                 }
                 throw e
             }
-            const status = payment.status === 'approved' ? 'paid' : (payment.status === 'rejected' ? 'cancelled' : 'awaiting_payment');
+            const status = mapMpStatusToOrderStatus(payment.status);
+            const becamePaid = status === 'paid' && order.status !== 'paid';
 
             // Atualiza o pedido com status e ID do pagamento do MP
             await supabase.from('orders').update({
@@ -349,37 +459,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
                 raw_data: payment
             });
 
-            // Se aprovado, baixa estoque e envia email (mesma lógica do Webhook)
-            if (status === 'paid') {
-                const { data: items } = await supabase.from('order_items').select('quantity, total_price, variant_id, variant:product_variants(size, color_name, product:products(name))').eq('order_id', order.id);
-
-                let itemsHtml = '';
-                if (items) {
-                    itemsHtml = items.map((it: any) => `
-                        <div style="padding: 10px 0; border-bottom: 1px solid #222;">
-                            <p style="margin: 0; font-weight: 900;">${it.variant?.product?.name} x ${it.quantity}</p>
-                            <p style="margin: 0; font-size: 12px; color: #888;">${it.variant?.size ? `Tamanho: ${it.variant.size}` : ''} ${it.variant?.color_name ? ` · Cor: ${it.variant.color_name}` : ''}</p>
-                            <p style="margin: 5px 0 0 0; color: #1a8fff; font-weight: 700;">${formatCurrencyString(it.total_price)}</p>
-                        </div>
-                    `).join('');
-
-                    for (const it of items) {
-                        try {
-                            await supabase.rpc('decrement_stock', { p_variant_id: it.variant_id, p_qty: it.quantity });
-                        } catch (e) {
-                            console.error('Error decrementing stock:', e);
-                        }
-                    }
-                }
-
-                if (order.customer_email) {
-                    const orderIdShort = order.id.slice(0, 8).toUpperCase();
-                    await sendEmail({
-                        to: order.customer_email,
-                        subject: `Pagamento Confirmado! #${orderIdShort}`,
-                        html: getPurchaseEmailHtml(order.id, order.customer_name || 'Família', itemsHtml, order.total || 0)
-                    });
-                }
+            // Se aprovado, baixa estoque e dispara notifica??es
+            if (becamePaid) {
+                await handlePaidOrderSideEffects({
+                    supabase,
+                    orderId: order.id,
+                    paymentMethod: payment.payment_method_id || body.selectedPaymentMethod || payment.payment_type_id || null,
+                })
             }
 
             const pixTransactionData = payment?.point_of_interaction?.transaction_data ?? null;
@@ -404,7 +490,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
             const body = PaymentStatusSchema.parse(await req.json())
             const paymentId = String(body.paymentId)
 
-            const { data: order } = await supabase
+            let { data: order } = await supabase
                 .from('orders')
                 .select('id, status, mp_payment_id')
                 .eq('mp_payment_id', paymentId)
@@ -419,10 +505,42 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
             }
 
             const payment = await mpGetPayment(paymentId)
+            const mappedStatus = mapMpStatusToOrderStatus(payment.status)
+            let targetOrderId = order?.id || null
+            if (!targetOrderId && (payment.metadata as any)?.order_id) {
+                targetOrderId = String((payment.metadata as any).order_id)
+            }
+
+            if (!order && targetOrderId) {
+                const { data: foundOrder } = await supabase
+                    .from('orders')
+                    .select('id, status, mp_payment_id')
+                    .eq('id', targetOrderId)
+                    .maybeSingle()
+                order = foundOrder ?? null
+            }
+
+            const becamePaid = mappedStatus === 'paid' && order?.status !== 'paid'
+
+            if (targetOrderId && mappedStatus !== order?.status) {
+                await supabase
+                    .from('orders')
+                    .update({ status: mappedStatus, mp_payment_id: paymentId })
+                    .eq('id', targetOrderId)
+            }
+
+            if (targetOrderId && becamePaid) {
+                await handlePaidOrderSideEffects({
+                    supabase,
+                    orderId: targetOrderId,
+                    paymentMethod: payment.payment_method_id || payment.payment_type_id || null,
+                })
+            }
+
             return NextResponse.json({
                 paymentId,
                 status: payment.status,
-                orderStatus: order?.status ?? null,
+                orderStatus: mappedStatus,
             })
         }
 
@@ -431,33 +549,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
             if (!(await validateMpSignature(req))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
             const body = await req.json(); if (body.type !== 'payment' || !body.data?.id) return NextResponse.json({ received: true })
             const payment = await mpGetPayment(body.data.id); const orderId = (payment.metadata as any)?.order_id; if (!orderId) return NextResponse.json({ received: true })
-            const status = payment.status === 'approved' ? 'paid' : (payment.status === 'rejected' ? 'cancelled' : 'awaiting_payment')
+            const status = mapMpStatusToOrderStatus(payment.status)
+            const { data: existingOrder } = await supabase.from('orders').select('*').eq('id', orderId).maybeSingle()
+            const becamePaid = status === 'paid' && existingOrder?.status !== 'paid'
             await supabase.from('orders').update({ status, mp_payment_id: String(body.data.id) }).eq('id', orderId)
             await supabase.from('payment_transactions').insert({ order_id: orderId, mp_payment_id: String(body.data.id), amount: payment.transaction_amount, method: payment.payment_type_id, status: payment.status, raw_data: payment })
-            if (status === 'paid') {
-                const { data: items } = await supabase.from('order_items').select('quantity, total_price, variant_id, variant:product_variants(size, color_name, product:products(name))').eq('order_id', orderId)
 
-                let itemsHtml = '';
-                if (items) {
-                    itemsHtml = items.map((it: any) => `
-                        <div style="padding: 10px 0; border-bottom: 1px solid #222;">
-                            <p style="margin: 0; font-weight: 900;">${it.variant?.product?.name} x ${it.quantity}</p>
-                            <p style="margin: 0; font-size: 12px; color: #888;">${it.variant?.size ? `Tamanho: ${it.variant.size}` : ''} ${it.variant?.color_name ? ` · Cor: ${it.variant.color_name}` : ''}</p>
-                            <p style="margin: 5px 0 0 0; color: #1a8fff; font-weight: 700;">${formatCurrencyString(it.total_price)}</p>
-                        </div>
-                    `).join('');
-
-                    for (const it of items) await supabase.rpc('decrement_stock', { p_variant_id: it.variant_id, p_qty: it.quantity })
-                }
-                const { data: orderData } = await supabase.from('orders').select('*').eq('id', orderId).single()
-
-                if (orderData.customer_email) {
-                    await sendEmail({
-                        to: orderData.customer_email,
-                        subject: `Pagamento Confirmado! #${orderId.slice(0, 8).toUpperCase()}`,
-                        html: getPurchaseEmailHtml(orderId, orderData.customer_name || 'Família', itemsHtml, orderData.total || 0)
-                    })
-                }
+            if (becamePaid) {
+                await handlePaidOrderSideEffects({
+                    supabase,
+                    orderId,
+                    paymentMethod: payment.payment_method_id || payment.payment_type_id || null,
+                })
             }
             return NextResponse.json({ received: true })
         }

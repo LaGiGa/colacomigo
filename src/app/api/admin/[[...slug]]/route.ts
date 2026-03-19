@@ -122,10 +122,72 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
             return NextResponse.json({ products: data ?? [] })
         }
 
+
+        if (resource === 'orders' && !id) {
+            const { data: orders, error } = await supabase
+                .from('orders')
+                .select('*, shipping_address:addresses!address_id(name, city, state), items:order_items(id)')
+                .order('created_at', { ascending: false })
+            if (error) throw error
+            return NextResponse.json({ orders: orders ?? [] })
+        }
+
         if (resource === 'orders' && id) {
             const { data: order, error } = await supabase.from('orders').select(`*, shipping_address:addresses!address_id(*), items:order_items(id, quantity, unit_price, total_price, variant:product_variants(sku, size, color_name, product:products(name, slug))), transactions:payment_transactions(id, mp_payment_id, amount, method, status, created_at), shipment:shipments(id, tracking_code, carrier, status, shipped_at, delivered_at)`).eq('id', id).single()
             if (error) throw error
             return NextResponse.json({ order })
+        }
+
+
+        if (resource === 'profiles') {
+            const { data: profiles, error: profilesError } = await supabase
+                .from('profiles')
+                .select('*')
+                .order('created_at', { ascending: false })
+            if (profilesError) throw profilesError
+
+            const userIds = (profiles ?? []).map((profile) => profile.id)
+            if (userIds.length === 0) return NextResponse.json({ profiles: [] })
+
+            const [{ data: addresses }, { data: orders }] = await Promise.all([
+                supabase
+                    .from('addresses')
+                    .select('id, user_id, city, state, street, number, neighborhood, zip_code, created_at')
+                    .in('user_id', userIds)
+                    .order('created_at', { ascending: false }),
+                supabase
+                    .from('orders')
+                    .select('user_id, customer_email, customer_name, customer_phone, created_at')
+                    .in('user_id', userIds)
+                    .order('created_at', { ascending: false }),
+            ])
+
+            const latestAddressByUser = new Map<string, any>()
+            for (const addr of addresses ?? []) {
+                if (addr.user_id && !latestAddressByUser.has(addr.user_id)) latestAddressByUser.set(addr.user_id, addr)
+            }
+
+            const latestOrderByUser = new Map<string, any>()
+            for (const order of orders ?? []) {
+                if (order.user_id && !latestOrderByUser.has(order.user_id)) latestOrderByUser.set(order.user_id, order)
+            }
+
+            const enrichedProfiles = (profiles ?? []).map((profile) => {
+                const addr = latestAddressByUser.get(profile.id)
+                const order = latestOrderByUser.get(profile.id)
+
+                return {
+                    ...profile,
+                    full_name: profile.full_name || order?.customer_name || null,
+                    phone: profile.phone || order?.customer_phone || null,
+                    email: order?.customer_email || null,
+                    city: addr?.city || null,
+                    state: addr?.state || null,
+                    address: addr || null,
+                }
+            })
+
+            return NextResponse.json({ profiles: enrichedProfiles })
         }
 
         if (resource === 'store-settings') {
@@ -323,7 +385,7 @@ async function handleUpdate(req: NextRequest, resource: string, id: string) {
         const table = resource === 'products' ? 'products' : resource === 'shipping-settings' ? 'shipping_settings' : resource === 'store-settings' ? 'store_settings' : RESOURCES[resource]
         if (!table) return NextResponse.json({ error: 'Recurso não suportado' }, { status: 404 })
 
-        let body = await req.json()
+        const body = await req.json()
 
         if (resource === 'orders') {
             const { trackingCode, ...orderUpdates } = body;

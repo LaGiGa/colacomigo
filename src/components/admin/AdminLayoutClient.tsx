@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { AdminSalesNotifier } from '@/components/admin/AdminSalesNotifier'
 
 // ─── Itens principais (bottom nav mobile) ──────────────
 const MAIN_NAV = [
@@ -121,6 +122,8 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
                     {children}
                 </main>
             </div>
+
+            <AdminSalesNotifier />
 
             {/* ══════════════════════════════════════════
                 BOTTOM NAV — Mobile only

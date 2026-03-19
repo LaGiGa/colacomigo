@@ -13,6 +13,7 @@ interface Categoria {
     name: string
     slug: string
     description: string | null
+    image_url?: string | null
     is_active: boolean
     sort_order: number
     created_at: string
@@ -57,6 +58,7 @@ export function CategoriasAdminClient({ initialCategories = [] }: Props) {
     // Form state
     const [nome, setNome] = useState('')
     const [descricao, setDescricao] = useState('')
+    const [imageUrl, setImageUrl] = useState('')
 
     const [ativa, setAtiva] = useState(true)
 
@@ -76,6 +78,7 @@ export function CategoriasAdminClient({ initialCategories = [] }: Props) {
         setEditando(null)
         setNome('')
         setDescricao('')
+        setImageUrl('')
         setAtiva(true)
         setShowForm(true)
     }
@@ -84,6 +87,7 @@ export function CategoriasAdminClient({ initialCategories = [] }: Props) {
         setEditando(cat)
         setNome(cat.name)
         setDescricao(cat.description ?? '')
+        setImageUrl(cat.image_url ?? '')
         setAtiva(cat.is_active)
         setShowForm(true)
     }
@@ -104,6 +108,7 @@ export function CategoriasAdminClient({ initialCategories = [] }: Props) {
                 name: nome.trim(),
                 slug: slugify(nome.trim()),
                 description: descricao.trim() || null,
+                image_url: imageUrl.trim() || null,
                 is_active: ativa,
             }
 
@@ -244,6 +249,14 @@ export function CategoriasAdminClient({ initialCategories = [] }: Props) {
                                 value={descricao}
                                 onChange={(e) => setDescricao(e.target.value)}
                                 placeholder="Ex: Camisas grife e streetwear das melhores marcas"
+                            />
+                        </div>
+                        <div className="sm:col-span-2 space-y-1">
+                            <Label>URL da imagem (opcional)</Label>
+                            <Input
+                                value={imageUrl}
+                                onChange={(e) => setImageUrl(e.target.value)}
+                                placeholder="/cat-camisas.png ou https://..."
                             />
                         </div>
                         <div>

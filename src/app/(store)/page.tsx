@@ -18,17 +18,6 @@ export const metadata: Metadata = {
     description: 'A maior curadoria de streetwear de Palmas-TO. Drops limitados, bonés, camisas e sneakers das melhores marcas. Atendimento ultra-rápido via WhatsApp!',
 }
 
-const CATEGORIAS = [
-    { nome: 'Camisas', slug: 'camisas', desc: 'Grife & Streetwear', num: '01', img: '/cat-camisas.png' },
-    { nome: 'Calças', slug: 'calcas', desc: 'Baggy, Cargo & Jogger', num: '02', img: '/cat-calcas.png' },
-    { nome: 'Tênis', slug: 'tenis', desc: 'Sneakers & Klassics', num: '03', img: '/cat-tenis.png' },
-    { nome: 'Bonés', slug: 'bones', desc: 'Caps & Headwear', num: '04', img: '/cat-bones.png' },
-    { nome: 'Bags', slug: 'bags', desc: 'Mochilas & Pochetes', num: '05', img: '/cat-bags.png' },
-    { nome: 'Casacos', slug: 'casacos', desc: 'Moletons & Jaquetas', num: '06', img: '/cat-casacos.png' },
-    { nome: "Short's", slug: 'shorts', desc: 'Bermudas Premium', num: '07', img: '/cat-shorts.png' },
-    { nome: 'Chinelos', slug: 'chinelos', desc: 'Slides & Sandálias', num: '08', img: '/cat-chinelos.png' },
-]
-
 const DIFERENCIAIS = [
     { icon: Truck, titulo: 'Entrega Relâmpago', descricao: 'Em Palmas-TO você recebe seu drop no mesmo dia.' },
     { icon: Zap, titulo: 'Atendimento no Zap', descricao: 'Sem robôs. Suporte humano e ultra-rápido.' },
@@ -65,7 +54,6 @@ export default async function PaginaInicial() {
         .eq('is_active', true)
         .is('parent_id', null)
         .order('sort_order', { ascending: true })
-        .limit(8)
 
     const COLECOES = (colecoesDB ?? []).map((c, i) => ({
         nome: c.name,
@@ -77,7 +65,7 @@ export default async function PaginaInicial() {
     const CATEGORIAS_LIST = (categoriasDB ?? []).map((c, i) => ({
         nome: c.name,
         slug: c.slug,
-        img: c.image_url || `/cat-placeholder.png`,
+        img: c.image_url || `/cat-placeholder.svg`,
         num: (i + 1).toString().padStart(2, '0')
     }))
 

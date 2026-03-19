@@ -130,3 +130,72 @@ export function getShippingEmailHtml(orderId: string, customerName: string, trac
     </div>
     `
 }
+
+interface SaleItem {
+    name: string
+    quantity: number
+    totalPrice: number
+    size?: string | null
+    colorName?: string | null
+}
+
+interface CompanySaleEmailInput {
+    orderId: string
+    customerName: string
+    customerEmail?: string | null
+    customerPhone?: string | null
+    total: number
+    paymentMethod?: string | null
+    shippingMethod?: string | null
+    items: SaleItem[]
+}
+
+export function getCompanyNewSaleEmailHtml(input: CompanySaleEmailInput) {
+    const paymentMethod = input.paymentMethod || 'Não informado'
+    const shippingMethod = input.shippingMethod || 'Não informado'
+    const itemsHtml = input.items.map((item) => {
+        const variant = [item.size ? `Tam: ${item.size}` : null, item.colorName ? `Cor: ${item.colorName}` : null]
+            .filter(Boolean)
+            .join(' · ')
+
+        return `
+        <tr>
+            <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb;">${item.name}</td>
+            <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: center;">${item.quantity}</td>
+            <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${formatCurrencyString(item.totalPrice)}</td>
+        </tr>
+        ${variant ? `<tr><td colspan="3" style="padding: 0 8px 10px; color: #6b7280; font-size: 12px;">${variant}</td></tr>` : ''}
+        `
+    }).join('')
+
+    return `
+    <div style="font-family: Arial, sans-serif; color: #111827; max-width: 680px; margin: 0 auto; border: 1px solid #e5e7eb;">
+        <div style="background: #111827; color: #fff; padding: 18px 20px;">
+            <h2 style="margin: 0; font-size: 20px;">Nova venda confirmada</h2>
+            <p style="margin: 6px 0 0; font-size: 13px; color: #cbd5e1;">Pedido #${input.orderId.slice(0, 8).toUpperCase()}</p>
+        </div>
+        <div style="padding: 20px;">
+            <p style="margin: 0 0 10px;"><strong>Cliente:</strong> ${input.customerName}</p>
+            <p style="margin: 0 0 10px;"><strong>E-mail:</strong> ${input.customerEmail || 'Não informado'}</p>
+            <p style="margin: 0 0 10px;"><strong>Telefone:</strong> ${input.customerPhone || 'Não informado'}</p>
+            <p style="margin: 0 0 10px;"><strong>Pagamento:</strong> ${paymentMethod}</p>
+            <p style="margin: 0 0 16px;"><strong>Frete:</strong> ${shippingMethod}</p>
+
+            <table width="100%" cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 1px solid #e5e7eb;">
+                <thead>
+                    <tr style="background: #f9fafb;">
+                        <th style="padding: 10px 8px; text-align: left; font-size: 12px;">Item</th>
+                        <th style="padding: 10px 8px; text-align: center; font-size: 12px;">Qtd</th>
+                        <th style="padding: 10px 8px; text-align: right; font-size: 12px;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${itemsHtml}
+                </tbody>
+            </table>
+
+            <p style="margin: 18px 0 0; font-size: 18px;"><strong>Total do pedido: ${formatCurrencyString(input.total)}</strong></p>
+        </div>
+    </div>
+    `
+}
