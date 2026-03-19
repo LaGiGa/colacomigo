@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Script from 'next/script'
-import { Loader2 } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 
 declare global {
     interface Window {
@@ -163,7 +163,7 @@ export function PaymentBrick({ preferenceId, orderId, totalAmount, onSuccess, on
             />
             {!sdkReady && (
                 <div className="flex flex-col items-center justify-center py-20 text-neutral-500 border border-white/5 bg-zinc-950/50 rounded-xl">
-                    <Loader2 className="h-8 w-8 animate-spin text-blue-500 mb-4" />
+                    <Icons.Loader2 className="h-8 w-8 animate-spin text-blue-500 mb-4" />
                     <p className="text-[10px] font-black uppercase tracking-widest animate-pulse">
                         Iniciando ambiente seguro de pagamento...
                     </p>

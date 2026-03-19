@@ -1,4 +1,4 @@
-import { Shield } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -110,7 +110,7 @@ export default function PoliticaPrivacidadePage() {
                         Sua privacidade é nossa prioridade. Saiba como tratamos e protegemos seus dados pessoais.
                     </p>
                     <div className="flex items-center justify-center gap-2 mt-6">
-                        <Shield className="h-4 w-4 text-primary" />
+                        <Icons.Shield className="h-4 w-4 text-primary" />
                         <span className="text-xs text-neutral-500">
                             Última atualização: março de 2025 · Em conformidade com a LGPD
                         </span>

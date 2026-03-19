@@ -15,7 +15,7 @@ import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency } from '@/lib/utils'
 import { optimizeImageUrl } from '@/lib/image'
-import { Loader2, ChevronRight, ChevronLeft, ShoppingBag, MapPin, CreditCard, Lock, Truck, Copy, CheckCircle2 } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 import Image from 'next/image'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
@@ -282,7 +282,7 @@ export function CheckoutFlow() {
             <div className="space-y-8">
                 <div className="flex items-center justify-between pb-6 border-b border-white/5">
                     <div className="flex items-center gap-3">
-                        <ShoppingBag className="h-5 w-5 text-white" />
+                        <Icons.ShoppingBag className="h-5 w-5 text-white" />
                         <h2 className="text-lg font-black uppercase tracking-tighter text-white">REVISAR PEDIDO</h2>
                     </div>
                     <Badge className="bg-white/10 text-white border-0 font-bold tracking-widest text-[10px] uppercase rounded-none px-3 py-1">
@@ -343,7 +343,7 @@ export function CheckoutFlow() {
                                     onClick={handleApplyCoupon}
                                     className="btn-ghost h-10 px-6 text-[10px] font-black tracking-widest bg-white/5 hover:bg-white/10"
                                 >
-                                    {isValidatingCoupon ? <Loader2 className="h-4 w-4 animate-spin" /> : 'APLICAR'}
+                                    {isValidatingCoupon ? <Icons.Loader2 className="h-4 w-4 animate-spin" /> : 'APLICAR'}
                                 </Button>
                             </div>
                         </div>
@@ -388,7 +388,7 @@ export function CheckoutFlow() {
                         >
                             {user ? 'AVANÇAR PARA ENTREGA' : (
                                 <>
-                                    <Lock className="h-4 w-4 mr-2 group-hover:animate-pulse" />
+                                    <Icons.Lock className="h-4 w-4 mr-2 group-hover:animate-pulse" />
                                     ENTRAR PARA FINALIZAR
                                 </>
                             )}
@@ -411,9 +411,9 @@ export function CheckoutFlow() {
             <form onSubmit={handleSubmit(onAddressSubmit)} className="space-y-8">
                 <div className="flex items-center gap-3 pb-6 border-b border-white/5">
                     <button type="button" onClick={() => setStep('cart')} className="text-neutral-500 hover:text-white transition-colors">
-                        <ChevronLeft className="h-5 w-5" />
+                        <Icons.ChevronLeft className="h-5 w-5" />
                     </button>
-                    <MapPin className="h-5 w-5 text-white" />
+                    <Icons.MapPin className="h-5 w-5 text-white" />
                     <h2 className="text-lg font-black uppercase tracking-tighter text-white">DADOS DE ENVIO</h2>
                 </div>
 
@@ -525,11 +525,11 @@ export function CheckoutFlow() {
                     className="btn-primary w-full h-14 mt-4 text-xs"
                 >
                     {loading ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        <Icons.Loader2 className="h-4 w-4 animate-spin mr-2" />
                     ) : !shipping ? (
-                        <Truck className="h-4 w-4 mr-2" />
+                        <Icons.Truck className="h-4 w-4 mr-2" />
                     ) : (
-                        <CreditCard className="h-4 w-4 mr-2" />
+                        <Icons.CreditCard className="h-4 w-4 mr-2" />
                     )}
                     {!shipping ? 'ESCOLHA UMA OPÇÃO DE FRETE' : 'IR PARA PAGAMENTO'}
                 </Button>
@@ -543,9 +543,9 @@ export function CheckoutFlow() {
             <div className="space-y-8">
                 <div className="flex items-center gap-3 pb-6 border-b border-white/5">
                     <button onClick={() => setStep('address')} className="text-neutral-500 hover:text-white transition-colors">
-                        <ChevronLeft className="h-5 w-5" />
+                        <Icons.ChevronLeft className="h-5 w-5" />
                     </button>
-                    <CreditCard className="h-5 w-5 text-white" />
+                    <Icons.CreditCard className="h-5 w-5 text-white" />
                     <h2 className="text-lg font-black uppercase tracking-tighter text-white">REVISÃO E PAGAMENTO</h2>
                 </div>
 
@@ -567,7 +567,7 @@ export function CheckoutFlow() {
                     {pendingPayment && (
                         <div className="mb-6 border border-primary/30 bg-primary/5 p-5 space-y-4">
                             <div className="flex items-center gap-2 text-primary">
-                                <CheckCircle2 className="h-4 w-4" />
+                                <Icons.CheckCircle2 className="h-4 w-4" />
                                 <p className="text-[10px] font-black uppercase tracking-widest">Pagamento PIX pendente</p>
                             </div>
                             <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-300">
@@ -596,7 +596,7 @@ export function CheckoutFlow() {
                                             className="h-10 border-white/10 bg-black text-white rounded-none text-[10px] font-bold tracking-wide"
                                         />
                                         <Button type="button" className="btn-primary h-10 px-4" onClick={copyPixCode}>
-                                            <Copy className="h-4 w-4 mr-2" />
+                                            <Icons.Copy className="h-4 w-4 mr-2" />
                                             COPIAR
                                         </Button>
                                     </div>

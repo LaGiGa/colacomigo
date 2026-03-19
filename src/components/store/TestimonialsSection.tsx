@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { ChevronLeft, ChevronRight, Quote } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 
 interface Testimonial {
@@ -95,7 +95,7 @@ export function TestimonialsSection() {
                             onClick={() => scroll('left')}
                             className="rounded-full border-white/10 bg-black/50 hover:bg-white/10 hover:text-white backdrop-blur-md h-12 w-12 hidden md:flex"
                         >
-                            <ChevronLeft className="w-5 h-5" />
+                            <Icons.ChevronLeft className="w-5 h-5" />
                         </Button>
                         <Button
                             variant="outline"
@@ -103,7 +103,7 @@ export function TestimonialsSection() {
                             onClick={() => scroll('right')}
                             className="rounded-full border-white/10 bg-black/50 hover:bg-white/10 hover:text-white backdrop-blur-md h-12 w-12 hidden md:flex"
                         >
-                            <ChevronRight className="w-5 h-5" />
+                            <Icons.ChevronRight className="w-5 h-5" />
                         </Button>
                     </div>
                 </div>
@@ -121,7 +121,7 @@ export function TestimonialsSection() {
                                 className="snap-start shrink-0 w-[280px] md:w-[360px] p-6 lg:p-8 rounded-3xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors backdrop-blur-sm shadow-xl flex flex-col justify-between"
                             >
                                 <div>
-                                    <Quote className="w-8 h-8 text-primary/40 mb-4" />
+                                    <Icons.Quote className="w-8 h-8 text-primary/40 mb-4" />
                                     <div className="flex gap-0.5 mb-4 text-[#ffc107]">
                                         {Array.from({ length: 5 }).map((_, i) => (
                                             <svg key={i} className={`w-4 h-4 ${i < t.rating ? 'fill-current' : 'fill-white/10'}`} viewBox="0 0 24 24">

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Minus, Plus, ShoppingBag, MessageCircle, Truck, Shield, RefreshCw, Zap } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
@@ -122,7 +122,7 @@ export function ProductActions({
                 </p>
                 <p className="text-[11px] font-black uppercase tracking-widest text-[#1a8fff] inline-flex items-center gap-2">
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#1a8fff] text-black text-[9px] tracking-widest">
-                        <Zap className="h-3 w-3" />
+                        <Icons.Zap className="h-3 w-3" />
                         PIX -10%
                     </span>
                     {formatCurrency(pixPrice)} no PIX
@@ -214,7 +214,7 @@ export function ProductActions({
                     onClick={handleWhatsApp}
                     className="w-full h-14 border-white/5 bg-transparent text-white hover:bg-white/5 font-black tracking-[0.2em] text-[10px] rounded-none flex items-center gap-3"
                 >
-                    <MessageCircle className="h-4 w-4 text-green-500" />
+                    <Icons.MessageCircle className="h-4 w-4 text-green-500" />
                     DÚVIDAS? CHAME NO WHATSAPP
                 </Button>
             </div>
@@ -227,15 +227,15 @@ export function ProductActions({
             {/* Garantias Burj Style */}
             <div className="grid grid-cols-3 border-y border-white/5 divide-x divide-white/5 py-4">
                 <div className="flex flex-col items-center justify-center p-2 text-center lg:px-4">
-                    <Truck className="h-4 w-4 text-primary mb-2" />
+                    <Icons.Truck className="h-4 w-4 text-primary mb-2" />
                     <span className="text-[8px] font-black uppercase tracking-widest text-neutral-500">Frete Rápido</span>
                 </div>
                 <div className="flex flex-col items-center justify-center p-2 text-center lg:px-4">
-                    <Shield className="h-4 w-4 text-primary mb-2" />
+                    <Icons.Shield className="h-4 w-4 text-primary mb-2" />
                     <span className="text-[8px] font-black uppercase tracking-widest text-neutral-500">Compra Segura</span>
                 </div>
                 <div className="flex flex-col items-center justify-center p-2 text-center lg:px-4">
-                    <RefreshCw className="h-4 w-4 text-primary mb-2" />
+                    <Icons.RefreshCw className="h-4 w-4 text-primary mb-2" />
                     <span className="text-[8px] font-black uppercase tracking-widest text-neutral-500">7 Dias p/ Troca</span>
                 </div>
             </div>

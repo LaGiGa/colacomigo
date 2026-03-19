@@ -2,10 +2,10 @@
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Users, Mail, Phone, MapPin } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 
 import { useState, useEffect } from 'react'
-import { Loader2 } from 'lucide-react'
+
 
 export function ClientesAdminClient({ initialClients = [] }: { initialClients?: any[] }) {
     const [profiles, setProfiles] = useState<any[]>(initialClients)
@@ -23,7 +23,7 @@ export function ClientesAdminClient({ initialClients = [] }: { initialClients?: 
         }
     }, [initialClients])
 
-    if (loading) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
+    if (loading) return <div className="flex items-center justify-center p-20"><Icons.Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -50,7 +50,7 @@ export function ClientesAdminClient({ initialClients = [] }: { initialClients?: 
                                     <td className="p-4">
                                         <div className="flex items-center gap-3">
                                             <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                                <Users className="h-5 w-5 text-primary" />
+                                                <Icons.Users className="h-5 w-5 text-primary" />
                                             </div>
                                             <div>
                                                 <p className="font-semibold">{p.full_name ?? '—'}</p>
@@ -61,12 +61,12 @@ export function ClientesAdminClient({ initialClients = [] }: { initialClients?: 
                                     <td className="p-4">
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-2 text-xs">
-                                                <Mail className="h-3 w-3 text-muted-foreground" />
+                                                <Icons.Mail className="h-3 w-3 text-muted-foreground" />
                                                 <span>{p.email}</span>
                                             </div>
                                             {p.phone && (
                                                 <div className="flex items-center gap-2 text-xs">
-                                                    <Phone className="h-3 w-3 text-muted-foreground" />
+                                                    <Icons.Phone className="h-3 w-3 text-muted-foreground" />
                                                     <span>{p.phone}</span>
                                                 </div>
                                             )}
@@ -75,7 +75,7 @@ export function ClientesAdminClient({ initialClients = [] }: { initialClients?: 
                                     <td className="p-4">
                                         {p.city ? (
                                             <div className="flex items-center gap-2 text-xs">
-                                                <MapPin className="h-3 w-3 text-muted-foreground" />
+                                                <Icons.MapPin className="h-3 w-3 text-muted-foreground" />
                                                 <span>{p.city} - {p.state}</span>
                                             </div>
                                         ) : '—'}
@@ -98,7 +98,7 @@ export function ClientesAdminClient({ initialClients = [] }: { initialClients?: 
                         <div key={p.id} className="rounded-xl border border-border p-4 bg-card space-y-4">
                             <div className="flex items-center gap-3">
                                 <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                    <Users className="h-6 w-6 text-primary" />
+                                    <Icons.Users className="h-6 w-6 text-primary" />
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-white">{p.full_name ?? '—'}</h3>
@@ -107,12 +107,12 @@ export function ClientesAdminClient({ initialClients = [] }: { initialClients?: 
                             </div>
                             <div className="pt-3 border-t border-border/40 space-y-2">
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                    <MapPin className="h-3.5 w-3.5" />
+                                    <Icons.MapPin className="h-3.5 w-3.5" />
                                     <span>{p.city ? `${p.city} - ${p.state}` : 'Endereço não informado'}</span>
                                 </div>
                                 {p.phone && (
                                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                        <Phone className="h-3.5 w-3.5" />
+                                        <Icons.Phone className="h-3.5 w-3.5" />
                                         <span>{p.phone}</span>
                                     </div>
                                 )}

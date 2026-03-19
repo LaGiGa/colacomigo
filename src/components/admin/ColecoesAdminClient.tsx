@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { Plus, Edit, Trash2, Loader2, CheckCircle, XCircle, Layers, GripVertical } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 
 interface Colecao {
     id: string
@@ -45,7 +45,7 @@ export function ColecoesAdminClient({ colecoes: initial = [] }: { colecoes?: Col
     const [descricao, setDescricao] = useState('')
     const [ativa, setAtiva] = useState(true)
 
-    if (loading) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
+    if (loading) return <div className="flex items-center justify-center p-20"><Icons.Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
 
     function slugify(text: string) {
         return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-')
@@ -94,7 +94,7 @@ export function ColecoesAdminClient({ colecoes: initial = [] }: { colecoes?: Col
             <div className="flex items-center justify-between gap-4">
                 <p className="text-sm text-muted-foreground">{colecoes.length} coleções · {colecoes.filter(c => c.is_active).length} ativas</p>
                 <Button className="gradient-brand text-white" size="sm" onClick={abrirNovo}>
-                    <Plus className="h-4 w-4 mr-2" /> Nova Coleção
+                    <Icons.Plus className="h-4 w-4 mr-2" /> Nova Coleção
                 </Button>
             </div>
 
@@ -123,7 +123,7 @@ export function ColecoesAdminClient({ colecoes: initial = [] }: { colecoes?: Col
                     </div>
                     <div className="flex gap-3">
                         <Button className="gradient-brand text-white" onClick={salvar} disabled={isPending}>
-                            {isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />} Salvar
+                            {isPending && <Icons.Loader2 className="h-4 w-4 animate-spin mr-2" />} Salvar
                         </Button>
                         <Button variant="outline" onClick={() => { setShowForm(false); setEditando(null) }}>Cancelar</Button>
                     </div>
@@ -148,13 +148,13 @@ export function ColecoesAdminClient({ colecoes: initial = [] }: { colecoes?: Col
                             <Button variant="outline" size="sm" className="flex-1" onClick={() => toggleAtivo(c)}>
                                 {c.is_active ? 'Desativar' : 'Ativar'}
                             </Button>
-                            <Button variant="outline" size="sm" onClick={() => abrirEditar(c)}><Edit className="h-4 w-4" /></Button>
-                            <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10" onClick={() => excluir(c)}><Trash2 className="h-4 w-4" /></Button>
+                            <Button variant="outline" size="sm" onClick={() => abrirEditar(c)}><Icons.Pencil className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10" onClick={() => excluir(c)}><Icons.Trash2 className="h-4 w-4" /></Button>
                         </div>
                     </div>
                 )) : (
                     <div className="rounded-xl border border-border p-12 text-center text-muted-foreground">
-                        <Layers className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                        <Icons.Layers className="h-8 w-8 mx-auto mb-2 opacity-30" />
                         <p>Nenhuma coleção criada ainda.</p>
                     </div>
                 )}
@@ -176,27 +176,27 @@ export function ColecoesAdminClient({ colecoes: initial = [] }: { colecoes?: Col
                     <tbody>
                         {colecoes.length > 0 ? colecoes.map(c => (
                             <tr key={c.id} className="border-b border-border/40 hover:bg-secondary/20 transition-colors">
-                                <td className="p-4"><GripVertical className="h-4 w-4 text-muted-foreground/30" /></td>
+                                <td className="p-4"><Icons.GripVertical className="h-4 w-4 text-muted-foreground/30" /></td>
                                 <td className="p-4 font-semibold">{c.name}</td>
                                 <td className="p-4"><code className="text-xs text-muted-foreground bg-secondary/50 px-2 py-0.5 rounded">{c.slug}</code></td>
                                 <td className="p-4 text-muted-foreground text-xs max-w-[200px] truncate">{c.description ?? '—'}</td>
                                 <td className="p-4">
                                     <button onClick={() => toggleAtivo(c)} className="flex items-center gap-1.5 hover:opacity-70 transition-opacity">
                                         {c.is_active
-                                            ? <><CheckCircle className="h-4 w-4 text-green-400" /><Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">Ativa</Badge></>
-                                            : <><XCircle className="h-4 w-4 text-neutral-500" /><Badge variant="secondary" className="text-xs">Inativa</Badge></>}
+                                            ? <><Icons.CheckCircle className="h-4 w-4 text-green-400" /><Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">Ativa</Badge></>
+                                            : <><Icons.XCircle className="h-4 w-4 text-neutral-500" /><Badge variant="secondary" className="text-xs">Inativa</Badge></>}
                                     </button>
                                 </td>
                                 <td className="p-4">
                                     <div className="flex gap-1">
-                                        <Button variant="ghost" size="sm" onClick={() => abrirEditar(c)}><Edit className="h-4 w-4" /></Button>
-                                        <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10" onClick={() => excluir(c)}><Trash2 className="h-4 w-4" /></Button>
+                                        <Button variant="ghost" size="sm" onClick={() => abrirEditar(c)}><Icons.Pencil className="h-4 w-4" /></Button>
+                                        <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10" onClick={() => excluir(c)}><Icons.Trash2 className="h-4 w-4" /></Button>
                                     </div>
                                 </td>
                             </tr>
                         )) : (
                             <tr><td colSpan={6} className="p-16 text-center text-muted-foreground">
-                                <Layers className="h-8 w-8 mx-auto mb-3 opacity-30" />
+                                <Icons.Layers className="h-8 w-8 mx-auto mb-3 opacity-30" />
                                 <p>Nenhuma coleção. Clique em &quot;Nova Coleção&quot; para criar.</p>
                             </td></tr>
                         )}

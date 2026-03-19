@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { CheckCircle, Loader2, Store, Truck, Package, Zap } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { formatCurrency } from '@/lib/utils'
@@ -174,7 +174,7 @@ export function ShippingCalculator({ weightKg = 0.3, subtotal = 0, onSelect, ext
     if (configLoading) {
         return (
             <div className="flex items-center gap-3 py-8 text-neutral-500 border border-white/5 bg-zinc-950/50 px-6">
-                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                <Icons.Loader2 className="h-4 w-4 animate-spin text-primary" />
                 <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Sincronizando opções de entrega...</span>
             </div>
         )
@@ -190,14 +190,14 @@ export function ShippingCalculator({ weightKg = 0.3, subtotal = 0, onSelect, ext
     return (
         <div className="space-y-6 pt-4">
             <p className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 text-white">
-                <Truck className="h-4 w-4 text-green-500" />
+                <Icons.Truck className="h-4 w-4 text-green-500" />
                 OPÇÕES DE ENTREGA
             </p>
 
             {/* Banner frete grátis */}
             {isFreeShipping && (
                 <div className="flex items-center gap-3 border border-green-500/30 bg-green-500/10 p-4">
-                    <Zap className="h-5 w-5 text-green-500 flex-shrink-0" />
+                    <Icons.Zap className="h-5 w-5 text-green-500 flex-shrink-0" />
                     <div>
                         <p className="font-black text-xs tracking-widest uppercase text-green-400">FRETE GRÁTIS CONQUISTADO! 🎉</p>
                         <p className="text-[9px] font-bold uppercase tracking-widest text-green-500/70 mt-0.5">
@@ -227,8 +227,8 @@ export function ShippingCalculator({ weightKg = 0.3, subtotal = 0, onSelect, ext
                                 opt.carrier === 'store_pickup' ? 'text-blue-500' : 'text-orange-500'
                             )}>
                                 {opt.carrier === 'store_pickup'
-                                    ? <Store className="h-5 w-5" />
-                                    : <Package className="h-5 w-5" />
+                                    ? <Icons.Store className="h-5 w-5" />
+                                    : <Icons.Package className="h-5 w-5" />
                                 }
                             </div>
                             <div className="flex-1">
@@ -249,7 +249,7 @@ export function ShippingCalculator({ weightKg = 0.3, subtotal = 0, onSelect, ext
                                 }
                             </div>
                             {selectedCarrier === opt.carrier && (
-                                <CheckCircle className="h-4 w-4 text-white flex-shrink-0 ml-3" strokeWidth={3} />
+                                <Icons.CheckCircle className="h-4 w-4 text-white flex-shrink-0 ml-3" strokeWidth={3} />
                             )}
                         </button>
                     ))}
@@ -282,7 +282,7 @@ export function ShippingCalculator({ weightKg = 0.3, subtotal = 0, onSelect, ext
                                 variant="outline"
                                 className="flex-shrink-0 h-12 rounded-none border-white/10 bg-black text-white hover:bg-white/10 hover:text-white text-xs font-black uppercase tracking-widest px-6 w-32"
                             >
-                                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'CALCULAR'}
+                                {loading ? <Icons.Loader2 className="h-4 w-4 animate-spin" /> : 'CALCULAR'}
                             </Button>
                         </div>
 
@@ -303,7 +303,7 @@ export function ShippingCalculator({ weightKg = 0.3, subtotal = 0, onSelect, ext
                                         )}
                                     >
                                         <div className="h-10 w-10 border border-white/10 bg-black flex items-center justify-center flex-shrink-0 text-white">
-                                            <Truck className="h-4 w-4" />
+                                            <Icons.Truck className="h-4 w-4" />
                                         </div>
                                         <div className="flex-1">
                                             <p className="font-black text-xs tracking-widest uppercase text-white">{opt.serviceName}</p>
@@ -318,7 +318,7 @@ export function ShippingCalculator({ weightKg = 0.3, subtotal = 0, onSelect, ext
                                             }
                                         </div>
                                         {selectedCarrier === opt.carrier && (
-                                            <CheckCircle className="h-4 w-4 text-white flex-shrink-0 ml-3" strokeWidth={3} />
+                                            <Icons.CheckCircle className="h-4 w-4 text-white flex-shrink-0 ml-3" strokeWidth={3} />
                                         )}
                                     </button>
                                 ))}

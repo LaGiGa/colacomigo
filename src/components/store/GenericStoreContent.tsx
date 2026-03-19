@@ -1,15 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
-import dynamic from 'next/dynamic'
-
-// Carregamento dinâmico para reduzir o bundle do servidor no Cloudflare
-const ProductPageClient = dynamic(() => import('@/components/store/ProductPageClient').then(mod => mod.ProductPageClient), {
-    loading: () => <div className="min-h-screen bg-black" />
-})
-
-const ProdutosPageClient = dynamic(() => import('@/components/store/ProdutosPageClient').then(mod => mod.ProdutosPageClient), {
-    loading: () => <div className="min-h-screen bg-black" />
-})
+import { ProdutosPageClient, ProductPageClient } from './StoreDynamicComponents'
 
 interface GenericStoreContentProps {
     type: 'produtos' | 'categorias' | 'marcas' | 'colecoes'

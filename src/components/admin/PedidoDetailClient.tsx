@@ -3,7 +3,7 @@
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { formatCurrency } from '@/lib/utils'
-import { Package, Truck, ChevronLeft } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 import Link from 'next/link'
 import { OrderStatusUpdater } from './OrderStatusUpdater'
 
@@ -24,7 +24,7 @@ interface Props {
 }
 
 import { useState, useEffect } from 'react'
-import { Loader2 } from 'lucide-react'
+
 
 export function PedidoDetailClient({ order: initialOrder, id }: Props) {
     const [order, setOrder] = useState<any>(initialOrder)
@@ -42,7 +42,7 @@ export function PedidoDetailClient({ order: initialOrder, id }: Props) {
         }
     }, [initialOrder, id])
 
-    if (loading) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
+    if (loading) return <div className="flex items-center justify-center p-20"><Icons.Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
     if (!order) return <div className="p-10 text-center">Pedido não encontrado</div>
 
     const statusConf = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.pending
@@ -52,7 +52,7 @@ export function PedidoDetailClient({ order: initialOrder, id }: Props) {
             {/* Header */}
             <div className="flex items-center gap-4">
                 <Link href="/admin/pedidos" className="text-muted-foreground hover:text-foreground">
-                    <ChevronLeft className="h-5 w-5" />
+                    <Icons.ChevronLeft className="h-5 w-5" />
                 </Link>
                 <div className="flex-1">
                     <h1 className="text-2xl font-black tracking-tight">
@@ -72,7 +72,7 @@ export function PedidoDetailClient({ order: initialOrder, id }: Props) {
                 <div className="md:col-span-2 space-y-4">
                     <div className="rounded-xl border border-border p-4 space-y-3">
                         <h2 className="font-semibold flex items-center gap-2">
-                            <Package className="h-4 w-4 text-primary" />
+                            <Icons.Package className="h-4 w-4 text-primary" />
                             Itens do Pedido
                         </h2>
                         {order.items?.map((item: any) => (
@@ -136,7 +136,7 @@ export function PedidoDetailClient({ order: initialOrder, id }: Props) {
 
                     <div className="rounded-xl border border-border p-4 space-y-2 text-sm">
                         <h2 className="font-semibold flex items-center gap-2">
-                            <Truck className="h-4 w-4 text-primary" />
+                            <Icons.Truck className="h-4 w-4 text-primary" />
                             Endereço de Entrega
                         </h2>
                         {order.shipping_address ? (

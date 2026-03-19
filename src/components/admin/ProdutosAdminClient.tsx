@@ -4,10 +4,10 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency } from '@/lib/utils'
-import { Plus, Edit, Package } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 
 import { useState, useEffect } from 'react'
-import { Loader2 } from 'lucide-react'
+
 
 export function ProdutosAdminClient({ products: initial = [] }: { products?: any[] }) {
     const [products, setProducts] = useState<any[]>(initial)
@@ -25,7 +25,7 @@ export function ProdutosAdminClient({ products: initial = [] }: { products?: any
         }
     }, [initial])
 
-    if (loading) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
+    if (loading) return <div className="flex items-center justify-center p-20"><Icons.Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -35,7 +35,7 @@ export function ProdutosAdminClient({ products: initial = [] }: { products?: any
                 </div>
                 <Button className="gradient-brand text-white" asChild>
                     <Link href="/admin/produtos/novo">
-                        <Plus className="h-4 w-4 mr-2" />
+                        <Icons.Plus className="h-4 w-4 mr-2" />
                         Novo Produto
                     </Link>
                 </Button>
@@ -64,7 +64,7 @@ export function ProdutosAdminClient({ products: initial = [] }: { products?: any
                                                 {p.images?.[0] ? (
                                                     <img src={p.images[0].url} alt="" className="h-10 w-10 object-cover rounded-lg" />
                                                 ) : (
-                                                    <Package className="h-5 w-5 text-muted-foreground" />
+                                                    <Icons.Package className="h-5 w-5 text-muted-foreground" />
                                                 )}
                                             </div>
                                             <div>
@@ -91,7 +91,7 @@ export function ProdutosAdminClient({ products: initial = [] }: { products?: any
                                     <td className="p-4">
                                         <Button variant="ghost" size="sm" asChild>
                                             <Link href={`/admin/produtos/${p.id}`}>
-                                                <Edit className="h-4 w-4" />
+                                                <Icons.Pencil className="h-4 w-4" />
                                             </Link>
                                         </Button>
                                     </td>
@@ -100,7 +100,7 @@ export function ProdutosAdminClient({ products: initial = [] }: { products?: any
                         ) : (
                             <tr>
                                 <td colSpan={6} className="p-12 text-center text-muted-foreground">
-                                    <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                    <Icons.Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
                                     <p>Nenhum produto cadastrado.</p>
                                 </td>
                             </tr>
@@ -119,7 +119,7 @@ export function ProdutosAdminClient({ products: initial = [] }: { products?: any
                                     {p.images?.[0] ? (
                                         <img src={p.images[0].url} alt="" className="h-16 w-16 object-cover" />
                                     ) : (
-                                        <Package className="h-8 w-8 text-muted-foreground" />
+                                        <Icons.Package className="h-8 w-8 text-muted-foreground" />
                                     )}
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -143,7 +143,7 @@ export function ProdutosAdminClient({ products: initial = [] }: { products?: any
                                 </div>
                                 <Button size="sm" variant="secondary" className="h-8 px-4 text-xs font-bold" asChild>
                                     <Link href={`/admin/produtos/${p.id}`}>
-                                        <Edit className="h-3.5 w-3.5 mr-2" />
+                                        <Icons.Pencil className="h-3.5 w-3.5 mr-2" />
                                         Editar
                                     </Link>
                                 </Button>

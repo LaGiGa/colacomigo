@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { ShoppingBag, Menu, Search, X, User, ChevronRight } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 import { useCartStore } from '@/store/useCartStore'
 import { useUIStore } from '@/store/useUIStore'
 import { useState, useEffect, useRef } from 'react'
@@ -117,7 +117,7 @@ export function Header() {
                             className="tap-target text-white md:hidden flex-shrink-0"
                             aria-label="Abrir menu"
                         >
-                            <Menu className="h-5 w-5" />
+                            <Icons.Menu className="h-5 w-5" />
                         </button>
 
                         {/* Logo — centralizada em mobile, à esquerda em desktop */}
@@ -141,7 +141,7 @@ export function Header() {
                             onSubmit={handleMobileSearch}
                             className="hidden lg:flex flex-1 items-center gap-2 bg-[#111] border border-white/8 px-4 h-[38px] max-w-[480px]"
                         >
-                            <Search className="h-4 w-4 text-neutral-500 flex-shrink-0" />
+                            <Icons.Search className="h-4 w-4 text-neutral-500 flex-shrink-0" />
                             <input
                                 type="text"
                                 value={searchQuery}
@@ -167,7 +167,7 @@ export function Header() {
                                         {user ? 'Meus Pedidos' : 'Bem-vindo'}
                                     </span>
                                 </div>
-                                <User className="h-5 w-5" />
+                                <Icons.User className="h-5 w-5" />
                             </Link>
 
                             {/* Carrinho */}
@@ -176,7 +176,7 @@ export function Header() {
                                 className="tap-target text-neutral-400 hover:text-white relative transition-colors"
                                 aria-label="Carrinho"
                             >
-                                <ShoppingBag className="h-5 w-5" />
+                                <Icons.ShoppingBag className="h-5 w-5" />
                                 {totalItems > 0 && (
                                     <span className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center bg-primary text-white text-[9px] font-black rounded-full shadow-[0_0_10px_rgba(26,143,255,0.5)]">
                                         {totalItems > 9 ? '9+' : totalItems}
@@ -193,7 +193,7 @@ export function Header() {
                         onSubmit={handleMobileSearch}
                         className="flex items-center gap-2 bg-[#111] border border-white/10 px-3 h-[38px]"
                     >
-                        <Search className="h-4 w-4 text-neutral-500 flex-shrink-0" />
+                        <Icons.Search className="h-4 w-4 text-neutral-500 flex-shrink-0" />
                         <input
                             ref={mobileSearchRef}
                             type="text"
@@ -204,7 +204,7 @@ export function Header() {
                         />
                         {searchQuery && (
                             <button type="button" onClick={() => setSearchQuery('')} className="text-neutral-500">
-                                <X className="h-4 w-4" />
+                                <Icons.X className="h-4 w-4" />
                             </button>
                         )}
                     </form>
@@ -282,7 +282,7 @@ export function Header() {
                             onClick={() => setMobileLevel(null)}
                             className="flex items-center gap-2 text-white font-bold text-sm"
                         >
-                            <ChevronRight className="h-4 w-4 rotate-180 text-primary" />
+                            <Icons.ChevronRight className="h-4 w-4 rotate-180 text-primary" />
                             {mobileLevel.label.toUpperCase()}
                         </button>
                     ) : (
@@ -299,7 +299,7 @@ export function Header() {
                         className="tap-target text-[#666] hover:text-white"
                         aria-label="Fechar menu"
                     >
-                        <X className="h-5 w-5" />
+                        <Icons.X className="h-5 w-5" />
                     </button>
                 </div>
 
@@ -314,7 +314,7 @@ export function Header() {
                                 className="flex items-center justify-between px-5 py-4 text-sm font-black tracking-widest uppercase text-primary border-b border-[#111]"
                             >
                                 Ver todos
-                                <ChevronRight className="h-4 w-4" />
+                                <Icons.ChevronRight className="h-4 w-4" />
                             </Link>
                             {mobileLevel.subs.map((sub, i) => (
                                 <Link
@@ -333,7 +333,7 @@ export function Header() {
                             {/* Busca rápida no drawer */}
                             <div className="px-4 py-3 border-b border-[#111]">
                                 <form onSubmit={handleMobileSearch} className="flex items-center gap-2 bg-[#111] border border-white/8 px-3 h-[36px]">
-                                    <Search className="h-4 w-4 text-neutral-600 flex-shrink-0" />
+                                    <Icons.Search className="h-4 w-4 text-neutral-600 flex-shrink-0" />
                                     <input
                                         type="text"
                                         value={searchQuery}
@@ -352,7 +352,7 @@ export function Header() {
                                     className="flex items-center gap-3"
                                 >
                                     <div className="h-10 w-10 rounded-full bg-zinc-900 flex items-center justify-center border border-white/10">
-                                        <User className="h-5 w-5 text-primary" />
+                                        <Icons.User className="h-5 w-5 text-primary" />
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500 leading-none mb-1">
@@ -362,7 +362,7 @@ export function Header() {
                                             {user ? 'Meus Pedidos' : 'Bem-vindo · Entrar'}
                                         </p>
                                     </div>
-                                    <ChevronRight className="h-4 w-4 ml-auto text-neutral-700" />
+                                    <Icons.ChevronRight className="h-4 w-4 ml-auto text-neutral-700" />
                                 </Link>
                             </div>
 
@@ -377,7 +377,7 @@ export function Header() {
                                         className="w-full flex items-center justify-between px-5 py-4 text-sm font-bold uppercase tracking-widest text-[#aaa] hover:text-white border-b border-[#0f0f0f] transition-colors"
                                     >
                                         {cat.label}
-                                        <ChevronRight className="h-4 w-4 text-[#333]" />
+                                        <Icons.ChevronRight className="h-4 w-4 text-[#333]" />
                                     </button>
                                 ) : (
                                     <Link

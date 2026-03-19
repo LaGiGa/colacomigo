@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
-import { Filter, SlidersHorizontal, Loader2, ChevronRight, X, ArrowDownUp, Plus, Minus, Search } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 import { createClient } from '@/lib/supabase/client'
 
 const ProductCard = dynamic(() => import('@/components/store/ProductCard').then(mod => mod.ProductCard), {
@@ -215,10 +215,10 @@ export function ProdutosPageClient({
                 {/* Mobile Bar: Ordenar | Filtrar */}
                 <div className="lg:hidden flex items-center border-y border-white/10 mb-8 bg-black sticky top-[72px] z-30 -translate-y-px">
                     <button onClick={() => setIsMobileSortOpen(true)} className="flex-1 flex items-center justify-center gap-2 py-4 text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-neutral-400 hover:text-white transition-colors border-r border-white/10">
-                        <ArrowDownUp className="w-3.5 h-3.5" /> Ordenar
+                        <Icons.ArrowDownUp className="h-4 w-4" /> Ordenar
                     </button>
                     <button onClick={() => setIsMobileFilterOpen(true)} className="flex-1 flex items-center justify-center gap-2 py-4 text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-neutral-400 hover:text-white transition-colors">
-                        <Filter className="w-3.5 h-3.5" /> Filtrar
+                        <Icons.Filter className="w-3.5 h-3.5" /> Filtrar
                     </button>
                 </div>
 
@@ -228,7 +228,7 @@ export function ProdutosPageClient({
                         <div className="sticky top-24 flex flex-col gap-y-12">
                             <div>
                                 <h2 className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.3em] mb-5 flex items-center gap-2">
-                                    <Filter className="w-4 h-4 text-primary" /> CATEGORIAS DETALHADAS
+                                    <Icons.Filter className="w-4 h-4 text-primary" /> CATEGORIAS DETALHADAS
                                 </h2>
                                 <div className="flex flex-col gap-1">
                                     <button
@@ -290,7 +290,7 @@ export function ProdutosPageClient({
                                                                     : 'text-neutral-500 hover:text-neutral-200 hover:bg-white/5'
                                                                     }`}
                                                             >
-                                                                <ChevronRight className={`w-3 h-3 ${categoria === sub.slug ? 'translate-x-1 text-primary' : 'text-neutral-600 group-hover:text-neutral-400'} transition-transform`} />
+                                                                <Icons.ChevronRight className="h-4 w-4 rotate-180" />
                                                                 {sub.name}
                                                             </button>
                                                         ))}
@@ -305,7 +305,7 @@ export function ProdutosPageClient({
                             {dbCollections.length > 0 && (
                                 <div>
                                     <h2 className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.3em] mb-5 flex items-center gap-2">
-                                        <Filter className="w-4 h-4 text-primary" /> DROPS & COLEÇÕES
+                                        <Icons.Filter className="w-4 h-4 text-primary" /> DROPS & COLEÇÕES
                                     </h2>
                                     <div className="flex flex-col gap-1">
                                         {dbCollections.map((col) => (
@@ -334,7 +334,7 @@ export function ProdutosPageClient({
                             {dbBrands.length > 0 && (
                                 <div>
                                     <h2 className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.3em] mb-5 flex items-center gap-2">
-                                        <Filter className="w-4 h-4 text-primary" /> MARCAS (AUTORIDADE)
+                                        <Icons.Filter className="w-4 h-4 text-primary" /> MARCAS (AUTORIDADE)
                                     </h2>
                                     <div className="flex flex-col gap-1">
                                         {dbBrands.map((brand) => (
@@ -363,7 +363,7 @@ export function ProdutosPageClient({
 
                             <div>
                                 <h2 className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.3em] mb-5 flex items-center gap-2">
-                                    <SlidersHorizontal className="w-4 h-4 text-primary" /> ORDENAR POR
+                                    <Icons.SlidersHorizontal className="h-4 w-4" /> ORDENAR POR
                                 </h2>
                                 <div className="flex flex-col gap-1">
                                     {[
@@ -390,7 +390,7 @@ export function ProdutosPageClient({
                     {/* Grid de Produtos */}
                     <div className="flex-1">
                         {loading ? (
-                            <div className="flex items-center justify-center py-32"><Loader2 className="animate-spin text-primary w-12 h-12" /></div>
+                            <div className="flex items-center justify-center py-32"><Icons.Loader2 className="animate-spin text-primary w-12 h-12" /></div>
                         ) : products.length > 0 ? (
                             <div>
                                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-4 lg:gap-6 w-full">
@@ -435,7 +435,7 @@ export function ProdutosPageClient({
                         ) : (
                             <div className="flex flex-col items-center justify-center py-32 text-center border border-dashed border-white/10 rounded-3xl bg-zinc-950/50">
                                 <div className="h-20 w-20 rounded-full bg-white/5 flex items-center justify-center mb-6">
-                                    <Filter className="h-8 w-8 text-neutral-800" />
+                                    <Icons.Search className="h-5 w-5 text-zinc-500" />
                                 </div>
                                 <h3 className="text-2xl font-black uppercase tracking-tight text-white mb-2">Sem Drop Disponível</h3>
                                 <p className="text-sm font-bold tracking-widest text-neutral-500 uppercase max-w-[280px]">
@@ -453,7 +453,7 @@ export function ProdutosPageClient({
                     <div className="flex items-center justify-between p-6 border-b border-white/5">
                         <h2 className="text-lg font-bold uppercase text-white tracking-widest">Filtrar</h2>
                         <button onClick={() => setIsMobileFilterOpen(false)} className="p-2 -mr-2 hover:bg-white/5 rounded-full transition-colors">
-                            <X className="w-6 h-6 text-white" strokeWidth={1.5} />
+                            <Icons.X className="w-6 h-6 text-white" strokeWidth={1.5} />
                         </button>
                     </div>
 
@@ -465,7 +465,7 @@ export function ProdutosPageClient({
                                 className="w-full flex items-center justify-between py-4 text-sm font-bold tracking-widest text-white transition-opacity"
                             >
                                 Categorias
-                                {openAccordion === 'categorias' ? <Minus className="w-4 h-4 text-neutral-500" strokeWidth={1} /> : <Plus className="w-4 h-4 text-neutral-500" strokeWidth={1} />}
+                                {openAccordion === 'categorias' ? <Icons.Minus className="w-4 h-4 text-neutral-500" strokeWidth={1} /> : <Icons.Plus className="w-4 h-4 text-neutral-500" strokeWidth={1} />}
                             </button>
                             {openAccordion === 'categorias' && (
                                 <div className="mt-2 mb-4 flex flex-col gap-4 animate-in fade-in slide-in-from-top-2">
@@ -510,7 +510,7 @@ export function ProdutosPageClient({
                                     className="w-full flex items-center justify-between py-4 text-sm font-bold tracking-widest text-white transition-opacity"
                                 >
                                     Marcas
-                                    {openAccordion === 'marcas' ? <Minus className="w-4 h-4 text-neutral-500" strokeWidth={1} /> : <Plus className="w-4 h-4 text-neutral-500" strokeWidth={1} />}
+                                    {openAccordion === 'marcas' ? <Icons.Minus className="w-4 h-4 text-neutral-500" strokeWidth={1} /> : <Icons.Plus className="w-4 h-4 text-neutral-500" strokeWidth={1} />}
                                 </button>
                                 {openAccordion === 'marcas' && (
                                     <div className="mt-2 mb-4 flex flex-col gap-4 animate-in fade-in slide-in-from-top-2">
@@ -543,7 +543,7 @@ export function ProdutosPageClient({
                                     className="w-full flex items-center justify-between py-4 text-sm font-bold tracking-widest text-white transition-opacity"
                                 >
                                     Coleções
-                                    {openAccordion === 'colecoes' ? <Minus className="w-4 h-4 text-neutral-500" strokeWidth={1} /> : <Plus className="w-4 h-4 text-neutral-500" strokeWidth={1} />}
+                                    {openAccordion === 'colecoes' ? <Icons.Minus className="w-4 h-4 text-neutral-500" strokeWidth={1} /> : <Icons.Plus className="w-4 h-4 text-neutral-500" strokeWidth={1} />}
                                 </button>
                                 {openAccordion === 'colecoes' && (
                                     <div className="mt-2 mb-4 flex flex-col gap-4 animate-in fade-in slide-in-from-top-2">
@@ -584,7 +584,7 @@ export function ProdutosPageClient({
                     <div className="flex items-center justify-between p-6 border-b border-white/5">
                         <h2 className="text-lg font-bold uppercase text-white tracking-widest">Ordenar</h2>
                         <button onClick={() => setIsMobileSortOpen(false)} className="p-2 -mr-2 hover:bg-white/5 rounded-full transition-colors">
-                            <X className="w-6 h-6 text-white" strokeWidth={1.5} />
+                            <Icons.X className="w-6 h-6 text-white" strokeWidth={1.5} />
                         </button>
                     </div>
 

@@ -48,13 +48,13 @@ const nextConfig: NextConfig = {
 
   // ─── Excluir pacotes pesados do bundle do servidor ───────────────────────
   serverExternalPackages: ['source-map-support', 'sharp'],
+  
+  bundlePagesRouterDependencies: true,
 
   experimental: {
     optimizePackageImports: [
-      'lucide-react',
       '@supabase/supabase-js',
       '@supabase/ssr',
-      '@mercadopago/sdk-react',
       'zod',
       'sonner',
       'react-hook-form',

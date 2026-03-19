@@ -2,7 +2,7 @@
 // export const runtime = 'edge';
 
 import { useState, useEffect } from 'react'
-import { Plus, Pencil, Trash2, Check, X, AlertCircle } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 import { toast } from 'sonner'
 import Image from 'next/image'
 
@@ -145,7 +145,7 @@ export default function TestimonialsAdminPage() {
                 </div>
                 {!isOpen && (
                     <Button onClick={() => setIsOpen(true)}>
-                        <Plus className="w-4 h-4 mr-2" />
+                        <Icons.Plus className="w-4 h-4 mr-2" />
                         Adicionar Novo
                     </Button>
                 )}
@@ -157,7 +157,7 @@ export default function TestimonialsAdminPage() {
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-lg font-bold">{editingId ? 'Editar' : 'Novo'} Depoimento</h2>
                         <Button variant="ghost" size="icon" onClick={resetForm}>
-                            <X className="w-4 h-4" />
+                            <Icons.X className="w-4 h-4" />
                         </Button>
                     </div>
 
@@ -205,7 +205,7 @@ export default function TestimonialsAdminPage() {
                 <div className="bg-card border border-border rounded-xl overflow-hidden">
                     {testimonials.length === 0 ? (
                         <div className="p-8 text-center text-muted-foreground flex flex-col items-center justify-center">
-                            <AlertCircle className="w-8 h-8 mb-3 opacity-50" />
+                            <Icons.AlertCircle className="w-8 h-8 mb-3 opacity-50" />
                             <p>Nenhum depoimento cadastrado.</p>
                             <Button variant="link" onClick={() => setIsOpen(true)}>Clique aqui para adicionar o primeiro</Button>
                         </div>
@@ -239,10 +239,10 @@ export default function TestimonialsAdminPage() {
                                             {t.is_active ? 'Publicado' : 'Oculto'}
                                         </Button>
                                         <Button variant="ghost" size="icon" onClick={() => handleEdit(t)} className="h-8 w-8 text-neutral-400 hover:text-white">
-                                            <Pencil className="h-4 w-4" />
+                                            <Icons.Pencil className="h-4 w-4" />
                                         </Button>
                                         <Button variant="ghost" size="icon" onClick={() => handleDelete(t.id)} className="h-8 w-8 text-muted-foreground hover:bg-destructive/20 hover:text-destructive">
-                                            <Trash2 className="h-4 w-4" />
+                                            <Icons.Trash2 className="h-4 w-4" />
                                         </Button>
                                     </div>
                                 </div>

@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 
-import { ArrowRight, Zap, Shield, Truck } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 import {
     HeroCarousel,
     TestimonialsSection
@@ -17,9 +17,9 @@ export const metadata: Metadata = {
 }
 
 const DIFERENCIAIS = [
-    { icon: Truck, titulo: 'Entrega Relâmpago', descricao: 'Em Palmas-TO você recebe seu drop no mesmo dia.' },
-    { icon: Zap, titulo: 'Atendimento no Zap', descricao: 'Sem robôs. Suporte humano e ultra-rápido.' },
-    { icon: Shield, titulo: 'Edições Limitadas', descricao: 'Curadoria exclusiva de peças que acabaram de dropar.' },
+    { icon: Icons.Truck, titulo: 'Entrega Relâmpago', descricao: 'Em Palmas-TO você recebe seu drop no mesmo dia.' },
+    { icon: Icons.Zap, titulo: 'Atendimento no Zap', descricao: 'Sem robôs. Suporte humano e ultra-rápido.' },
+    { icon: Icons.Shield, titulo: 'Edições Limitadas', descricao: 'Curadoria exclusiva de peças que acabaram de dropar.' },
 ]
 
 export default async function PaginaInicial() {
@@ -84,7 +84,7 @@ export default async function PaginaInicial() {
                             <h2 className="text-[clamp(2.5rem,6vw,5rem)] font-black tracking-tighter uppercase leading-none text-white">CATEGORIAS</h2>
                         </div>
                         <Link href="/categorias" className="text-xs font-black tracking-widest uppercase text-primary hover:text-white transition-colors flex items-center gap-2 group whitespace-nowrap">
-                            Ver tudo <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                            Ver tudo <Icons.ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                         </Link>
                     </div>
                 </div>
@@ -114,7 +114,7 @@ export default async function PaginaInicial() {
                             <h2 className="text-4xl font-black tracking-tight uppercase leading-none">Coleções</h2>
                         </div>
                         <Link href="/colecoes" className="text-xs font-black tracking-widest uppercase text-primary hover:text-white transition-colors flex items-center gap-2 group">
-                            Ver tudo <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                            Ver tudo <Icons.ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                         </Link>
                     </div>
                     <div className="grid md:grid-cols-2 gap-4">
@@ -133,7 +133,7 @@ export default async function PaginaInicial() {
                                     <h3 className="text-4xl font-black tracking-tight uppercase mb-3 text-white">{col.nome}</h3>
                                     <p className="text-sm text-neutral-400 mb-5 max-w-sm">{col.descricao}</p>
                                     <span className="flex items-center gap-2 text-primary text-sm font-bold group-hover:gap-3 transition-all">
-                                        Ver coleção <ArrowRight className="h-4 w-4" />
+                                        Ver coleção <Icons.ArrowRight className="h-4 w-4" />
                                     </span>
                                 </div>
                             </Link>
@@ -156,7 +156,7 @@ export default async function PaginaInicial() {
                                 </h2>
                             </div>
                             <Link href="/marcas" className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-neutral-500 hover:text-white transition-colors border-b border-white/10 pb-2">
-                                Explorar Universo <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
+                                Explorar Universo <Icons.ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
                             </Link>
                         </div>
 
