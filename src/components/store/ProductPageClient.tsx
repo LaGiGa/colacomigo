@@ -1,9 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ImageGallery } from '@/components/store/ImageGallery'
-import { ProductActions } from '@/components/store/ProductActions'
+import dynamic from 'next/dynamic'
 import { createClient } from '@/lib/supabase/client'
+
+const ImageGallery = dynamic(() => import('@/components/store/ImageGallery').then(mod => mod.ImageGallery), {
+    loading: () => <div className="aspect-[4/5] bg-zinc-950 animate-pulse" />
+})
+
+const ProductActions = dynamic(() => import('@/components/store/ProductActions').then(mod => mod.ProductActions), {
+    loading: () => <div className="h-96 bg-zinc-950 animate-pulse" />
+})
 import { optimizeImageUrl } from '@/lib/image'
 import { Loader2, ChevronRight } from 'lucide-react'
 import Link from 'next/link'

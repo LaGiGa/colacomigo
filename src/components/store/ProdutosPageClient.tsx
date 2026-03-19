@@ -1,9 +1,13 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import dynamic from 'next/dynamic'
 import { Filter, SlidersHorizontal, Loader2, ChevronRight, X, ArrowDownUp, Plus, Minus, Search } from 'lucide-react'
-import { ProductCard } from '@/components/store/ProductCard'
 import { createClient } from '@/lib/supabase/client'
+
+const ProductCard = dynamic(() => import('@/components/store/ProductCard').then(mod => mod.ProductCard), {
+    loading: () => <div className="aspect-[3/4] bg-zinc-950 animate-pulse" />
+})
 
 interface Category {
     id: string
