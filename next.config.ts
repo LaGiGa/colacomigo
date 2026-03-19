@@ -61,7 +61,12 @@ const nextConfig: NextConfig = {
       'radix-ui',
       'embla-carousel-react',
       'embla-carousel-autoplay',
+      '@hookform/resolvers',
+      'class-variance-authority',
+      'clsx',
+      'tailwind-merge',
     ],
+    optimizeCss: true,
   },
 }
 

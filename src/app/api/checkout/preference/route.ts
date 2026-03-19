@@ -3,7 +3,7 @@ export const runtime = 'edge';
 
 import { createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-import { mpCreatePreference } from '@/lib/mercadopago'
+import { createMercadoPagoPreference } from '@/lib/api-lazy-loaders'
 
 export async function POST(req: Request) {
     try {
@@ -79,7 +79,7 @@ export async function POST(req: Request) {
         if (itemsError) throw itemsError
 
         // 4. Mercado Pago Preference
-        const preference = await mpCreatePreference({
+        const preference = await createMercadoPagoPreference({
             external_reference: order.id,
             items: items.map((it: any) => ({
                 id: it.variant_id,

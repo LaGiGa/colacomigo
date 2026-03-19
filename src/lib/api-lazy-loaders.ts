@@ -41,6 +41,11 @@ export async function createMercadoPagoPreference(payload: any) {
     return mpCreatePreference(payload)
 }
 
+export async function createMercadoPagoPayment(payload: any) {
+    const { mpCreatePayment } = await getMercadoPagoFunctions()
+    return mpCreatePayment(payload)
+}
+
 export async function getMercadoPagoPayment(paymentId: string | number) {
     const { mpGetPayment } = await getMercadoPagoFunctions()
     return mpGetPayment(paymentId)
@@ -73,4 +78,13 @@ export async function getCompanyNewSaleEmailHtmlLazy(options: any) {
 export async function formatCurrencyStringLazy(value: number) {
     const { formatCurrencyString } = await getEmailFunctions()
     return formatCurrencyString(value)
+}
+
+export async function getShippingEmailHtmlLazy(
+    orderId: string,
+    customerName: string,
+    trackingCode: string
+) {
+    const { getShippingEmailHtml } = await getEmailFunctions()
+    return getShippingEmailHtml(orderId, customerName, trackingCode)
 }

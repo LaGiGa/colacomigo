@@ -3,8 +3,7 @@ export const runtime = 'edge';
 
 import { createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-import { mpGetPayment } from '@/lib/mercadopago'
-import { sendEmail, getPurchaseEmailHtml, formatCurrencyString, getCompanyNewSaleEmailHtml } from '@/lib/email'
+import { getMercadoPagoPayment, sendEmailWithLazyLoad, getPurchaseEmailHtmlLazy, formatCurrencyStringLazy, getCompanyNewSaleEmailHtmlLazy } from '@/lib/api-lazy-loaders'
 
 export async function POST(req: Request) {
     try {
@@ -22,7 +21,7 @@ export async function POST(req: Request) {
         })
 
         if (type === 'payment' && dataId) {
-            const payment = await mpGetPayment(dataId)
+            const payment = await getMercadoPagoPayment(dataId)
             console.log('[MP WEBHOOK PAYMENT FETCHED]', {
                 id: payment.id,
                 status: payment.status,
@@ -83,23 +82,27 @@ export async function POST(req: Request) {
 
                     let itemsHtml = ''
                     if (items) {
-                        itemsHtml = items.map((it: any) => `
+                        const itemsHtmlPromises = items.map(async (it: any) => {
+                            const price = await formatCurrencyStringLazy(it.total_price)
+                            return `
                             <div style="padding: 10px 0; border-bottom: 1px solid #222;">
                                 <p style="margin: 0; font-weight: 900;">${it.variant?.product?.name} x ${it.quantity}</p>
                                 <p style="margin: 0; font-size: 12px; color: #888;">${it.variant?.size ? `Tamanho: ${it.variant.size}` : ''} ${it.variant?.color_name ? ` · Cor: ${it.variant.color_name}` : ''}</p>
-                                <p style="margin: 5px 0 0 0; color: #1a8fff; font-weight: 700;">${formatCurrencyString(it.total_price)}</p>
+                                <p style="margin: 5px 0 0 0; color: #1a8fff; font-weight: 700;">${price}</p>
                             </div>
-                        `).join('')
+                        `
+                        })
+                        itemsHtml = (await Promise.all(itemsHtmlPromises)).join('')
                     }
 
                     // Enviar e-mails
                     const to = order.customer_email
                     if (to) {
                         try {
-                            await sendEmail({
+                            await sendEmailWithLazyLoad({
                                 to,
                                 subject: `Pagamento Confirmado! Pedido #${orderId.slice(0, 8).toUpperCase()}`,
-                                html: getPurchaseEmailHtml(orderId, order.customer_name || 'Família', itemsHtml, order.total || 0)
+                                html: await getPurchaseEmailHtmlLazy(orderId, order.customer_name || 'Família', itemsHtml, order.total || 0)
                             })
                         } catch (e) { console.error('[EMAIL ERROR]', e) }
                     }
@@ -107,10 +110,10 @@ export async function POST(req: Request) {
                     const adminNotifyEmail = process.env.NEW_SALE_NOTIFY_EMAIL || process.env.COMPANY_SALES_EMAIL || 'colacomigoshop@gmail.com'
                     if (adminNotifyEmail) {
                         try {
-                            await sendEmail({
+                            await sendEmailWithLazyLoad({
                                 to: adminNotifyEmail,
                                 subject: `Nova Venda! Pedido #${orderId.slice(0, 8).toUpperCase()}`,
-                                html: getCompanyNewSaleEmailHtml({
+                                html: await getCompanyNewSaleEmailHtmlLazy({
                                     orderId,
                                     customerName: order.customer_name || 'Cliente',
                                     customerEmail: order.customer_email,

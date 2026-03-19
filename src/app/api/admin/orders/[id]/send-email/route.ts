@@ -3,7 +3,7 @@ export const runtime = 'edge';
 
 import { createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-import { sendEmail, getPurchaseEmailHtml, getShippingEmailHtml, formatCurrencyString } from '@/lib/email'
+import { sendEmailWithLazyLoad, getPurchaseEmailHtmlLazy, formatCurrencyStringLazy, getShippingEmailHtmlLazy } from '@/lib/api-lazy-loaders'
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
     const { id: orderId } = await params
@@ -17,10 +17,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         if (!to) return NextResponse.json({ error: 'Pedido sem e-mail cadastrado' }, { status: 400 })
 
         if (trackingCode) {
-            await sendEmail({
+            await sendEmailWithLazyLoad({
                 to,
                 subject: `Oba! Seu pedido #${orderId.slice(0, 8).toUpperCase()} foi enviado! 🚀`,
-                html: getShippingEmailHtml(orderId, order.customer_name || 'Família', trackingCode)
+                html: await getShippingEmailHtmlLazy(orderId, order.customer_name || 'Família', trackingCode)
             })
         } else {
             const { data: items } = await supabase
@@ -30,19 +30,19 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
             let itemsHtml = '';
             if (items) {
-                itemsHtml = items.map((it: any) => `
+                itemsHtml = items.map(async (it: any) => `
                     <div style="padding: 10px 0; border-bottom: 1px solid #222;">
                         <p style="margin: 0; font-weight: 900;">${it.variant?.product?.name} x ${it.quantity}</p>
                         <p style="margin: 0; font-size: 12px; color: #888;">${it.variant?.size ? `Tamanho: ${it.variant.size}` : ''} ${it.variant?.color_name ? ` · Cor: ${it.variant.color_name}` : ''}</p>
-                        <p style="margin: 5px 0 0 0; color: #1a8fff; font-weight: 700;">${formatCurrencyString(it.total_price)}</p>
+                        <p style="margin: 5px 0 0 0; color: #1a8fff; font-weight: 700;">${await formatCurrencyStringLazy(it.total_price)}</p>
                     </div>
                 `).join('');
             }
 
-            await sendEmail({
+            await sendEmailWithLazyLoad({
                 to,
                 subject: `Pagamento Confirmado! Pedido #${orderId.slice(0, 8).toUpperCase()}`,
-                html: getPurchaseEmailHtml(orderId, order.customer_name || 'Família', itemsHtml, order.total || 0)
+                html: await getPurchaseEmailHtmlLazy(orderId, order.customer_name || 'Família', itemsHtml, order.total || 0)
             })
         }
 

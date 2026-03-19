@@ -3,7 +3,7 @@ export const runtime = 'edge';
 
 import { createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-import { mpCreatePayment } from '@/lib/mercadopago'
+import { createMercadoPagoPayment } from '@/lib/api-lazy-loaders'
 
 export async function POST(req: Request) {
     try {
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
             paymentPayload.notification_url = `${baseUrl}/api/checkout/webhook`
         }
 
-        const payment = await mpCreatePayment(paymentPayload)
+        const payment = await createMercadoPagoPayment(paymentPayload)
 
         // Update order status if approved
         if (payment.status === 'approved') {
