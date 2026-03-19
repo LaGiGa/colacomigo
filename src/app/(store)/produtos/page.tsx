@@ -1,3 +1,5 @@
+export const runtime = 'edge'
+
 import { ProdutosPageClient } from '@/components/store/StoreDynamicComponents'
 import { createClient } from '@/lib/supabase/server'
 import type { Metadata } from 'next'

@@ -1,5 +1,5 @@
 export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
+export const runtime = 'edge';
 
 import { createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
