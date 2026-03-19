@@ -1,5 +1,5 @@
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 import { createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
@@ -9,22 +9,73 @@ import { sendEmail, getPurchaseEmailHtml, formatCurrencyString, getCompanyNewSal
 export async function POST(req: Request) {
     try {
         const url = new URL(req.url)
-        const type = url.searchParams.get('type') || (await req.json().catch(() => ({}))).type
-        const dataId = url.searchParams.get('data.id') || (await req.json().catch(() => ({}))).data?.id
+        const body = await req.json().catch(() => ({}))
+        
+        const type = url.searchParams.get('type') || body.type
+        const dataId = url.searchParams.get('data.id') || body.data?.id
+        
+        console.log('[MP WEBHOOK RAW]', { 
+            type, 
+            dataId, 
+            queryParams: Object.fromEntries(url.searchParams.entries()),
+            bodyKeys: Object.keys(body) 
+        })
 
         if (type === 'payment' && dataId) {
             const payment = await mpGetPayment(dataId)
-            console.log('[MP WEBHOOK PAYMENT]', payment.id, payment.status, payment.metadata?.order_id)
+            console.log('[MP WEBHOOK PAYMENT FETCHED]', {
+                id: payment.id,
+                status: payment.status,
+                metadata: payment.metadata,
+                external_ref: payment.external_reference
+            })
 
-            if (payment.status === 'approved' && payment.metadata?.order_id) {
-                const orderId = payment.metadata.order_id
+            if (payment.status === 'approved') {
+                const orderId = payment.metadata?.order_id || payment.external_reference
+                
+                if (!orderId) {
+                    console.error('[MP WEBHOOK] Sem orderId no metadata ou external_reference')
+                    return NextResponse.json({ received: true })
+                }
+                
+                console.log('[MP WEBHOOK] Processando pedido:', orderId)
                 const supabase = createServiceClient()
-                const { data: order } = await supabase.from('orders').select('*').eq('id', orderId).single()
+                
+                // Buscamos o pedido com todas as colunas necessárias para o e-mail
+                const { data: order, error: orderFetchErr } = await supabase
+                    .from('orders')
+                    .select('*')
+                    .eq('id', orderId)
+                    .single()
 
-                if (order && (order.status === 'pending' || order.status === 'awaiting_payment')) {
-                    await supabase.from('orders').update({ status: 'paid' }).eq('id', orderId)
-                    await supabase.from('payment_transactions').update({ status: 'approved' }).eq('mp_payment_id', String(payment.id))
+                if (orderFetchErr || !order) {
+                    console.error('[MP WEBHOOK] Pedido não encontrado ou erro:', orderFetchErr)
+                    return NextResponse.json({ received: true })
+                }
 
+                // Só processamos se estiver em estado pendente
+                if (order.status === 'pending' || order.status === 'awaiting_payment') {
+                    console.log('[MP WEBHOOK] Atualizando status do pedido para paid...')
+                    
+                    const { error: updateOrderErr } = await supabase
+                        .from('orders')
+                        .update({ 
+                            status: 'paid', 
+                            mp_payment_id: String(payment.id),
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', orderId)
+
+                    if (updateOrderErr) console.error('[MP WEBHOOK] Erro ao atualizar pedido:', updateOrderErr)
+
+                    const { error: updateTransErr } = await supabase
+                        .from('payment_transactions')
+                        .update({ status: 'approved' })
+                        .eq('mp_payment_id', String(payment.id))
+                    
+                    if (updateTransErr) console.error('[MP WEBHOOK] Erro ao atualizar transação:', updateTransErr)
+
+                    // Busca itens para o e-mail
                     const { data: items } = await supabase
                         .from('order_items')
                         .select('quantity, total_price, variant:product_variants(size, color_name, product:products(name))')
@@ -53,7 +104,7 @@ export async function POST(req: Request) {
                         } catch (e) { console.error('[EMAIL ERROR]', e) }
                     }
 
-                    const adminNotifyEmail = process.env.NEW_SALE_NOTIFY_EMAIL || process.env.COMPANY_SALES_EMAIL
+                    const adminNotifyEmail = process.env.NEW_SALE_NOTIFY_EMAIL || process.env.COMPANY_SALES_EMAIL || 'colacomigoshop@gmail.com'
                     if (adminNotifyEmail) {
                         try {
                             await sendEmail({
@@ -76,7 +127,11 @@ export async function POST(req: Request) {
                             })
                         } catch (e) { console.error('[ADMIN EMAIL ERROR]', e) }
                     }
+                } else {
+                    console.log('[MP WEBHOOK] Pedido já processado ou em outro status:', order.status)
                 }
+            } else {
+                console.log('[MP WEBHOOK] Pagamento não aprovado:', payment.status)
             }
         }
 

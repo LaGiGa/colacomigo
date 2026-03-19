@@ -26,16 +26,16 @@ export function ProdutosPageClient({
     initialCategory = null,
     initialCollection = null,
     initialMarca = null,
-    initialProducts = [],
+    initialProducts,
     initialCategories,
     initialBrands,
     initialCollections,
 }: Props) {
-    const [products, setProducts] = useState<any[]>(initialProducts)
+    const [products, setProducts] = useState<any[]>(initialProducts ?? [])
     const [dbCategories, setDbCategories] = useState<Category[]>(initialCategories ?? [])
     const [dbBrands, setDbBrands] = useState<any[]>(initialBrands ?? [])
     const [dbCollections, setDbCollections] = useState<any[]>(initialCollections ?? [])
-    const [loading, setLoading] = useState(initialProducts.length === 0)
+    const [loading, setLoading] = useState(initialProducts === undefined || initialProducts.length === 0)
     const [categoria, setCategoria] = useState<string | null>(initialCategory)
     const [colecao, setColecao] = useState<string | null>(initialCollection)
     const [marca, setMarca] = useState<string | null>(initialMarca)
@@ -44,7 +44,7 @@ export function ProdutosPageClient({
     const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
     const [isMobileSortOpen, setIsMobileSortOpen] = useState(false)
     const [openAccordion, setOpenAccordion] = useState<string | null>('categorias')
-    const skipFirstFetchRef = useRef(initialProducts.length > 0)
+    const skipFirstFetchRef = useRef(initialProducts !== undefined && initialProducts.length > 0)
     const productsCacheRef = useRef<Map<string, any[]>>(new Map())
     const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
@@ -80,7 +80,7 @@ export function ProdutosPageClient({
 
             if (skipFirstFetchRef.current && currentKey === initialKey) {
                 skipFirstFetchRef.current = false
-                productsCacheRef.current.set(currentKey, initialProducts)
+                productsCacheRef.current.set(currentKey, initialProducts ?? [])
                 setLoading(false)
                 return
             }

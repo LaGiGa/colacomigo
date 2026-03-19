@@ -13,6 +13,7 @@ declare global {
 
 interface PaymentBrickProps {
     preferenceId: string
+    orderId: string
     totalAmount: number
     onSuccess: (paymentId: string) => void
     onPendingPayment?: (payload: { paymentId: string; status: string; pixQrCode?: string | null; pixQrCodeBase64?: string | null }) => void
@@ -24,7 +25,7 @@ interface PaymentBrickProps {
  * O usuário paga diretamente na nossa página — sem redirecionamento para o MP.
  * Aceita: Cartão de crédito/débito, PIX e boleto bancário.
  */
-export function PaymentBrick({ preferenceId, totalAmount, onSuccess, onPendingPayment, onError }: PaymentBrickProps) {
+export function PaymentBrick({ preferenceId, orderId, totalAmount, onSuccess, onPendingPayment, onError }: PaymentBrickProps) {
     const containerRef = useRef<HTMLDivElement>(null)
     const brickControllerRef = useRef<{ unmount: () => void } | null>(null)
     const [sdkReady, setSdkReady] = useState(false)
@@ -87,38 +88,36 @@ export function PaymentBrick({ preferenceId, totalAmount, onSuccess, onPendingPa
             },
             callbacks: {
                 onReady: () => {},
-                onSubmit: async (
-                    { selectedPaymentMethod, formData }: {
-                        selectedPaymentMethod: string
-                        formData: Record<string, unknown>
-                    }
-                ) => {
-                    const res = await fetch('/api/checkout/process-payment', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ selectedPaymentMethod, formData, preferenceId }),
-                    })
-                    const data = await res.json()
-                    if (res.ok) {
-                        if (data.status === 'approved') {
-                            onSuccess(data.paymentId)
-                        } else if (data.status === 'pending') {
-                            onPendingPayment?.({
-                                paymentId: data.paymentId,
-                                status: data.status,
-                                pixQrCode: data.pixQrCode,
-                                pixQrCodeBase64: data.pixQrCodeBase64,
-                            })
+                onSubmit: async ({ formData }: { formData: Record<string, any> }) => {
+                    try {
+                        const res = await fetch('/api/checkout/payment', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ ...formData, orderId }),
+                        })
+                        const data = await res.json()
+                        if (res.ok) {
+                            if (data.status === 'approved') {
+                                onSuccess(data.paymentId)
+                            } else if (data.status === 'pending' || data.status === 'in_process') {
+                                onPendingPayment?.({
+                                    paymentId: data.paymentId,
+                                    status: data.status,
+                                    pixQrCode: data.pixQrCode,
+                                    pixQrCodeBase64: data.pixQrCodeBase64,
+                                })
+                            } else {
+                                onError(new Error(data.error ?? `Status do pagamento: ${data.status}`))
+                            }
                         } else {
-                            onError(new Error(data.error ?? 'Pagamento não aprovado.'))
+                            onError(new Error(data.error ?? 'Erro ao processar pagamento'))
                         }
-                    } else {
-                        console.error('[PaymentBrick] Payment error:', data.error);
-                        onError(new Error(data.error ?? 'Erro no pagamento'))
+                    } catch (error: any) {
+                        onError(error)
                     }
                 },
                 onError: (error: any) => {
-                    console.error('[PaymentBrick] Initialization error:', error);
+                    console.error('[PaymentBrick] Brick error:', error)
                     onError(error)
                 },
             },
@@ -131,16 +130,18 @@ export function PaymentBrick({ preferenceId, totalAmount, onSuccess, onPendingPa
                 settings
             )
         } catch (error) {
-            console.error('[PaymentBrick] Create instance error:', error);
-            onError(error instanceof Error ? error : new Error('Falha ao inicializar formulário de pagamento.'));
+            console.error('[PaymentBrick] Create instance error:', error)
+            onError(error instanceof Error ? error : new Error('Falha ao inicializar formulário de pagamento.'))
         }
     }
 
     useEffect(() => {
-        if (sdkReady) initBrick()
+        if (sdkReady && preferenceId) {
+            initBrick()
+        }
         return () => brickControllerRef.current?.unmount()
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [sdkReady, preferenceId])
+    }, [sdkReady, preferenceId, orderId])
 
     return (
         <>
@@ -148,11 +149,11 @@ export function PaymentBrick({ preferenceId, totalAmount, onSuccess, onPendingPa
                 src="https://sdk.mercadopago.com/js/v2"
                 strategy="afterInteractive"
                 onLoad={() => {
-                    setSdkReady(true);
+                    setSdkReady(true)
                 }}
                 onError={(e) => {
-                    console.error('[PaymentBrick] SDK failed to load', e);
-                    onError(new Error('Falha ao carregar o SDK do Mercado Pago. Verifique sua conexão ou bloqueadores de anúncios.'));
+                    console.error('[PaymentBrick] SDK failed to load', e)
+                    onError(new Error('Falha ao carregar o SDK do Mercado Pago.'))
                 }}
             />
             <div
@@ -161,8 +162,8 @@ export function PaymentBrick({ preferenceId, totalAmount, onSuccess, onPendingPa
                 className="w-full min-h-[400px] transition-all duration-500"
             />
             {!sdkReady && (
-                <div className="flex flex-col items-center justify-center py-20 text-neutral-500 border border-white/5 bg-zinc-950/50">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+                <div className="flex flex-col items-center justify-center py-20 text-neutral-500 border border-white/5 bg-zinc-950/50 rounded-xl">
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-500 mb-4" />
                     <p className="text-[10px] font-black uppercase tracking-widest animate-pulse">
                         Iniciando ambiente seguro de pagamento...
                     </p>
@@ -171,4 +172,3 @@ export function PaymentBrick({ preferenceId, totalAmount, onSuccess, onPendingPa
         </>
     )
 }
-

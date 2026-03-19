@@ -43,6 +43,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json({
             coupon: {
+                id: coupon.id,
                 code: coupon.code,
                 discount_type: coupon.discount_type,
                 discount_value: coupon.discount_value,

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -65,6 +65,7 @@ export function CheckoutFlow() {
     // Coupon states
     const [couponCode, setCouponCode] = useState('')
     const [appliedCoupon, setAppliedCoupon] = useState<{
+        id: string
         code: string
         discount_type: 'percent' | 'fixed'
         discount_value: number
@@ -77,10 +78,10 @@ export function CheckoutFlow() {
         return (subtotal() * appliedCoupon.discount_value) / 100
     }
 
-    const discountValue = calculateDiscount()
-
     const [user, setUser] = useState<User | null>(null)
-    const supabase = createClient()
+    const supabase = useMemo(() => createClient(), [])
+
+    const discountValue = calculateDiscount()
 
     useEffect(() => {
         supabase.auth.getUser().then(({ data: { user } }) => {
@@ -132,71 +133,6 @@ export function CheckoutFlow() {
         } catch { /* silencioso */ }
     }
 
-    // Validação de Cupom
-    async function handleApplyCoupon() {
-        if (!couponCode.trim()) return
-        setIsValidatingCoupon(true)
-        try {
-            const res = await fetch('/api/checkout/coupon-validate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code: couponCode })
-            })
-            const data = await res.json()
-            if (!res.ok) throw new Error(data.error)
-
-            setAppliedCoupon(data)
-            toast.success(`Cupom ${data.code} aplicado!`)
-        } catch (err) {
-            toast.error(err instanceof Error ? err.message : 'Erro ao validar cupom')
-            setAppliedCoupon(null)
-        } finally {
-            setIsValidatingCoupon(false)
-        }
-    }
-
-    async function onAddressSubmit(data: AddressForm) {
-        if (!shipping) {
-            toast.error('Selecione uma opção de frete antes de continuar.')
-            return
-        }
-
-        setLoading(true)
-        try {
-            // Cria o pedido + preference no Supabase e MP
-            const res = await fetch('/api/checkout/create-preference', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    items: validItems.map((i) => ({
-                        variantId: i.variantId,
-                        productName: i.productName,
-                        quantity: i.quantity,
-                        unitPrice: i.price,
-                        imageUrl: i.imageUrl,
-                    })),
-                    customerInfo: data,
-                    shippingCost: shipping.price,
-                    shippingMethod: shipping.serviceName,
-                    discount: discountValue,
-                    coupon: appliedCoupon?.code,
-                    profileId: user?.id,
-                }),
-            })
-
-            const result = await res.json()
-            if (!res.ok) throw new Error(result.error)
-
-            setPreferenceId(result.preferenceId)
-            setOrderId(result.orderId)
-            setStep('payment')
-        } catch (err) {
-            toast.error(err instanceof Error ? err.message : 'Erro ao criar pedido')
-        } finally {
-            setLoading(false)
-        }
-    }
-
     function handlePaymentSuccess(paymentId: string) {
         setPendingPayment(null)
         clearCart()
@@ -219,48 +155,127 @@ export function CheckoutFlow() {
         }
     }
 
-    useEffect(() => {
-        if (!pendingPayment?.paymentId) return
+    // Validação de Cupom
+    async function handleApplyCoupon() {
+        if (!couponCode.trim()) return
+        setIsValidatingCoupon(true)
+        try {
+            const res = await fetch('/api/checkout/coupon', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: couponCode, total: subtotal() })
+            })
+            const result = await res.json()
+            if (!res.ok) throw new Error(result.error)
 
-        let mounted = true
+            const { coupon } = result
+            setAppliedCoupon({
+                id: coupon.id,
+                code: coupon.code,
+                discount_type: coupon.discount_type === 'percent' ? 'percent' : 'fixed',
+                discount_value: coupon.discount_value
+            })
+            toast.success(`Cupom ${coupon.code} aplicado!`)
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : 'Erro ao validar cupom')
+            setAppliedCoupon(null)
+        } finally {
+            setIsValidatingCoupon(false)
+        }
+    }
 
-        const checkPaymentStatus = async () => {
-            try {
-                const res = await fetch('/api/checkout/payment-status', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ paymentId: pendingPayment.paymentId }),
-                })
-                const data = await res.json()
-                if (!res.ok || !mounted) return
-
-                if (data.status === 'approved' || data.orderStatus === 'paid') {
-                    handlePaymentSuccess(pendingPayment.paymentId)
-                    return
-                }
-
-                if (data.status === 'rejected' || data.orderStatus === 'cancelled') {
-                    setPendingPayment(null)
-                    toast.error('Pagamento PIX nao foi aprovado.')
-                }
-            } catch {
-                // polling silencioso para nao poluir UI
-            }
+    async function onAddressSubmit(data: AddressForm) {
+        if (!shipping) {
+            toast.error('Selecione uma opção de frete antes de continuar.')
+            return
         }
 
-        checkPaymentStatus()
-        const timer = setInterval(checkPaymentStatus, 4000)
+        setLoading(true)
+        try {
+            // Cria o pedido + preference no Supabase e MP
+            const res = await fetch('/api/checkout/preference', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    items: validItems.map((i) => ({
+                        variant_id: i.variantId,
+                        name: i.productName,
+                        quantity: i.quantity,
+                        price: i.price,
+                    })),
+                    customer: {
+                        ...data,
+                        zipCode: data.zipCode.replace(/\D/g, '')
+                    },
+                    shipping: {
+                        name: shipping.serviceName,
+                        price: shipping.price
+                    },
+                    coupon: appliedCoupon ? {
+                        id: appliedCoupon.id,
+                        code: appliedCoupon.code,
+                        discount_type: appliedCoupon.discount_type,
+                        discount_value: appliedCoupon.discount_value
+                    } : null
+                }),
+            })
 
-        return () => {
-            mounted = false
-            clearInterval(timer)
+            const result = await res.json()
+            if (!res.ok) throw new Error(result.error)
+
+            setPreferenceId(result.id)
+            setOrderId(result.orderId)
+            setStep('payment')
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : 'Erro ao criar pedido')
+        } finally {
+            setLoading(false)
         }
-    }, [pendingPayment?.paymentId])
+    }
 
     function handlePaymentError(err: Error) {
         toast.error('Erro no pagamento: ' + err.message)
+        setLoading(false)
     }
 
+    // ─── POLLING: CHECK ORDER STATUS ──────────────────────────────────
+    useEffect(() => {
+        let interval: any
+        
+        if (step === 'payment' && orderId && pendingPayment) {
+            console.log('Iniciando polling para pedido via API interna:', orderId)
+            interval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/checkout/order-status?orderId=${orderId}`)
+                    if (!response.ok) {
+                        console.error('Erro ao consultar API de status:', response.statusText)
+                        return
+                    }
+
+                    const data = await response.json()
+
+                    if (data?.status === 'paid') {
+                        clearInterval(interval)
+                        handlePaymentSuccess(pendingPayment.paymentId)
+                        return
+                    }
+
+                    if (data?.status === 'cancelled' || data?.status === 'refunded' || data?.mp_status === 'rejected') {
+                        clearInterval(interval)
+                        setPendingPayment(null)
+                        toast.error('O pagamento foi recusado ou o pedido foi cancelado.')
+                    }
+                } catch (e) {
+                    console.error('Falha ao checar status do pedido:', e)
+                }
+            }, 5000) // check every 5 seconds
+        }
+
+        return () => {
+            if (interval) clearInterval(interval)
+        }
+    }, [step, orderId, pendingPayment])
+    
     // ─── STEP: CART ───────────────────────────────────────────────────
     if (step === 'cart') {
         return (
@@ -594,6 +609,7 @@ export function CheckoutFlow() {
                     )}
                     <PaymentBrick
                         preferenceId={preferenceId}
+                        orderId={orderId!}
                         totalAmount={orderTotal}
                         onSuccess={handlePaymentSuccess}
                         onPendingPayment={handlePendingPayment}

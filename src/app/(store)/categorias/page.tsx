@@ -2,7 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowRight } from 'lucide-react'
 import type { Metadata } from 'next'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 
 export const revalidate = 120
 
@@ -12,13 +12,17 @@ export const metadata: Metadata = {
 }
 
 export default async function CategoriasPage() {
-    const supabase = createServiceClient()
-    const { data: categoriasDB } = await supabase
+    const supabase = await createClient()
+    const { data: categoriasDB, error } = await supabase
         .from('categories')
         .select('name, slug, description, image_url')
         .eq('is_active', true)
         .is('parent_id', null)
         .order('sort_order', { ascending: true })
+
+    if (error) {
+        console.error('CategoriasPage [Error]:', error)
+    }
 
     const categorias = (categoriasDB ?? []).map((cat, index) => ({
         nome: cat.name,

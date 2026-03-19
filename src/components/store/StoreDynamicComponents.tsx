@@ -12,12 +12,12 @@ const Loading = ({ text }: { text: string }) => (
 
 export const ProdutosPageClient = dynamic(
     () => import('./ProdutosPageClient').then(mod => mod.ProdutosPageClient),
-    { ssr: false, loading: () => <Loading text="Carregando drop..." /> }
+    { ssr: true, loading: () => <Loading text="Carregando drop..." /> }
 )
 
 export const ProductPageClient = dynamic(
     () => import('./ProductPageClient').then(mod => mod.ProductPageClient),
-    { ssr: false, loading: () => <Loading text="Carregando drop..." /> }
+    { ssr: true, loading: () => <Loading text="Carregando drop..." /> }
 )
 
 
