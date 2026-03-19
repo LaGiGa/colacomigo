@@ -32,7 +32,6 @@ interface ProductData {
     price: number
     compare_price?: number | null
     weight_kg?: number
-    is_new?: boolean
     images: ProductImage[]
     brand?: { name: string; logo_url?: string | null } | null
     category?: { id: string; name: string; slug: string } | null
@@ -147,11 +146,6 @@ export function ProductPageClient({ slug, initialProduct = null }: { slug: strin
                                 {product.brand && (
                                     <span className="text-[10px] font-black tracking-[0.3em] text-primary uppercase">
                                         {product.brand.name}
-                                    </span>
-                                )}
-                                {product.is_new && (
-                                    <span className="bg-primary text-white text-[9px] font-black px-2 py-0.5 tracking-tighter uppercase">
-                                        NOVO
                                     </span>
                                 )}
                             </div>

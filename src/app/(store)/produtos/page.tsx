@@ -9,8 +9,9 @@ export const metadata: Metadata = {
     description: 'Camisas, Tênis, Bonés, Casacos e muito mais. Streetwear de qualidade.',
 }
 
-export default async function ProdutosPage() {
+export default async function ProdutosPage({ searchParams }: { searchParams: { busca?: string } }) {
     const supabase = await createClient()
+    const busca = (await searchParams)?.busca
 
     const [
         allCatsRes,
@@ -21,12 +22,20 @@ export default async function ProdutosPage() {
         supabase.from('categories').select('id, name, slug, parent_id').eq('is_active', true).order('sort_order', { ascending: true }),
         supabase.from('brands').select('id, name, slug').eq('is_active', true).order('sort_order', { ascending: true }),
         supabase.from('collections').select('id, name, slug').eq('is_active', true).order('sort_order', { ascending: true }),
-        supabase.from('products').select(`
-            id, name, slug, price, compare_price, is_new,
-            brand:brands(name),
-            images:product_images(url, is_primary),
-            variants:product_variants(id, sku, is_active, stock)
-        `).eq('is_active', true).order('created_at', { ascending: false }).limit(20)
+        (() => {
+            let q = supabase.from('products').select(`
+                id, name, slug, price, compare_price,
+                brand:brands(name),
+                images:product_images(url, is_primary),
+                variants:product_variants(id, sku, is_active, stock)
+            `).eq('is_active', true)
+            
+            if (busca) {
+                q = q.ilike('name', `%${busca}%`)
+            }
+            
+            return q.order('created_at', { ascending: false }).limit(20)
+        })()
     ])
 
     if (allCatsRes.error) console.error('ProdutosPage [Cats Error]:', allCatsRes.error)
@@ -40,6 +49,7 @@ export default async function ProdutosPage() {
             initialCategories={allCatsRes.data || []}
             initialBrands={allBrandsRes.data || []}
             initialCollections={allColsRes.data || []}
+            initialSearch={busca}
         />
     )
 }

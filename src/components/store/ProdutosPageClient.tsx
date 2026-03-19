@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Filter, SlidersHorizontal, Loader2, ChevronRight, X, ArrowDownUp, Plus, Minus } from 'lucide-react'
+import { Filter, SlidersHorizontal, Loader2, ChevronRight, X, ArrowDownUp, Plus, Minus, Search } from 'lucide-react'
 import { ProductCard } from '@/components/store/ProductCard'
 import { createClient } from '@/lib/supabase/client'
 
@@ -20,6 +20,9 @@ interface Props {
     initialCategories?: Category[]
     initialBrands?: any[]
     initialCollections?: any[]
+    initialSearch?: string | null
+    initialType?: string | null
+    initialSlug?: string | null
 }
 
 export function ProdutosPageClient({
@@ -30,6 +33,9 @@ export function ProdutosPageClient({
     initialCategories,
     initialBrands,
     initialCollections,
+    initialSearch = null,
+    initialType = null,
+    initialSlug = null,
 }: Props) {
     const [products, setProducts] = useState<any[]>(initialProducts ?? [])
     const [dbCategories, setDbCategories] = useState<Category[]>(initialCategories ?? [])
@@ -41,6 +47,7 @@ export function ProdutosPageClient({
     const [marca, setMarca] = useState<string | null>(initialMarca)
     const [ordem, setOrdem] = useState<string>('novos')
     const [visibleCount, setVisibleCount] = useState(10)
+    const [search, setSearch] = useState<string | null>(initialSearch)
     const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
     const [isMobileSortOpen, setIsMobileSortOpen] = useState(false)
     const [openAccordion, setOpenAccordion] = useState<string | null>('categorias')
@@ -75,8 +82,8 @@ export function ProdutosPageClient({
 
     useEffect(() => {
         async function load() {
-            const initialKey = `${initialCategory ?? ''}|${initialCollection ?? ''}|${initialMarca ?? ''}|novos`
-            const currentKey = `${categoria ?? ''}|${colecao ?? ''}|${marca ?? ''}|${ordem}`
+            const initialKey = `${initialCategory ?? ''}|${initialCollection ?? ''}|${initialMarca ?? ''}|${initialSearch ?? ''}|novos`
+            const currentKey = `${categoria ?? ''}|${colecao ?? ''}|${marca ?? ''}|${search ?? ''}|${ordem}`
 
             if (skipFirstFetchRef.current && currentKey === initialKey) {
                 skipFirstFetchRef.current = false
@@ -106,7 +113,6 @@ export function ProdutosPageClient({
 
 
             if (categoria) {
-                // Tenta encontrar ID localmente ou busca no banco
                 let catId = dbCategories.find(c => c.slug === categoria)?.id
                 if (!catId) {
                     const { data: catData } = await supabase.from('categories').select('id').eq('slug', categoria).single()
@@ -134,6 +140,10 @@ export function ProdutosPageClient({
                     if (brandData) query = query.eq('brand_id', brandData.id)
                 }
             }
+            
+            if (search) {
+                query = query.ilike('name', `%${search}%`)
+            }
 
             if (ordem === 'menor') query = query.order('price', { ascending: true })
             else if (ordem === 'maior') query = query.order('price', { ascending: false })
@@ -150,15 +160,17 @@ export function ProdutosPageClient({
             setLoading(false)
         }
         load()
-    }, [categoria, colecao, marca, ordem, dbCategories, dbBrands, dbCollections, initialCategory, initialCollection, initialMarca, initialProducts])
+    }, [categoria, colecao, marca, search, ordem, dbCategories, dbBrands, dbCollections, initialCategory, initialCollection, initialMarca, initialSearch, initialProducts])
 
-    const currentTitle = categoria
-        ? dbCategories.find(c => c.slug === categoria)?.name
-        : colecao
-            ? colecao.replace(/-/g, ' ').toUpperCase()
-            : marca
-                ? marca.replace(/-/g, ' ').toUpperCase()
-                : 'A COLA'
+    const currentTitle = search 
+        ? `BUSCA: ${search.toUpperCase()}`
+        : categoria
+            ? dbCategories.find(c => c.slug === categoria)?.name
+            : colecao
+                ? colecao.replace(/-/g, ' ').toUpperCase()
+                : marca
+                    ? marca.replace(/-/g, ' ').toUpperCase()
+                    : 'A COLA'
     const displayedProducts = products.slice(0, visibleCount)
 
     useEffect(() => {
@@ -219,15 +231,16 @@ export function ProdutosPageClient({
                                             setCategoria(null)
                                             setColecao(null)
                                             setMarca(null)
+                                            setSearch(null)
                                             window.history.pushState({}, '', '/produtos')
                                         }}
-                                        className={`group flex items-center justify-between px-4 py-3 text-[11px] font-black uppercase tracking-widest transition-all rounded-lg ${(!categoria && !colecao && !marca)
+                                        className={`group flex items-center justify-between px-4 py-3 text-[11px] font-black uppercase tracking-widest transition-all rounded-lg ${(!categoria && !colecao && !marca && !search)
                                             ? 'bg-zinc-800 text-white border border-white/5'
                                             : 'text-neutral-400 hover:text-white hover:bg-zinc-900 border border-transparent hover:border-white/5'
                                             }`}
                                     >
                                         TODOS OS PRODUTOS
-                                        {(!categoria && !colecao && !marca) && <span className="w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_8px_rgba(59,130,246,0.8)]" />}
+                                        {(!categoria && !colecao && !marca && !search) && <span className="w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_8px_rgba(59,130,246,0.8)]" />}
                                     </button>
 
                                     {dbCategories.filter(c => !c.parent_id).map((cat) => {
@@ -242,6 +255,7 @@ export function ProdutosPageClient({
                                                         setCategoria(cat.slug)
                                                         setColecao(null)
                                                         setMarca(null)
+                                                        setSearch(null)
                                                         window.history.pushState({}, '', `/categorias/${cat.slug}`)
                                                     }}
                                                     className={`w-full group flex items-center justify-between px-4 py-3 text-[11px] font-black uppercase tracking-widest transition-all rounded-lg ${isExpanded
@@ -258,11 +272,12 @@ export function ProdutosPageClient({
                                                     <div className="ml-2 pl-2 border-l-2 border-primary/20 flex flex-col pt-1.5 pb-2 gap-1 animate-in fade-in slide-in-from-left-2 duration-300">
                                                         {dbCategories.filter(sub => sub.parent_id === cat.id).map(sub => (
                                                             <button
-                                                                key={sub.id}
+                                                                 key={sub.id}
                                                                 onClick={() => {
                                                                     setCategoria(sub.slug)
                                                                     setColecao(null)
                                                                     setMarca(null)
+                                                                    setSearch(null)
                                                                     window.history.pushState({}, '', `/categorias/${sub.slug}`)
                                                                 }}
                                                                 className={`w-full text-left group flex items-center gap-2 px-3 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all rounded-md ${categoria === sub.slug
@@ -295,6 +310,7 @@ export function ProdutosPageClient({
                                                     setColecao(col.slug)
                                                     setCategoria(null)
                                                     setMarca(null)
+                                                    setSearch(null)
                                                     window.history.pushState({}, '', `/colecoes/${col.slug}`)
                                                 }}
                                                 className={`w-full group flex items-center justify-between px-4 py-3 text-[11px] font-black uppercase tracking-widest transition-all rounded-lg ${colecao === col.slug
@@ -323,6 +339,7 @@ export function ProdutosPageClient({
                                                     setMarca(brand.slug)
                                                     setCategoria(null)
                                                     setColecao(null)
+                                                    setSearch(null)
                                                     window.history.pushState({}, '', `/marcas/${brand.slug}`)
                                                 }}
                                                 className={`w-full group flex items-center justify-between px-4 py-3 text-[11px] font-black uppercase tracking-widest transition-all rounded-lg ${marca === brand.slug
@@ -391,7 +408,6 @@ export function ProdutosPageClient({
                                                     imageUrl={p.images?.[0]?.url ?? null}
                                                     secondImageUrl={p.images?.[1]?.url ?? null}
                                                     brandName={p.brand?.name ?? null}
-                                                    isNew={p.is_new ?? false}
                                                     variantId={firstActiveVariant?.id ?? null}
                                                     variantSku={firstActiveVariant?.sku ?? null}
                                                     inStock={isInStock}
@@ -418,7 +434,7 @@ export function ProdutosPageClient({
                                 </div>
                                 <h3 className="text-2xl font-black uppercase tracking-tight text-white mb-2">Sem Drop Disponível</h3>
                                 <p className="text-sm font-bold tracking-widest text-neutral-500 uppercase max-w-[280px]">
-                                    OS PRODUTOS DESTA CATEGORIA AINDA ESTÃO NO FORNO.
+                                    {search ? `NÃO ENCONTRAMOS NADA PARA "${search.toUpperCase()}".` : 'OS PRODUTOS DESTA CATEGORIA AINDA ESTÃO NO FORNO.'}
                                 </p>
                             </div>
                         )}
@@ -453,10 +469,11 @@ export function ProdutosPageClient({
                                             setCategoria(null)
                                             setColecao(null)
                                             setMarca(null)
+                                            setSearch(null)
                                             window.history.pushState({}, '', '/produtos')
                                             setIsMobileFilterOpen(false)
                                         }}
-                                        className={`text-left text-[11px] font-bold tracking-widest ${(!categoria && !colecao && !marca) ? 'text-primary' : 'text-neutral-400'}`}
+                                        className={`text-left text-[11px] font-bold tracking-widest ${(!categoria && !colecao && !marca && !search) ? 'text-primary' : 'text-neutral-400'}`}
                                     >
                                         TODOS OS PRODUTOS
                                     </button>
@@ -467,6 +484,7 @@ export function ProdutosPageClient({
                                                 setCategoria(cat.slug)
                                                 setColecao(null)
                                                 setMarca(null)
+                                                setSearch(null)
                                                 window.history.pushState({}, '', `/categorias/${cat.slug}`)
                                                 setIsMobileFilterOpen(false)
                                             }}
@@ -498,6 +516,7 @@ export function ProdutosPageClient({
                                                     setMarca(brand.slug)
                                                     setCategoria(null)
                                                     setColecao(null)
+                                                    setSearch(null)
                                                     window.history.pushState({}, '', `/marcas/${brand.slug}`)
                                                     setIsMobileFilterOpen(false)
                                                 }}
@@ -530,6 +549,7 @@ export function ProdutosPageClient({
                                                     setColecao(col.slug)
                                                     setCategoria(null)
                                                     setMarca(null)
+                                                    setSearch(null)
                                                     window.history.pushState({}, '', `/colecoes/${col.slug}`)
                                                     setIsMobileFilterOpen(false)
                                                 }}
@@ -587,5 +607,3 @@ export function ProdutosPageClient({
         </main>
     )
 }
-
-

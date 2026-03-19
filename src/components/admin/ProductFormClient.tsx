@@ -24,7 +24,6 @@ interface ProductFormValues {
     collection_id: string
     weight_kg: string
     is_active: boolean
-    is_new: boolean
 }
 
 interface ImagePreview { file: File; uploadFile: File; preview: string; uploading: boolean; url?: string }
@@ -142,7 +141,6 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
             collection_id: initialProduct?.collection_id || '',
             weight_kg: initialProduct?.weight_kg?.toString() || '',
             is_active: initialProduct?.is_active ?? true,
-            is_new: initialProduct?.is_new ?? false,
         },
     })
 
@@ -161,7 +159,6 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
                 collection_id: initialProduct.collection_id || '',
                 weight_kg: initialProduct.weight_kg?.toString() || '',
                 is_active: initialProduct.is_active ?? true,
-                is_new: initialProduct.is_new ?? false,
             })
         }
     }, [initialProduct, reset])
@@ -443,10 +440,6 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" {...register('is_active')} className="h-4 w-4 accent-orange-500" />
                             <span className="text-sm">Produto ativo</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" {...register('is_new')} className="h-4 w-4 accent-orange-500" />
-                            <span className="text-sm">Marcar como novidade</span>
                         </label>
                     </div>
                 </div>
