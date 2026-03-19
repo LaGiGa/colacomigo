@@ -1,11 +1,11 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { Icons } from '@/components/ui/icons'
+import { Loader2 } from '@/components/ui/icons'
 
 const Loading = ({ text }: { text: string }) => (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center text-white p-4">
-        <Icons.Loader2 className="h-10 w-10 text-primary mb-4" />
+        <Loader2 className="h-10 w-10 text-primary mb-4" />
         <p className="text-xs font-bold uppercase tracking-[0.2em] animate-pulse text-neutral-500">{text}</p>
     </div>
 )
