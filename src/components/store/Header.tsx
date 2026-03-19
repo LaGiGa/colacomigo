@@ -7,6 +7,8 @@ import { useCartStore } from '@/store/useCartStore'
 import { useUIStore } from '@/store/useUIStore'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { AuthChangeEvent, Session } from '@supabase/supabase-js'
 
 // ─── Dados de navegação ───────────────────────────────────────────────────────
 const CATEGORIAS = [
@@ -49,11 +51,26 @@ export function Header() {
     const [drawerOpen, setDrawerOpen] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [scrolled, setScrolled] = useState(false)
+    const [user, setUser] = useState<any | null>(null)
 
     // Mobile: nível de navegação (null = raiz, objeto = nível 2 de subcategorias)
     const [mobileLevel, setMobileLevel] = useState<null | { label: string; subs: string[]; subHrefs: string[] }>(null)
 
     const mobileSearchRef = useRef<HTMLInputElement>(null)
+    const supabase = createClient()
+
+    // Auth check
+    useEffect(() => {
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            setUser(user)
+        })
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
+            setUser(session?.user ?? null)
+        })
+
+        return () => subscription.unsubscribe()
+    }, [supabase])
 
     // Scroll shadow no header
     useEffect(() => {
@@ -87,7 +104,7 @@ export function Header() {
                 HEADER PRINCIPAL
             ══════════════════════════════════════════════════════════════ */}
             <header
-                className="sticky top-0 z-50 w-full bg-black"
+                className="sticky top-0 z-50 w-full bg-black font-sans"
                 style={{ borderBottom: scrolled ? '1px solid #1a1a1a' : '1px solid transparent' }}
             >
                 {/* ── Linha 1: hamburger | logo | ações ── */}
@@ -135,13 +152,21 @@ export function Header() {
                         </form>
 
                         {/* Ações — direita */}
-                        <div className="flex items-center gap-0.5 ml-auto">
+                        <div className="flex items-center gap-2 ml-auto">
                             {/* Conta (desktop) */}
                             <Link
                                 href="/conta/pedidos"
-                                className="tap-target text-neutral-400 hover:text-white transition-colors hidden lg:flex"
+                                className="tap-target group flex items-center gap-2 text-neutral-400 hover:text-white transition-colors hidden lg:flex"
                                 aria-label="Minha conta"
                             >
+                                <div className="flex flex-col items-end leading-none">
+                                    <span className="text-[9px] font-black uppercase tracking-widest text-neutral-600 group-hover:text-primary transition-colors">
+                                        {user ? 'Olá,' : 'Seja'}
+                                    </span>
+                                    <span className="text-[11px] font-black uppercase tracking-wider text-white">
+                                        {user ? 'Meus Pedidos' : 'Bem-vindo'}
+                                    </span>
+                                </div>
                                 <User className="h-5 w-5" />
                             </Link>
 
@@ -319,6 +344,28 @@ export function Header() {
                                 </form>
                             </div>
 
+                            {/* Conta (mobile) */}
+                            <div className="px-5 py-4 border-b border-[#111] bg-white/5">
+                                <Link
+                                    href="/conta/pedidos"
+                                    onClick={() => setDrawerOpen(false)}
+                                    className="flex items-center gap-3"
+                                >
+                                    <div className="h-10 w-10 rounded-full bg-zinc-900 flex items-center justify-center border border-white/10">
+                                        <User className="h-5 w-5 text-primary" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500 leading-none mb-1">
+                                            {user ? 'Olá,' : 'Seja'}
+                                        </p>
+                                        <p className="text-sm font-black uppercase tracking-tight text-white leading-none">
+                                            {user ? 'Meus Pedidos' : 'Bem-vindo · Entrar'}
+                                        </p>
+                                    </div>
+                                    <ChevronRight className="h-4 w-4 ml-auto text-neutral-700" />
+                                </Link>
+                            </div>
+
                             <p className="px-5 pt-4 pb-2 text-[9px] font-black text-[#333] uppercase tracking-[0.25em]">
                                 Categorias
                             </p>
@@ -349,7 +396,7 @@ export function Header() {
                                 Institucional
                             </p>
                             {[
-                                { label: 'Minha Conta / Pedidos', href: '/conta/pedidos' },
+                                { label: 'Ajuda / WhatsApp', href: 'https://wa.me/5563991312913' },
                                 { label: 'Pagamento e Frete', href: '/institucional/pagamento-e-frete' },
                                 { label: 'Trocas e Devoluções', href: '/institucional/trocas-e-devolucoes' },
                                 { label: 'Política de Privacidade', href: '/institucional/politica-de-privacidade' },
