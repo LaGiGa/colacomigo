@@ -3,7 +3,7 @@ import type { NextConfig } from 'next'
 const nextConfig: NextConfig = {
   // ─── Otimizações para Cloudflare 3MB Limit ───────────────────────────────
   productionBrowserSourceMaps: false,
-  
+
   async redirects() {
     return [
       {
@@ -26,6 +26,7 @@ const nextConfig: NextConfig = {
       },
     ]
   },
+
   images: {
     unoptimized: true,
     remotePatterns: [
@@ -44,16 +45,22 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+
+  // ─── Excluir pacotes pesados do bundle do servidor ───────────────────────
+  serverExternalPackages: ['source-map-support', 'sharp'],
+
   experimental: {
     optimizePackageImports: [
       'lucide-react',
       '@supabase/supabase-js',
       '@supabase/ssr',
-      'mercadopago',
       '@mercadopago/sdk-react',
       'zod',
       'sonner',
       'react-hook-form',
+      'radix-ui',
+      'embla-carousel-react',
+      'embla-carousel-autoplay',
     ],
   },
 }
