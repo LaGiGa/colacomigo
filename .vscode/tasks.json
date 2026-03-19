@@ -5,6 +5,16 @@
 			"label": "Verificar tamanho do build",
 			"type": "shell",
 			"command": "npm run build 2>&1 | tail -50"
+		},
+		{
+			"label": "Git Push Latest Changes",
+			"type": "shell",
+			"command": "git add . && git commit -m 'fix: move runtime exports to top' && git push"
+		},
+		{
+			"label": "Git Push with PowerShell Syntax",
+			"type": "shell",
+			"command": "git add . ; git commit -m 'fix: move runtime exports to top' ; git push"
 		}
 	]
 }

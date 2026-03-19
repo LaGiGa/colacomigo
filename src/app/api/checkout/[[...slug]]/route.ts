@@ -1,10 +1,10 @@
+export const runtime = 'nodejs'
+
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient, createClient } from '@/lib/supabase/server'
 import { mpCreatePreference, mpCreatePayment, mpGetPayment } from '@/lib/mercadopago'
 import { sendEmail, getPurchaseEmailHtml, formatCurrencyString, getCompanyNewSaleEmailHtml } from '@/lib/email'
 import { z } from 'zod'
-
-export const runtime = 'nodejs'
 
 /**
  * API CHECKOUT — OTIMIZADA PARA CLOUDFLARE 3MB LIMIT

@@ -1,6 +1,6 @@
-import { PedidoDetailClient } from '@/components/admin/AdminDynamicComponents'
-
 export const runtime = 'nodejs'
+
+import { PedidoDetailClient } from '@/components/admin/AdminDynamicComponents'
 
 interface Props {
   params: Promise<{ id: string }>
