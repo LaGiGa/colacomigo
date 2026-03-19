@@ -1,7 +1,7 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  // ─── Otimizações para Cloudflare 3MB Limit ───────────────────────────────
+  // ─── Otimizações para Cloudflare 25MB Limit ───────────────────────────────
   productionBrowserSourceMaps: false,
 
   async redirects() {
@@ -49,7 +49,7 @@ const nextConfig: NextConfig = {
   // ─── Excluir pacotes pesados do bundle do servidor ───────────────────────
   serverExternalPackages: ['source-map-support', 'sharp'],
   
-  bundlePagesRouterDependencies: true,
+  bundlePagesRouterDependencies: false,
 
   experimental: {
     optimizePackageImports: [
@@ -65,9 +65,13 @@ const nextConfig: NextConfig = {
       'class-variance-authority',
       'clsx',
       'tailwind-merge',
+      'lucide-react',
+      'next-themes',
     ],
     optimizeCss: true,
   },
+  
+  turbopack: {},
 }
 
 export default nextConfig
