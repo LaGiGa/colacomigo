@@ -67,6 +67,7 @@ const nextConfig: NextConfig = {
       'tailwind-merge',
       'lucide-react',
       'next-themes',
+      'zustand',
     ],
     optimizeCss: true,
   },
