@@ -1,6 +1,6 @@
-import { Header } from '@/components/store/Header'
-import { Footer } from '@/components/store/Footer'
 import {
+    Header,
+    Footer,
     AnnouncementBar,
     CartDrawer,
     WhatsAppButton,

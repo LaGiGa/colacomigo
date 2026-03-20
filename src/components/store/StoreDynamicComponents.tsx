@@ -96,3 +96,13 @@ export const Toaster = dynamic(
     () => import('@/components/ui/sonner').then(mod => mod.Toaster),
     { ssr: false }
 )
+
+export const Header = dynamic(
+    () => import('./Header').then(mod => mod.Header),
+    { ssr: false, loading: () => <div className="h-16 bg-black border-b border-[#111] animate-pulse" /> }
+)
+
+export const Footer = dynamic(
+    () => import('./Footer').then(mod => mod.Footer),
+    { ssr: false, loading: () => <div className="h-64 bg-[#050505] border-t border-[#111] animate-pulse" /> }
+)

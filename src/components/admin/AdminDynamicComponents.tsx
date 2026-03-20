@@ -61,3 +61,8 @@ export const ProductFormClient = dynamic(
     () => import('./ProductFormClient').then(mod => mod.ProductFormClient),
     { ssr: false, loading: () => <Loading text="Carregando editor..." /> }
 )
+
+export const AdminLayoutClient = dynamic(
+    () => import('./AdminLayoutClient').then(mod => mod.AdminLayoutClient),
+    { ssr: false }
+)
