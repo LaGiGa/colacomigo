@@ -1,7 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { X } from '@/components/ui/icons'
+const X = ({ size = 20, ...props }: any) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+  </svg>
+)
 import { Dialog as SheetPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"

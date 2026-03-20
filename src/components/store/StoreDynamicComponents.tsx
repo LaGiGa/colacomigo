@@ -1,11 +1,27 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { Loader2 } from '@/components/ui/icons'
 
 const Loading = ({ text }: { text: string }) => (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center text-white p-4">
-        <Loader2 className="h-10 w-10 text-primary mb-4" />
+        <svg 
+            className="h-10 w-10 text-primary mb-4 animate-spin" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+        >
+            <path d="M12 2v4" />
+            <path d="m16.2 7.8 2.9-2.9" />
+            <path d="M18 12h4" />
+            <path d="m16.2 16.2 2.9 2.9" />
+            <path d="M12 18v4" />
+            <path d="m4.9 19.1 2.9-2.9" />
+            <path d="M2 12h4" />
+            <path d="m4.9 4.9 2.9 2.9" />
+        </svg>
         <p className="text-xs font-bold uppercase tracking-[0.2em] animate-pulse text-neutral-500">{text}</p>
     </div>
 )
