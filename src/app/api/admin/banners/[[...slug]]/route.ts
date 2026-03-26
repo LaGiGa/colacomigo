@@ -7,7 +7,7 @@ import { NextResponse } from 'next/server'
 export async function GET() {
     try {
         const supabase = createServiceClient()
-        const { data, error } = await supabase.from('banners').select('*').order('order_index', { ascending: true })
+        const { data, error } = await supabase.from('hero_banners').select('*').order('sort_order', { ascending: true })
         if (error) throw error
         return NextResponse.json({ banners: data ?? [] })
     } catch (err: any) {
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     try {
         const supabase = createServiceClient()
         const body = await req.json()
-        const { data, error } = await supabase.from('banners').insert(body).select().single()
+        const { data, error } = await supabase.from('hero_banners').insert(body).select().single()
         if (error) throw error
         return NextResponse.json({ banner: data })
     } catch (err: any) {
@@ -33,7 +33,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ slug?:
         const id = slug?.[0]
         const supabase = createServiceClient()
         const body = await req.json()
-        const { data, error } = await supabase.from('banners').update(body).eq('id', id).select().single()
+        const { data, error } = await supabase.from('hero_banners').update(body).eq('id', id).select().single()
         if (error) throw error
         return NextResponse.json({ banner: data })
     } catch (err: any) {
@@ -46,7 +46,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ slug?
         const slug = (await params).slug
         const id = slug?.[0]
         const supabase = createServiceClient()
-        const { error } = await supabase.from('banners').delete().eq('id', id)
+        const { error } = await supabase.from('hero_banners').delete().eq('id', id)
         if (error) throw error
         return NextResponse.json({ success: true })
     } catch (err: any) {
