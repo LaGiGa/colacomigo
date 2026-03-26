@@ -1,16 +1,13 @@
-interface OptimizeImageOptions {
-    width?: number
-    quality?: number
-    format?: 'origin' | 'webp'
-}
-
 /**
- * Converte URLs públicas do Supabase Storage para endpoint de transformação
- * (render/image), reduzindo drasticamente o payload enviado ao cliente.
+ * Converte URLs públicas do Supabase Storage para caminho proxy local.
+ * As imagens passam pelo Cloudflare CDN (bandwidth gratuito + cache),
+ * evitando egress direto do Supabase Storage.
+ *
+ * O Next.js Image component cuida do resize e conversão para WebP/AVIF
+ * automaticamente via suas props (width, sizes, quality).
  */
 export function optimizeImageUrl(
     url?: string | null,
-    { width = 1200, quality = 72, format = 'webp' }: OptimizeImageOptions = {}
 ): string | null {
     if (!url) return null
     if (!url.startsWith('http')) return url
@@ -22,23 +19,12 @@ export function optimizeImageUrl(
         return url
     }
 
-    // Só transforma URLs do Supabase Storage public object
+    // Só converte URLs do Supabase Storage public object
     if (!parsed.pathname.includes('/storage/v1/object/public/')) {
         return url
     }
 
-    // Alguns tenants do Supabase não têm o recurso render/image habilitado.
-    // Só convertemos quando explicitamente habilitado por env.
-    if (process.env.NEXT_PUBLIC_SUPABASE_IMAGE_TRANSFORM !== 'true') {
-        return url
-    }
-
-    parsed.pathname = parsed.pathname.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/')
-    parsed.searchParams.set('width', String(width))
-    parsed.searchParams.set('quality', String(quality))
-    if (format !== 'origin') {
-        parsed.searchParams.set('format', format)
-    }
-
-    return parsed.toString()
+    // Redireciona para proxy local → Cloudflare cacheia → Supabase não gasta egress
+    const storagePath = parsed.pathname.replace('/storage/v1/object/public/', '')
+    return `/supabase-images/${storagePath}`
 }

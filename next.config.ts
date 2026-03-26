@@ -27,8 +27,21 @@ const nextConfig: NextConfig = {
     ]
   },
 
+  async rewrites() {
+    return [
+      {
+        source: '/supabase-images/:path*',
+        destination:
+          'https://ygdlmathcksuhnybkcpy.supabase.co/storage/v1/object/public/:path*',
+      },
+    ]
+  },
+
   images: {
-    unoptimized: true,
+    minimumCacheTTL: 2592000,
+    formats: ['image/webp', 'image/avif'],
+    deviceSizes: [640, 768, 1024, 1280],
+    imageSizes: [128, 256, 384],
     remotePatterns: [
       {
         protocol: 'https',

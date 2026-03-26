@@ -303,7 +303,7 @@ export function CheckoutFlow() {
                                     {item.imageUrl && (
                                         <div className="relative h-20 w-16 overflow-hidden flex-shrink-0 bg-neutral-900 outline outline-1 outline-white/10">
                                             <Image
-                                                src={optimizeImageUrl(item.imageUrl, { width: 220, quality: 60 }) ?? item.imageUrl}
+                                                src={optimizeImageUrl(item.imageUrl) ?? item.imageUrl}
                                                 alt={item.productName}
                                                 fill
                                                 className="object-cover"

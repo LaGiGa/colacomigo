@@ -115,8 +115,7 @@ export function ProductPageClient({ slug, initialProduct = null }: { slug: strin
     )
 
     const primaryImage = optimizeImageUrl(
-        product.images?.find((img) => img.is_primary)?.url || product.images?.[0]?.url,
-        { width: 900, quality: 72 }
+        product.images?.find((img) => img.is_primary)?.url || product.images?.[0]?.url
     )
 
     return (

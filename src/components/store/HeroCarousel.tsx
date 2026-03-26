@@ -13,6 +13,7 @@ import {
     type CarouselApi,
 } from '@/components/ui/carousel'
 import { Button } from '@/components/ui/button'
+import { optimizeImageUrl } from '@/lib/image'
 
 interface Banner {
     id: string
@@ -63,10 +64,11 @@ export function HeroCarousel({ initialBanners }: { initialBanners: Banner[] }) {
                         <CarouselItem key={banner.id}>
                             <div className="relative h-[85vh] min-h-[600px] w-full cursor-grab active:cursor-grabbing">
                                 <Image
-                                    src={banner.image_url}
+                                    src={optimizeImageUrl(banner.image_url) ?? banner.image_url}
                                     alt={banner.title}
                                     fill
                                     className="object-cover object-center opacity-70"
+                                    sizes="100vw"
                                     priority={index === 0}
                                 />
                                 {/* Overlay Escuro Clássico */}

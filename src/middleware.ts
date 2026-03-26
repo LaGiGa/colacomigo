@@ -49,11 +49,11 @@ export async function middleware(request: NextRequest) {
         try {
             const { data: profile, error } = await supabase
                 .from('profiles')
-                .select('is_admin')
+                .select('role')
                 .eq('id', user.id)
                 .maybeSingle()
 
-            if (error || !profile || !profile.is_admin) {
+            if (error || !profile || profile.role !== 'admin') {
                 console.warn('Acesso negado: Usuário não é admin ou profile não encontrado.')
                 if (pathname.startsWith('/api/')) {
                     return NextResponse.json({ error: 'Acesso Proibido' }, { status: 403 })

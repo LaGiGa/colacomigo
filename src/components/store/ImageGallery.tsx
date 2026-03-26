@@ -15,7 +15,7 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
     const [current, setCurrent] = useState(0)
     const [zoomed, setZoomed] = useState(false)
     const [thumbsReady, setThumbsReady] = useState(false)
-    const currentMainImage = optimizeImageUrl(images[current]?.url, { width: 1400, quality: 75 })
+    const currentMainImage = optimizeImageUrl(images[current]?.url)
 
     useEffect(() => {
         const timer = setTimeout(() => setThumbsReady(true), 1200)
@@ -48,7 +48,7 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
                             )}
                         >
                             <Image
-                                src={optimizeImageUrl(img.url, { width: 220, quality: 60 }) ?? img.url}
+                                src={optimizeImageUrl(img.url) ?? img.url}
                                 alt={`Foto ${i + 1}`}
                                 fill
                                 className="object-contain p-1 bg-black"

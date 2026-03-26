@@ -45,8 +45,8 @@ export function ProductCard({
     const discountPct = hasDiscount ? Math.round(((comparePrice - price) / comparePrice) * 100) : 0
     const pixPrice = price * 0.9
     const pixSavings = Math.max(0, price - pixPrice)
-    const optimizedMainImage = optimizeImageUrl(imageUrl, { width: 640, quality: 68 })
-    const optimizedSecondImage = optimizeImageUrl(secondImageUrl, { width: 640, quality: 68 })
+    const optimizedMainImage = optimizeImageUrl(imageUrl)
+    const optimizedSecondImage = optimizeImageUrl(secondImageUrl)
 
     function handleQuickAdd(e: React.MouseEvent) {
         e.preventDefault()

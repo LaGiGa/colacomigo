@@ -78,7 +78,7 @@ export function CartDrawer() {
                                     <div className="relative h-28 w-24 flex-shrink-0 bg-zinc-900 border border-white/5 overflow-hidden">
                                         {item.imageUrl ? (
                                             <Image
-                                                src={optimizeImageUrl(item.imageUrl, { width: 320, quality: 62 }) ?? item.imageUrl}
+                                                src={optimizeImageUrl(item.imageUrl) ?? item.imageUrl}
                                                 alt={item.productName}
                                                 fill
                                                 className="object-cover transition-transform duration-500 group-hover:scale-110 mix-blend-luminosity hover:mix-blend-normal"
