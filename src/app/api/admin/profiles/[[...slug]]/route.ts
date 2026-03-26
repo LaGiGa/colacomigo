@@ -25,17 +25,25 @@ export async function GET() {
         // 3. Buscar endereços para pegar cidade/estado
         const { data: addresses, error: addressesError } = await supabase
             .from('addresses')
-            .select('profile_id, city, state')
+            .select('*')
         
+        if (addressesError) console.error('Addresses Error:', addressesError)
+
         // 4. Enriquecer os perfis
         const enrichedProfiles = profiles.map(p => {
             const authUser = users?.find(u => u.id === p.id)
-            // Tenta encontrar o endereço desse perfil
-            const address = addresses?.find(a => a.profile_id === p.id) || null
+            const metadata = authUser?.user_metadata || {}
+            
+            // Tenta pegar o nome de várias fontes (perfil, metadata full_name, metadata name)
+            const name = p.full_name || metadata.full_name || metadata.name || metadata.display_name || null
+
+            // Tenta encontrar o endereço (checa user_id ou profile_id conforme o schema)
+            const address = addresses?.find(a => (a.user_id === p.id || a.profile_id === p.id)) || null
             
             return {
                 ...p,
-                email: authUser?.email ?? p.email ?? '—', // Fallback se já existir no profile ou se não achar no auth
+                full_name: name,
+                email: authUser?.email ?? p.email ?? '—',
                 city: address?.city ?? '',
                 state: address?.state ?? ''
             }
