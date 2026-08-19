@@ -50,6 +50,18 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'cdn.colacomigoshop.com.br',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.r2.dev',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.r2.cloudflarestorage.com',
+      },
+      {
+        protocol: 'https',
         hostname: 'images.unsplash.com',
       },
       {
@@ -60,7 +72,7 @@ const nextConfig: NextConfig = {
   },
 
   // ─── Excluir pacotes pesados do bundle do servidor ───────────────────────
-  serverExternalPackages: ['source-map-support', 'sharp'],
+  serverExternalPackages: ['source-map-support', 'sharp', '@aws-sdk/client-s3'],
   
   bundlePagesRouterDependencies: true,
 

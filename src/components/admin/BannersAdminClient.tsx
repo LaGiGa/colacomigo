@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { ArrowDown, ArrowUp, Check, CheckCircle, ExternalLink, ImagePlus, Layout, Loader2, Pencil, Plus, Trash2, X, XCircle } from '@/components/ui/icons'
 import Image from 'next/image'
+import { optimizeImageFile } from '@/lib/image-client'
+
 
 interface Banner {
     id: string
@@ -83,14 +85,16 @@ export function BannersAdminClient({ banners: initial = [] }: { banners?: Banner
     }
 
     async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-        const file = e.target.files?.[0]
-        if (!file) return
+        const rawFile = e.target.files?.[0]
+        if (!rawFile) return
 
         setUploading(true)
-        const formData = new FormData()
-        formData.append('file', file)
-
         try {
+            const file = await optimizeImageFile(rawFile, { maxSide: 2000, quality: 0.88 })
+            const formData = new FormData()
+            formData.append('file', file)
+            formData.append('folder', 'banners')
+
             const res = await fetch('/api/admin/upload', {
                 method: 'POST',
                 body: formData,
@@ -98,16 +102,17 @@ export function BannersAdminClient({ banners: initial = [] }: { banners?: Banner
             const data = await res.json()
             if (data.url) {
                 setImageUrl(data.url)
-                toast.success('Imagem carregada!')
+                toast.success('Imagem otimizada e carregada!')
             } else {
-                toast.error('Erro no upload')
+                toast.error(data.error || 'Erro no upload')
             }
-        } catch (err) {
-            toast.error('Erro de conexão')
+        } catch (err: any) {
+            toast.error(err?.message || 'Erro no processamento da imagem')
         } finally {
             setUploading(false)
         }
     }
+
 
     async function salvar() {
         if (!title.trim() || !imageUrl.trim() || !linkUrl.trim()) {

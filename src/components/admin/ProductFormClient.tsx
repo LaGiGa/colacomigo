@@ -11,6 +11,8 @@ import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { ChevronDown, ImagePlus, Loader2, Plus, Save, X } from '@/components/ui/icons'
 import Image from 'next/image'
+import { optimizeImageFile } from '@/lib/image-client'
+
 
 interface ProductFormValues {
     name: string
@@ -173,37 +175,6 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
             .replace(/[^a-z0-9\s-]/g, '')
             .trim()
             .replace(/\s+/g, '-')
-    }
-
-    async function optimizeImageFile(file: File): Promise<File> {
-        if (!file.type.startsWith('image/')) return file
-        if (file.size <= 450 * 1024) return file
-
-        const bitmap = await createImageBitmap(file)
-        const maxSide = 1600
-        const ratio = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height))
-        const targetWidth = Math.max(1, Math.round(bitmap.width * ratio))
-        const targetHeight = Math.max(1, Math.round(bitmap.height * ratio))
-
-        const canvas = document.createElement('canvas')
-        canvas.width = targetWidth
-        canvas.height = targetHeight
-
-        const ctx = canvas.getContext('2d')
-        if (!ctx) return file
-        ctx.drawImage(bitmap, 0, 0, targetWidth, targetHeight)
-        bitmap.close()
-
-        const webpBlob = await new Promise<Blob | null>((resolve) =>
-            canvas.toBlob(resolve, 'image/webp', 0.8)
-        )
-        if (!webpBlob) return file
-
-        const optimizedName = file.name.replace(/\.[^.]+$/, '.webp')
-        return new File([webpBlob], optimizedName, {
-            type: 'image/webp',
-            lastModified: Date.now(),
-        })
     }
 
     async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
