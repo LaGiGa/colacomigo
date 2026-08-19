@@ -64,6 +64,8 @@ export default function AdminDashboard() {
         },
     ]
 
+    const lowStock: any[] = stats?.lowStock ?? []
+
     const statusList = [
         { label: 'Pendentes', value: stats?.statusCounts?.pending ?? 0, color: 'bg-yellow-500/20 text-yellow-400', href: '/admin/pedidos?status=pending' },
         { label: 'Pagos', value: stats?.statusCounts?.paid ?? 0, color: 'bg-green-500/20 text-green-400', href: '/admin/pedidos?status=paid' },
@@ -103,7 +105,7 @@ export default function AdminDashboard() {
                 ))}
             </div>
 
-            {/* Status dos pedidos */}
+            {/* Status dos pedidos + Estoque baixo */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 <Card className="bg-card border-border overflow-hidden">
                     <CardHeader className="py-4 sm:py-6">
@@ -128,6 +130,50 @@ export default function AdminDashboard() {
                                 </Link>
                             ))}
                         </div>
+                    </CardContent>
+                </Card>
+
+                {/* Estoque baixo */}
+                <Card className="bg-card border-border overflow-hidden">
+                    <CardHeader className="py-4 sm:py-6">
+                        <CardTitle className="flex items-center gap-2 text-base sm:text-xl">
+                            <Package className="h-4 w-4 text-amber-400" />
+                            Estoque Baixo
+                            {lowStock.length > 0 && (
+                                <Badge className="bg-amber-500/20 text-amber-400 text-[10px] ml-1">
+                                    {lowStock.length}
+                                </Badge>
+                            )}
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
+                        {lowStock.length === 0 ? (
+                            <p className="text-xs sm:text-sm text-muted-foreground py-4">
+                                Nenhuma variante com estoque baixo. Tudo certo por aqui.
+                            </p>
+                        ) : (
+                            <div className="space-y-2 max-h-72 overflow-auto">
+                                {lowStock.map((item: any) => (
+                                    <Link
+                                        key={item.variantId}
+                                        href={`/admin/produtos/${item.productId}`}
+                                        className="flex items-center justify-between gap-3 rounded-lg border border-border/50 px-3 py-2 hover:bg-secondary/30 transition-colors"
+                                    >
+                                        <div className="min-w-0">
+                                            <p className="text-xs sm:text-sm font-medium truncate">{item.productName}</p>
+                                            <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                                                {[item.size ? `Tam ${item.size}` : null, item.colorName].filter(Boolean).join(' · ') || 'Variante única'}
+                                            </p>
+                                        </div>
+                                        <Badge
+                                            className={`text-[10px] flex-shrink-0 ${item.stock <= 0 ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400'}`}
+                                        >
+                                            {item.stock <= 0 ? 'Esgotado' : `${item.stock} un.`}
+                                        </Badge>
+                                    </Link>
+                                ))}
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </div>

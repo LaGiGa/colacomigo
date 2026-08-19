@@ -3,6 +3,7 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatCurrency } from '@/lib/utils'
+import { shippingMethodLabel, shippingMethodTone } from '@/lib/shipping'
 import { Clock, Eye, Loader2, Package } from '@/components/ui/icons'
 import Link from 'next/link'
 
@@ -61,6 +62,7 @@ export function PedidosAdminClient({ initialOrders = [] }: { initialOrders?: any
                             <th className="text-left p-4 font-semibold">Cliente</th>
                             <th className="text-left p-4 font-semibold">Data</th>
                             <th className="text-left p-4 font-semibold">Itens</th>
+                            <th className="text-left p-4 font-semibold">Entrega</th>
                             <th className="text-left p-4 font-semibold">Total</th>
                             <th className="text-left p-4 font-semibold">Status</th>
                             <th className="text-left p-4 font-semibold">Ações</th>
@@ -86,6 +88,11 @@ export function PedidosAdminClient({ initialOrders = [] }: { initialOrders?: any
                                             <p className="text-xs">{date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
                                         </td>
                                         <td className="p-4 text-muted-foreground">{order.items?.length ?? 0}</td>
+                                        <td className="p-4">
+                                            <Badge variant="outline" className={`text-[10px] uppercase font-bold ${shippingMethodTone(order)}`}>
+                                                {shippingMethodLabel(order)}
+                                            </Badge>
+                                        </td>
                                         <td className="p-4"><span className="font-bold text-primary">{formatCurrency(order.total)}</span></td>
                                         <td className="p-4"><Badge variant="outline" className={`text-xs ${statusConf.color}`}>{statusConf.label}</Badge></td>
                                         <td className="p-4"><Button variant="ghost" size="sm" asChild><Link href={`/admin/pedidos/${order.id}`}><Eye className="h-4 w-4" /></Link></Button></td>
@@ -93,7 +100,7 @@ export function PedidosAdminClient({ initialOrders = [] }: { initialOrders?: any
                                 )
                             })
                         ) : (
-                            <tr><td colSpan={7} className="p-12 text-center text-muted-foreground"><Package className="h-8 w-8 mx-auto mb-2 opacity-50" /><p>Nenhum pedido recebido ainda.</p></td></tr>
+                            <tr><td colSpan={8} className="p-12 text-center text-muted-foreground"><Package className="h-8 w-8 mx-auto mb-2 opacity-50" /><p>Nenhum pedido recebido ainda.</p></td></tr>
                         )}
                     </tbody>
                 </table>
@@ -112,7 +119,7 @@ export function PedidosAdminClient({ initialOrders = [] }: { initialOrders?: any
                                 </div>
                                 <div className="grid grid-cols-2 gap-4 pt-1">
                                     <div className="flex flex-col"><span className="text-[10px] text-muted-foreground uppercase font-bold">Cliente</span><span className="text-sm font-medium truncate">{order.shipping_address?.name ?? '—'}</span><span className="text-[10px] text-muted-foreground">{order.shipping_address?.city}/{order.shipping_address?.state}</span></div>
-                                    <div className="flex flex-col text-right"><span className="text-[10px] text-muted-foreground uppercase font-bold">Total</span><span className="text-sm font-black text-primary">{formatCurrency(order.total)}</span><span className="text-[10px] text-muted-foreground">{order.items?.length ?? 0} item(ns)</span></div>
+                                    <div className="flex flex-col text-right"><span className="text-[10px] text-muted-foreground uppercase font-bold">Total</span><span className="text-sm font-black text-primary">{formatCurrency(order.total)}</span><span className="text-[10px] text-muted-foreground">{order.items?.length ?? 0} item(ns)</span><span className="text-[10px] font-bold text-primary/80">{shippingMethodLabel(order)}</span></div>
                                 </div>
                                 <div className="flex items-center justify-between pt-2 border-t border-border/40">
                                     <div className="flex items-center gap-2 text-muted-foreground"><Clock className="h-3 w-3" /><span className="text-[10px]">{date.toLocaleDateString('pt-BR')} às {date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span></div>

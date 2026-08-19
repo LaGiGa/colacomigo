@@ -313,57 +313,84 @@ export type Database = {
       orders: {
         Row: {
           address_id: string | null
+          coupon_code: string | null
+          coupon_id: string | null
           created_at: string
           customer_email: string | null
           customer_name: string | null
           customer_phone: string | null
           discount: number
           id: string
+          emails_sent_at: string | null
           mp_payment_id: string | null
           mp_preference_id: string | null
           notes: string | null
+          paid_at: string | null
+          payment_method: string | null
           shipping_cost: number
+          shipping_label: string | null
+          shipping_method: string | null
           status: string
+          stock_applied: boolean
           subtotal: number
           total: number
           updated_at: string
           user_id: string | null
+          whatsapp_notified_at: string | null
         }
         Insert: {
           address_id?: string | null
+          coupon_code?: string | null
+          coupon_id?: string | null
           created_at?: string
           customer_email?: string | null
           customer_name?: string | null
           customer_phone?: string | null
           discount?: number
           id?: string
+          emails_sent_at?: string | null
           mp_payment_id?: string | null
           mp_preference_id?: string | null
           notes?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
           shipping_cost?: number
+          shipping_label?: string | null
+          shipping_method?: string | null
           status?: string
+          stock_applied?: boolean
           subtotal?: number
           total?: number
           updated_at?: string
           user_id?: string | null
+          whatsapp_notified_at?: string | null
         }
         Update: {
           address_id?: string | null
+          coupon_code?: string | null
+          coupon_id?: string | null
           created_at?: string
           customer_email?: string | null
           customer_name?: string | null
           customer_phone?: string | null
           discount?: number
           id?: string
+          emails_sent_at?: string | null
           mp_payment_id?: string | null
           mp_preference_id?: string | null
           notes?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
           shipping_cost?: number
+          shipping_label?: string | null
+          shipping_method?: string | null
           status?: string
+          stock_applied?: boolean
           subtotal?: number
           total?: number
           updated_at?: string
           user_id?: string | null
+          whatsapp_notified_at?: string | null
         }
         Relationships: [
           {
@@ -705,24 +732,75 @@ export type Database = {
         }
         Relationships: []
       }
+      stock_movements: {
+        Row: {
+          created_at: string
+          delta: number
+          id: string
+          note: string | null
+          order_id: string | null
+          reason: string
+          variant_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          delta: number
+          id?: string
+          note?: string | null
+          order_id?: string | null
+          reason: string
+          variant_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          delta?: number
+          id?: string
+          note?: string | null
+          order_id?: string | null
+          reason?: string
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_settings: {
         Row: {
           announcements: Json
           id: number
           recent_purchaser_names: Json
           updated_at: string | null
+          whatsapp_notify_enabled: boolean
+          whatsapp_notify_number: string | null
         }
         Insert: {
           announcements?: Json
           id?: number
           recent_purchaser_names?: Json
           updated_at?: string | null
+          whatsapp_notify_enabled?: boolean
+          whatsapp_notify_number?: string | null
         }
         Update: {
           announcements?: Json
           id?: number
           recent_purchaser_names?: Json
           updated_at?: string | null
+          whatsapp_notify_enabled?: boolean
+          whatsapp_notify_number?: string | null
         }
         Relationships: []
       }
@@ -764,9 +842,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_order_stock: {
+        Args: { p_order_id: string }
+        Returns: Json
+      }
       decrement_stock: {
         Args: { p_qty: number; p_variant_id: string }
         Returns: undefined
+      }
+      increment_coupon_uses: {
+        Args: { p_coupon_id: string }
+        Returns: undefined
+      }
+      restore_order_stock: {
+        Args: { p_order_id: string }
+        Returns: Json
       }
     }
     Enums: {

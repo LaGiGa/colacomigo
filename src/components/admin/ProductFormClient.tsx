@@ -273,6 +273,10 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
         const normalizedVariants = variants
             .filter((v) => v.sku || v.size || v.colorName)
             .map(v => ({
+                // O id precisa ir junto: é ele que faz a API ATUALIZAR a variante
+                // existente em vez de criar uma nova (o que zeraria o estoque e
+                // quebraria o vínculo com os pedidos antigos).
+                id: v.id || undefined,
                 sku: v.sku || undefined,
                 size: v.size || undefined,
                 color_name: v.colorName || undefined,

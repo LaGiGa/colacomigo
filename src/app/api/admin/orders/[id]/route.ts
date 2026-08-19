@@ -23,9 +23,32 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         const supabase = createServiceClient()
         const body = await req.json()
         const { trackingCode, ...orderUpdates } = body;
-        
+
+        const { data: previous } = await supabase
+            .from('orders')
+            .select('status, stock_applied')
+            .eq('id', id)
+            .single()
+
         const { data, error } = await supabase.from('orders').update(orderUpdates).eq('id', id).select().single()
         if (error) throw error
+
+        // ─── Estoque acompanha o status do pedido ────────────────────────────
+        const newStatus = orderUpdates.status as string | undefined
+        const wasCancelled = ['cancelled', 'refunded'].includes(previous?.status ?? '')
+        const isCancelled = ['cancelled', 'refunded'].includes(newStatus ?? '')
+
+        if (newStatus && isCancelled && !wasCancelled) {
+            // Cancelou/estornou → devolve as peças para o estoque
+            const { data: restored, error: restoreErr } = await supabase.rpc('restore_order_stock', { p_order_id: id })
+            if (restoreErr) console.error('[ADMIN ORDER] Erro ao estornar estoque:', restoreErr)
+            else console.log('[ADMIN ORDER] Estoque estornado:', id, restored)
+        } else if (newStatus && !isCancelled && wasCancelled && previous?.stock_applied === false) {
+            // Reabriu um pedido cancelado → tira do estoque de novo
+            const { data: applied, error: applyErr } = await supabase.rpc('apply_order_stock', { p_order_id: id })
+            if (applyErr) console.error('[ADMIN ORDER] Erro ao reaplicar baixa de estoque:', applyErr)
+            else console.log('[ADMIN ORDER] Baixa reaplicada:', id, applied)
+        }
 
         if (trackingCode !== undefined) {
             if (trackingCode.trim() !== '') {

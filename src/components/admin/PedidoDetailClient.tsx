@@ -3,6 +3,7 @@
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { formatCurrency } from '@/lib/utils'
+import { shippingMethodLabel, isStorePickup } from '@/lib/shipping'
 import { ChevronLeft, Loader2, Package, Truck } from '@/components/ui/icons'
 import Link from 'next/link'
 import { OrderStatusUpdater } from './OrderStatusUpdater'
@@ -137,9 +138,17 @@ export function PedidoDetailClient({ order: initialOrder, id }: Props) {
                     <div className="rounded-xl border border-border p-4 space-y-2 text-sm">
                         <h2 className="font-semibold flex items-center gap-2">
                             <Truck className="h-4 w-4 text-primary" />
-                            Endereço de Entrega
+                            Entrega
                         </h2>
-                        {order.shipping_address ? (
+                        <p className="font-bold text-primary">
+                            {shippingMethodLabel(order)}
+                            {order.shipping_cost > 0 ? ` — ${formatCurrency(order.shipping_cost)}` : ''}
+                        </p>
+                        {isStorePickup(order) ? (
+                            <p className="text-muted-foreground">
+                                O cliente vai retirar na loja — não é necessário enviar.
+                            </p>
+                        ) : order.shipping_address ? (
                             <div className="text-muted-foreground space-y-0.5">
                                 <p>{order.shipping_address.street}, {order.shipping_address.number}</p>
                                 {order.shipping_address.complement && <p>{order.shipping_address.complement}</p>}

@@ -16,11 +16,28 @@ export async function GET() {
     }
 }
 
+/** Só estas colunas podem ser alteradas pelo painel. */
+const EDITABLE_FIELDS = [
+    'announcements',
+    'recent_purchaser_names',
+    'whatsapp_notify_enabled',
+    'whatsapp_notify_number',
+] as const
+
 export async function PATCH(req: Request) {
     try {
         const supabase = createServiceClient()
         const body = await req.json()
-        const { data, error } = await supabase.from('store_settings').update(body).eq('id', 1).select().single()
+
+        const patch: Record<string, unknown> = {}
+        for (const field of EDITABLE_FIELDS) {
+            if (field in body) patch[field] = body[field]
+        }
+        if (Object.keys(patch).length === 0) {
+            return NextResponse.json({ error: 'Nenhum campo válido para atualizar' }, { status: 400 })
+        }
+
+        const { data, error } = await supabase.from('store_settings').update(patch).eq('id', 1).select().single()
         if (error) throw error
         return NextResponse.json({ settings: data })
     } catch (err: any) {

@@ -48,6 +48,7 @@ export function ProductActions({
     weightKg = 0.3,
 }: ProductActionsProps) {
     const addItem = useCartStore((s) => s.addItem)
+    const cartItems = useCartStore((s) => s.items)
     const openCart = useUIStore((s) => s.openCart)
     const [isPending, startTransition] = useTransition()
 
@@ -78,6 +79,20 @@ export function ProductActions({
             toast.error('Por favor, selecione uma variante.')
             return
         }
+
+        const stock = selectedVariant.stock
+        if (typeof stock === 'number' && stock <= 0) {
+            toast.error('Este item está esgotado.')
+            return
+        }
+
+        // Já no carrinho: não deixa passar do estoque disponível
+        const inCart = cartItems.find((i) => i.variantId === selectedVariant.id)?.quantity ?? 0
+        if (typeof stock === 'number' && inCart >= stock) {
+            toast.error(`Você já tem ${inCart} unidade(s) no carrinho — é todo o estoque disponível.`)
+            return
+        }
+
         startTransition(() => {
             addItem({
                 variantId: selectedVariant.id,
@@ -90,6 +105,7 @@ export function ProductActions({
                 colorHex: selectedVariant.color_hex,
                 price: currentPrice,
                 imageUrl: imageUrl ?? null,
+                stock,
             })
             toast.success(`${productName} adicionado ao carrinho!`)
             openCart()

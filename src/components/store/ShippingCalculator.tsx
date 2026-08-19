@@ -144,7 +144,10 @@ export function ShippingCalculator({ weightKg = 0.3, subtotal = 0, onSelect, ext
             const res = await fetch('/api/checkout/shipping', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ cepDestino: raw, itens: [{ quantity: 1, weightKg }] }),
+                body: JSON.stringify({
+                    cepDestino: raw,
+                    items: [{ id: 'carrinho', quantity: 1, weightKg, price: subtotal }],
+                }),
             })
 
             if (!res.ok) {

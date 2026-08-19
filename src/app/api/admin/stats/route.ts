@@ -21,6 +21,27 @@ export async function GET() {
 
         const { count: activeProducts } = await supabase.from('products').select('*', { count: 'exact', head: true }).eq('is_active', true)
 
+        // ─── Estoque baixo: variantes ativas com 5 unidades ou menos ─────────
+        const LOW_STOCK_THRESHOLD = 5
+        const { data: lowStockRows } = await supabase
+            .from('product_variants')
+            .select('id, size, color_name, stock, product:products(id, name, is_active)')
+            .eq('is_active', true)
+            .lte('stock', LOW_STOCK_THRESHOLD)
+            .order('stock', { ascending: true })
+            .limit(20)
+
+        const lowStock = (lowStockRows ?? [])
+            .filter((v: any) => v.product?.is_active !== false)
+            .map((v: any) => ({
+                variantId: v.id,
+                productId: v.product?.id,
+                productName: v.product?.name ?? 'Produto',
+                size: v.size,
+                colorName: v.color_name,
+                stock: Number(v.stock) || 0,
+            }))
+
         const statusCounts = {
             pending: orders?.filter(o => o.status === 'awaiting_payment' || o.status === 'pending').length ?? 0,
             paid: orders?.filter(o => o.status === 'paid').length ?? 0,
@@ -34,9 +55,11 @@ export async function GET() {
                 revenue: totalRevenue,
                 ordersToday: todayOrders,
                 customers: uniqueCustomers,
-                products: activeProducts ?? 0
+                products: activeProducts ?? 0,
+                lowStockCount: lowStock.length
             },
-            statusCounts
+            statusCounts,
+            lowStock
         })
     } catch (err: any) {
         console.error('[API ADMIN STATS ERROR]', err)

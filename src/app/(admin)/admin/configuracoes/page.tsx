@@ -11,12 +11,30 @@ interface StoreSettings {
     id: number
     announcements: string[]
     recent_purchaser_names: string[]
+    whatsapp_notify_enabled: boolean
+    whatsapp_notify_number: string
+}
+
+interface WhatsAppStatus {
+    provider: string
+    configured: boolean
+    enabled: boolean
+    number: string | null
+}
+
+const PROVIDER_LABELS: Record<string, string> = {
+    callmebot: 'CallMeBot (grátis)',
+    zapi: 'Z-API',
+    meta: 'WhatsApp Cloud API (Meta)',
+    none: 'Nenhum provedor configurado',
 }
 
 export default function GlobalSettingsAdminPage() {
     const [settings, setSettings] = useState<StoreSettings | null>(null)
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
+    const [whatsappStatus, setWhatsappStatus] = useState<WhatsAppStatus | null>(null)
+    const [testingWhatsapp, setTestingWhatsapp] = useState(false)
 
     useEffect(() => {
         async function load() {
@@ -24,12 +42,11 @@ export default function GlobalSettingsAdminPage() {
                 const res = await fetch('/api/admin/store-settings')
                 if (!res.ok) throw new Error('Falha ao carregar')
                 const data = await res.json()
-                if (data.settings) {
-                    setSettings(data.settings)
-                } else {
-                    // fallbacks
-                    setSettings({ id: 1, announcements: [], recent_purchaser_names: [] })
-                }
+                const base = { announcements: [], recent_purchaser_names: [], whatsapp_notify_enabled: true, whatsapp_notify_number: '' }
+                setSettings({ id: 1, ...base, ...(data.settings ?? {}) })
+
+                const statusRes = await fetch('/api/admin/whatsapp-test')
+                if (statusRes.ok) setWhatsappStatus(await statusRes.json())
             } catch (err: any) {
                 toast.error(err.message)
             } finally {
@@ -49,6 +66,8 @@ export default function GlobalSettingsAdminPage() {
                 body: JSON.stringify({
                     announcements: settings.announcements,
                     recent_purchaser_names: settings.recent_purchaser_names,
+                    whatsapp_notify_enabled: settings.whatsapp_notify_enabled,
+                    whatsapp_notify_number: settings.whatsapp_notify_number,
                 }),
             })
             if (!res.ok) throw new Error('Erro ao salvar')
@@ -103,6 +122,27 @@ export default function GlobalSettingsAdminPage() {
         })
     }
 
+
+    async function testWhatsApp() {
+        if (!settings) return
+        setTestingWhatsapp(true)
+        try {
+            // Salva antes de testar, para o disparo usar o número que está na tela
+            await save()
+            const res = await fetch('/api/admin/whatsapp-test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ number: settings.whatsapp_notify_number }),
+            })
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error || 'Falha ao enviar')
+            toast.success(`Mensagem de teste enviada via ${data.provider}. Confira o WhatsApp!`)
+        } catch (err: any) {
+            toast.error(err.message)
+        } finally {
+            setTestingWhatsapp(false)
+        }
+    }
 
     if (loading || !settings) {
         return (
@@ -196,6 +236,62 @@ export default function GlobalSettingsAdminPage() {
                     <Button variant="outline" size="sm" onClick={addName} className="mt-4 text-xs h-8">
                         <Plus className="h-3 w-3 mr-1" /> Adicionar Nome
                     </Button>
+                </div>
+            </div>
+
+            {/* NOTIFICACAO DE VENDA NO WHATSAPP */}
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+                <div className="p-5 border-b border-border/50 flex items-start justify-between gap-4">
+                    <div>
+                        <h2 className="font-bold text-sm">Aviso de Venda no WhatsApp</h2>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            A cada compra aprovada, a loja recebe uma mensagem com os dados do cliente,
+                            os itens e o tipo de entrega (retirada, entrega local ou Correios).
+                        </p>
+                    </div>
+                    <label className="flex items-center gap-2 text-xs font-semibold flex-shrink-0 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={settings.whatsapp_notify_enabled}
+                            onChange={(e) => setSettings((s) => s ? { ...s, whatsapp_notify_enabled: e.target.checked } : s)}
+                            className="h-4 w-4 accent-green-500"
+                        />
+                        {settings.whatsapp_notify_enabled ? 'Ativo' : 'Desativado'}
+                    </label>
+                </div>
+                <div className="p-5 space-y-4 bg-secondary/10">
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold">Número que recebe os avisos</label>
+                        <Input
+                            value={settings.whatsapp_notify_number}
+                            onChange={(e) => setSettings((s) => s ? { ...s, whatsapp_notify_number: e.target.value } : s)}
+                            className="h-9 text-xs"
+                            placeholder="5563991312913 (DDI + DDD + número)"
+                        />
+                    </div>
+
+                    <div className="flex items-center justify-between gap-4 rounded-lg border border-border/60 bg-background/40 p-3">
+                        <div className="text-xs">
+                            <p className="font-semibold">
+                                Provedor: {PROVIDER_LABELS[whatsappStatus?.provider ?? 'none'] ?? whatsappStatus?.provider}
+                            </p>
+                            <p className="text-muted-foreground mt-0.5">
+                                {whatsappStatus?.configured
+                                    ? 'Credenciais detectadas no servidor.'
+                                    : 'Nenhuma credencial configurada — as mensagens não serão enviadas.'}
+                            </p>
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={testWhatsApp}
+                            disabled={testingWhatsapp || saving}
+                            className="text-xs h-8 flex-shrink-0"
+                        >
+                            {testingWhatsapp ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
+                            Enviar teste
+                        </Button>
+                    </div>
                 </div>
             </div>
 

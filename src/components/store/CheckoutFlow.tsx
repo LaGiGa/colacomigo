@@ -52,6 +52,14 @@ interface PendingPaymentData {
     pixQrCodeBase64?: string | null
 }
 
+/** Totais oficiais devolvidos pelo servidor — sempre têm prioridade sobre o cálculo local. */
+interface ServerTotals {
+    subtotal: number
+    discount: number
+    shipping: number
+    total: number
+}
+
 export function CheckoutFlow() {
     const router = useRouter()
     const { items, subtotal, clearCart } = useCartStore()
@@ -61,6 +69,7 @@ export function CheckoutFlow() {
     const [orderId, setOrderId] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
     const [pendingPayment, setPendingPayment] = useState<PendingPaymentData | null>(null)
+    const [serverTotals, setServerTotals] = useState<ServerTotals | null>(null)
 
     // Coupon states
     const [couponCode, setCouponCode] = useState('')
@@ -114,7 +123,10 @@ export function CheckoutFlow() {
         }
     }, [user, setValue])
 
-    const orderTotal = Number(Math.max(0, subtotal() + (shipping?.price ?? 0) - discountValue).toFixed(2))
+    // Estimativa local para exibir antes de criar o pedido; assim que o servidor
+    // devolve os totais oficiais, passamos a usar os dele.
+    const estimatedTotal = Number(Math.max(0, subtotal() + (shipping?.price ?? 0) - discountValue).toFixed(2))
+    const orderTotal = serverTotals?.total ?? estimatedTotal
     const validItems = items.filter((i) => i.quantity > 0)
 
     // Auto-preenche endereço via ViaCEP
@@ -208,21 +220,40 @@ export function CheckoutFlow() {
                         zipCode: data.zipCode.replace(/\D/g, '')
                     },
                     shipping: {
+                        carrier: shipping.carrier,
                         name: shipping.serviceName,
                         price: shipping.price
                     },
-                    coupon: appliedCoupon ? {
-                        id: appliedCoupon.id,
-                        code: appliedCoupon.code,
-                        discount_type: appliedCoupon.discount_type,
-                        discount_value: appliedCoupon.discount_value
-                    } : null
+                    // O servidor revalida o cupom no banco — só o código é necessário.
+                    couponCode: appliedCoupon?.code ?? null
                 }),
             })
 
             const result = await res.json()
+
+            // Estoque acabou entre montar o carrinho e finalizar
+            if (res.status === 409 && result.code === 'OUT_OF_STOCK') {
+                const detalhes = (result.unavailable ?? [])
+                    .map((u: { name: string; available: number }) =>
+                        u.available > 0 ? `${u.name} (só restam ${u.available})` : `${u.name} (esgotado)`
+                    )
+                    .join(', ')
+                toast.error('Estoque insuficiente', {
+                    description: detalhes || 'Revise as quantidades no seu carrinho.',
+                })
+                setStep('cart')
+                return
+            }
+
             if (!res.ok) throw new Error(result.error)
 
+            if (result.totals) {
+                setServerTotals(result.totals)
+                if (appliedCoupon && result.totals.discount === 0) {
+                    toast.warning('O cupom não pôde ser aplicado a este pedido.')
+                    setAppliedCoupon(null)
+                }
+            }
             setPreferenceId(result.id)
             setOrderId(result.orderId)
             setStep('payment')

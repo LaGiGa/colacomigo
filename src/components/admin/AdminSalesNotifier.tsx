@@ -10,7 +10,22 @@ type OrderLite = {
     status: string
     total?: number
     created_at: string
-    shipping_address?: { name?: string | null } | null
+    customer_name?: string | null
+    shipping_method?: string | null
+    shipping_label?: string | null
+}
+
+const SHIPPING_LABELS: Record<string, string> = {
+    store_pickup: 'Retirada na loja',
+    local_delivery: 'Entrega local',
+    correios_pac: 'Correios (PAC)',
+    correios_sedex: 'Correios (SEDEX)',
+    correios: 'Correios',
+}
+
+function deliveryText(order: OrderLite) {
+    if (!order.shipping_method) return order.shipping_label || 'Entrega não informada'
+    return SHIPPING_LABELS[order.shipping_method] || order.shipping_label || order.shipping_method
 }
 
 const STORAGE_KEY = 'admin_seen_paid_orders_v1'
@@ -43,7 +58,9 @@ export function AdminSalesNotifier() {
 
         const poll = async () => {
             try {
-                const res = await fetch('/api/admin/orders', { cache: 'no-store' })
+                // Payload enxuto e limitado: antes esse polling puxava a base
+                // inteira de pedidos a cada 10 segundos.
+                const res = await fetch('/api/admin/orders?status=paid&fields=lite&limit=20', { cache: 'no-store' })
                 if (!res.ok) return
                 const data = await res.json()
                 const orders = (Array.isArray(data) ? data : data.orders || []) as OrderLite[]
@@ -63,7 +80,7 @@ export function AdminSalesNotifier() {
 
                 unseen.forEach((order) => {
                     toast.success('Nova compra realizada', {
-                        description: `Pedido #${order.id.slice(0, 8).toUpperCase()} confirmado.`,
+                        description: `Pedido #${order.id.slice(0, 8).toUpperCase()} · ${deliveryText(order)} · estoque atualizado.`,
                     })
                 })
 
@@ -120,8 +137,9 @@ export function AdminSalesNotifier() {
                         <div className="min-w-0">
                             <p className="text-xs font-bold">#{order.id.slice(0, 8).toUpperCase()}</p>
                             <p className="text-[11px] text-muted-foreground truncate">
-                                {order.shipping_address?.name || 'Cliente'} - {new Date(order.created_at).toLocaleString('pt-BR')}
+                                {order.customer_name || 'Cliente'} - {new Date(order.created_at).toLocaleString('pt-BR')}
                             </p>
+                            <p className="text-[10px] text-primary/80 truncate">{deliveryText(order)}</p>
                         </div>
                     </Link>
                 ))}

@@ -10,6 +10,8 @@ export interface CartItem {
     price: number        // preço final (product.price + variant.price_delta)
     imageUrl: string | null
     quantity: number
+    /** Estoque disponível da variante no momento em que foi adicionada ao carrinho. */
+    stock?: number
 }
 
 export interface CartStore {

@@ -28,15 +28,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
                 .select('quantity, total_price, variant:product_variants(size, color_name, product:products(name))')
                 .eq('order_id', orderId);
 
+            // Cada linha depende de um await, então precisa de Promise.all antes
+            // do join — senão o HTML sai com "[object Promise]".
             let itemsHtml = '';
             if (items) {
-                itemsHtml = items.map(async (it: any) => `
+                itemsHtml = (await Promise.all(items.map(async (it: any) => `
                     <div style="padding: 10px 0; border-bottom: 1px solid #222;">
                         <p style="margin: 0; font-weight: 900;">${it.variant?.product?.name} x ${it.quantity}</p>
                         <p style="margin: 0; font-size: 12px; color: #888;">${it.variant?.size ? `Tamanho: ${it.variant.size}` : ''} ${it.variant?.color_name ? ` · Cor: ${it.variant.color_name}` : ''}</p>
                         <p style="margin: 5px 0 0 0; color: #1a8fff; font-weight: 700;">${await formatCurrencyStringLazy(it.total_price)}</p>
                     </div>
-                `).join('');
+                `))).join('');
             }
 
             await sendEmailWithLazyLoad({

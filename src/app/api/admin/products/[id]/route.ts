@@ -39,15 +39,54 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             if (imagesError) throw imagesError
         }
         
-        await supabase.from('product_variants').delete().eq('product_id', id)
-        const { error: variantsError } = await supabase.from('product_variants').insert(
-            (body.variants ?? []).map((v: any) => {
-                const { id: _id, ...variantWithoutId } = v
-                return { ...variantWithoutId, product_id: id }
-            })
-        )
-        if (variantsError) throw variantsError
-        
+        // ─── Variantes: ATUALIZA, nunca apaga ────────────────────────────────
+        // Apagar e recriar (comportamento antigo) gerava IDs novos a cada
+        // edição: quebrava o vínculo dos pedidos antigos com o item vendido,
+        // invalidava carrinhos salvos no navegador do cliente e zerava o
+        // controle de estoque. Agora: atualiza as existentes, insere as novas
+        // e apenas DESATIVA as que o admin removeu do formulário.
+        const incoming = (body.variants ?? []) as any[]
+
+        const { data: currentVariants, error: currentErr } = await supabase
+            .from('product_variants')
+            .select('id')
+            .eq('product_id', id)
+        if (currentErr) throw currentErr
+
+        const currentIds = new Set((currentVariants ?? []).map((v) => v.id))
+        const keptIds = new Set<string>()
+
+        for (const variant of incoming) {
+            const { id: variantId, ...fields } = variant
+
+            if (variantId && currentIds.has(variantId)) {
+                keptIds.add(variantId)
+                const { error } = await supabase
+                    .from('product_variants')
+                    .update({ ...fields, product_id: id })
+                    .eq('id', variantId)
+                if (error) throw error
+            } else {
+                const { data: created, error } = await supabase
+                    .from('product_variants')
+                    .insert({ ...fields, product_id: id })
+                    .select('id')
+                    .single()
+                if (error) throw error
+                if (created) keptIds.add(created.id)
+            }
+        }
+
+        // Removidas no formulário → desativadas (o histórico de vendas continua íntegro)
+        const removedIds = Array.from(currentIds).filter((variantId) => !keptIds.has(variantId))
+        if (removedIds.length > 0) {
+            const { error } = await supabase
+                .from('product_variants')
+                .update({ is_active: false })
+                .in('id', removedIds)
+            if (error) throw error
+        }
+
         return NextResponse.json({ success: true })
     } catch (err: any) {
         console.error('[API ADMIN PRODUCT UPDATE ERROR]', err)

@@ -8,6 +8,25 @@ import { Loader2, Plus, Package, Pencil } from '@/components/ui/icons'
 
 import { useState, useEffect } from 'react'
 
+/** Soma o estoque de todas as variantes ativas do produto. */
+function totalStock(product: any): number {
+    return (product.variants ?? [])
+        .filter((v: any) => v.is_active !== false)
+        .reduce((acc: number, v: any) => acc + (Number(v.stock) || 0), 0)
+}
+
+/** Cor do badge conforme a situação do estoque. */
+function stockTone(stock: number) {
+    if (stock <= 0) return 'bg-red-500/20 text-red-400'
+    if (stock <= 5) return 'bg-amber-500/20 text-amber-400'
+    return 'bg-green-500/20 text-green-400'
+}
+
+function stockText(stock: number) {
+    if (stock <= 0) return 'Esgotado'
+    return `${stock} un.`
+}
+
 
 export function ProdutosAdminClient({ products: initial = [] }: { products?: any[] }) {
     const [products, setProducts] = useState<any[]>(initial)
@@ -50,6 +69,7 @@ export function ProdutosAdminClient({ products: initial = [] }: { products?: any
                             <th className="text-left p-4 font-semibold">Categoria</th>
                             <th className="text-left p-4 font-semibold">Preço</th>
                             <th className="text-left p-4 font-semibold">Variantes</th>
+                            <th className="text-left p-4 font-semibold">Estoque</th>
                             <th className="text-left p-4 font-semibold">Status</th>
                             <th className="text-left p-4 font-semibold">Ações</th>
                         </tr>
@@ -83,6 +103,11 @@ export function ProdutosAdminClient({ products: initial = [] }: { products?: any
                                     </td>
                                     <td className="p-4 text-muted-foreground">{p.variants?.length ?? 0}</td>
                                     <td className="p-4">
+                                        <Badge className={`text-[10px] ${stockTone(totalStock(p))}`}>
+                                            {stockText(totalStock(p))}
+                                        </Badge>
+                                    </td>
+                                    <td className="p-4">
                                         <Badge variant={p.is_active ? 'default' : 'secondary'}
                                             className={p.is_active ? 'bg-green-500/20 text-green-400 border-green-500/30' : ''}>
                                             {p.is_active ? 'Ativo' : 'Inativo'}
@@ -99,7 +124,7 @@ export function ProdutosAdminClient({ products: initial = [] }: { products?: any
                             ))
                         ) : (
                             <tr>
-                                <td colSpan={6} className="p-12 text-center text-muted-foreground">
+                                <td colSpan={7} className="p-12 text-center text-muted-foreground">
                                     <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
                                     <p>Nenhum produto cadastrado.</p>
                                 </td>
@@ -139,7 +164,9 @@ export function ProdutosAdminClient({ products: initial = [] }: { products?: any
                             <div className="flex items-center justify-between pt-3 border-t border-border/40">
                                 <div className="flex flex-col">
                                     <span className="text-[10px] text-muted-foreground font-medium uppercase">{p.category?.name ?? 'S/ Categoria'}</span>
-                                    <span className="text-[10px] text-muted-foreground uppercase font-mono">{p.variants?.length ?? 0} variantes</span>
+                                    <span className="text-[10px] text-muted-foreground uppercase font-mono">
+                                        {p.variants?.length ?? 0} variantes · <span className={totalStock(p) <= 5 ? 'text-amber-400' : ''}>{stockText(totalStock(p))}</span>
+                                    </span>
                                 </div>
                                 <Button size="sm" variant="secondary" className="h-8 px-4 text-xs font-bold" asChild>
                                     <Link href={`/admin/produtos/${p.id}`}>

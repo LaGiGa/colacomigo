@@ -2,6 +2,11 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { CartItem, CartStore } from '@/types/cart.types'
 
+/** Teto de unidades de uma variante: o estoque informado (quando existir). */
+function maxFor(item: { stock?: number }) {
+    return typeof item.stock === 'number' && item.stock >= 0 ? item.stock : Number.POSITIVE_INFINITY
+}
+
 export const useCartStore = create<CartStore>()(
     persist(
         (set, get) => ({
@@ -13,14 +18,18 @@ export const useCartStore = create<CartStore>()(
                         (i) => i.variantId === newItem.variantId
                     )
                     if (existingIndex >= 0) {
-                        // Incrementa quantidade se já existir
+                        // Incrementa a quantidade, respeitando o estoque disponível
+                        const current = state.items[existingIndex]
+                        const limit = maxFor(newItem)
                         const updated = [...state.items]
                         updated[existingIndex] = {
-                            ...updated[existingIndex],
-                            quantity: updated[existingIndex].quantity + 1,
+                            ...current,
+                            stock: newItem.stock ?? current.stock,
+                            quantity: Math.min(current.quantity + 1, limit),
                         }
                         return { items: updated }
                     }
+                    if (maxFor(newItem) < 1) return { items: state.items }
                     return { items: [...state.items, { ...newItem, quantity: 1 }] }
                 })
             },
@@ -38,7 +47,9 @@ export const useCartStore = create<CartStore>()(
                 }
                 set((state) => ({
                     items: state.items.map((i) =>
-                        i.variantId === variantId ? { ...i, quantity } : i
+                        i.variantId === variantId
+                            ? { ...i, quantity: Math.min(quantity, maxFor(i)) }
+                            : i
                     ),
                 }))
             },
