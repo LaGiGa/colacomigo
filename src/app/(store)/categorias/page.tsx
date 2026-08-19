@@ -6,7 +6,8 @@ import { ArrowRight } from '@/components/ui/icons'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 
-export const revalidate = 120
+export const dynamic = 'force-dynamic'
+
 
 export const metadata: Metadata = {
     title: 'Categorias | Cola Comigo Shop',

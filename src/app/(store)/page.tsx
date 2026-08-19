@@ -9,7 +9,8 @@ import {
 import { createServiceClient } from '@/lib/supabase/server'
 import type { Metadata } from 'next'
 
-export const revalidate = 120
+export const dynamic = 'force-dynamic'
+
 
 export const metadata: Metadata = {
     title: 'Cola Comigo Shop | Streetwear e Edições Limitadas em Palmas-TO',
