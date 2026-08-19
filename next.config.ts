@@ -4,28 +4,8 @@ const nextConfig: NextConfig = {
   // ─── Otimizações para Cloudflare 25MB Limit ───────────────────────────────
   productionBrowserSourceMaps: false,
 
-  async redirects() {
-    return [
-      {
-        source: '/:path*',
-        has: [{ type: 'host', value: 'colacomigoshop.com.br' }],
-        destination: 'https://www.colacomigoshop.com.br/:path*',
-        permanent: true,
-      },
-      {
-        source: '/:path*',
-        has: [{ type: 'host', value: 'colacomigoshop.com' }],
-        destination: 'https://www.colacomigoshop.com.br/:path*',
-        permanent: true,
-      },
-      {
-        source: '/:path*',
-        has: [{ type: 'host', value: 'www.colacomigoshop.com' }],
-        destination: 'https://www.colacomigoshop.com.br/:path*',
-        permanent: true,
-      },
-    ]
-  },
+  // Redirects de domínio (non-www → www) são gerenciados pelo Cloudflare na
+  // camada de rede via "Custom Domains". Mantê-los aqui causaria loop no Worker.
 
   async rewrites() {
     return [
