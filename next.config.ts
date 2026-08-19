@@ -72,7 +72,7 @@ const nextConfig: NextConfig = {
   },
 
   // ─── Excluir pacotes pesados do bundle do servidor ───────────────────────
-  serverExternalPackages: ['source-map-support', 'sharp', '@aws-sdk/client-s3'],
+  serverExternalPackages: ['source-map-support', 'sharp'],
   
   bundlePagesRouterDependencies: true,
 
