@@ -1,4 +1,4 @@
-// export const runtime = 'edge';
+// // export const runtime = "edge";
 import { ProductFormClient } from '@/components/admin/AdminDynamicComponents'
 import { ChevronLeft } from '@/components/ui/icons'
 import Link from 'next/link'

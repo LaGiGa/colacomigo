@@ -1,5 +1,5 @@
 'use client'
-// export const runtime = 'edge';
+// // export const runtime = "edge";
 
 import { useState, useEffect, useCallback } from 'react'
 import { AlertCircle, Check, CheckCircle, CheckCircle2, Loader2, Package, Save, Settings2, Store, Truck, Zap } from '@/components/ui/icons'

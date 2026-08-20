@@ -1,4 +1,4 @@
-export const runtime = 'edge'
+// export const runtime = "edge";
 
 import { ProdutosPageClient } from '@/components/store/StoreDynamicComponents'
 import { createClient } from '@/lib/supabase/server'

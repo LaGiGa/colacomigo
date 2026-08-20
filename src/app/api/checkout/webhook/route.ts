@@ -1,5 +1,5 @@
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
+// export const runtime = "edge";
 
 import { NextResponse } from 'next/server'
 import { getMercadoPagoPayment } from '@/lib/api-lazy-loaders'

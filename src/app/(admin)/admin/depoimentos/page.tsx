@@ -1,5 +1,5 @@
 'use client'
-// export const runtime = 'edge';
+// // export const runtime = "edge";
 
 import { useState, useEffect } from 'react'
 import { AlertCircle, Pencil, Plus, Trash2, X } from '@/components/ui/icons'
