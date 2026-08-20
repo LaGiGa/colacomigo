@@ -24,36 +24,49 @@ const DIFERENCIAIS = [
 ]
 
 export default async function PaginaInicial() {
-    const supabase = createServiceClient()
-    const [{ data: bannersDB, error: bErr }, { data: marcasDB, error: mErr }] = await Promise.all([
-        supabase.from('hero_banners').select('*').order('sort_order', { ascending: true }),
-        supabase.from('brands').select('name, slug, logo_url').order('sort_order', { ascending: true }).limit(6),
-    ]);
+    let bannersDB: any[] | null = null
+    let marcasDB: any[] | null = null
+    let colecoesDB: any[] | null = null
+    let categoriasDB: any[] | null = null
 
-    // Log para depuração local
-    if (bErr || mErr) {
-        console.error('Database Error:', bErr || mErr);
+    try {
+        const supabase = createServiceClient()
+        const [{ data: bData, error: bErr }, { data: mData, error: mErr }] = await Promise.all([
+            supabase.from('hero_banners').select('*').order('sort_order', { ascending: true }),
+            supabase.from('brands').select('name, slug, logo_url').order('sort_order', { ascending: true }).limit(6),
+        ]);
+
+        if (bErr || mErr) {
+            console.error('Database Error:', bErr || mErr);
+        }
+
+        bannersDB = bData
+        marcasDB = mData
+
+        // Buscar coleções do banco (ativas, ordenadas)
+        const { data: cData } = await supabase
+            .from('collections')
+            .select('name, slug, description')
+            .eq('is_active', true)
+            .order('sort_order', { ascending: true })
+            .limit(4)
+        colecoesDB = cData
+
+        // Buscar categorias do banco (limitado a 8)
+        const { data: catData } = await supabase
+            .from('categories')
+            .select('name, slug, image_url')
+            .eq('is_active', true)
+            .is('parent_id', null)
+            .order('sort_order', { ascending: true })
+            .limit(8)
+        categoriasDB = catData
+    } catch (err) {
+        console.error('Falha ao carregar dados do Supabase na PaginaInicial:', err)
     }
 
     const BANNERS = bannersDB || []
-    const MARCAS = (marcasDB || []).map(m => ({ nome: m.name, slug: m.slug, logo: m.logo_url }))
-
-    // Buscar coleções do banco (ativas, ordenadas)
-    const { data: colecoesDB } = await supabase
-        .from('collections')
-        .select('name, slug, description')
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true })
-        .limit(4)
-
-    // Buscar categorias do banco (limitado a 8)
-    const { data: categoriasDB } = await supabase
-        .from('categories')
-        .select('name, slug, image_url')
-        .eq('is_active', true)
-        .is('parent_id', null)
-        .order('sort_order', { ascending: true })
-        .limit(8)
+    const MARCAS = (marcasDB || []).map((m: any) => ({ nome: m.name, slug: m.slug, logo: m.logo_url }))
 
     const COLECOES = (colecoesDB ?? []).map((c, i) => ({
         nome: c.name,

@@ -2,6 +2,24 @@ import { createServerClient } from '@supabase/ssr'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
+const DEFAULT_SUPABASE_URL = 'https://ygdlmathcksuhnybkcpy.supabase.co'
+const DEFAULT_SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnZGxtYXRoY2tzdWhueWJrY3B5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2NzUyNzYsImV4cCI6MjA4ODI1MTI3Nn0.-W97wm88UqWT4sLs_Fgfah6NimmcW_lGzkx2OhvsSoc'
+const DEFAULT_SUPABASE_SERVICE_ROLE_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnZGxtYXRoY2tzdWhueWJrY3B5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjY3NTI3NiwiZXhwIjoyMDg4MjUxMjc2fQ.7_X_4gZkiSWbD3DKbM2jisDc_LP5i2H1xiolDSnRQhY'
+
+function getSupabaseUrl() {
+    return process.env.NEXT_PUBLIC_SUPABASE_URL || DEFAULT_SUPABASE_URL
+}
+
+function getAnonKey() {
+    return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY
+}
+
+function getServiceRoleKey() {
+    return process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_SERVICE_ROLE_KEY
+}
+
 /**
  * Cliente Supabase para Server Components (usa sessão do usuário via cookies).
  */
@@ -9,8 +27,8 @@ export async function createClient() {
     const cookieStore = await cookies()
 
     return createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        getSupabaseUrl(),
+        getAnonKey(),
         {
             cookies: {
                 getAll() { return cookieStore.getAll() },
@@ -34,8 +52,8 @@ export async function createAdminClient() {
     const cookieStore = await cookies()
 
     return createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        getSupabaseUrl(),
+        getServiceRoleKey(),
         {
             cookies: {
                 getAll() { return cookieStore.getAll() },
@@ -58,8 +76,8 @@ export async function createAdminClient() {
  */
 export function createServiceClient() {
     return createSupabaseClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        getSupabaseUrl(),
+        getServiceRoleKey(),
         {
             auth: {
                 autoRefreshToken: false,
