@@ -114,7 +114,7 @@ export default function AdminLoginPage() {
                         <Button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-black font-black uppercase tracking-widest text-sm shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                            className="w-full h-14 rounded-xl bg-[#1a8fff] hover:bg-[#1577d6] text-white font-black uppercase tracking-widest text-sm shadow-xl shadow-[#1a8fff]/30 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                         >
                             {isLoading ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />
