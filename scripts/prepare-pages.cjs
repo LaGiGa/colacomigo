@@ -1,70 +1,59 @@
-const fs = require('fs')
-const path = require('path')
+#!/usr/bin/env node
+/**
+ * prepare-pages.cjs
+ *
+ * Bundla o .open-next/worker.js (e todos os seus imports) em um único
+ * .open-next/assets/_worker.js para deploy no Cloudflare Pages (advanced mode).
+ *
+ * Isso replica exatamente o que `wrangler deploy` faz internamente, mas
+ * em vez de fazer deploy, gera o bundle no diretório de assets do CF Pages.
+ */
 
-const rootDir = path.resolve(__dirname, '..')
-const openNextDir = path.join(rootDir, '.open-next')
-const assetsDir = path.join(openNextDir, 'assets')
+const { execSync } = require('child_process');
+const path = require('path');
+const fs = require('fs');
 
-console.log('⚡ [PAGES] Preparando estrutura para Cloudflare Pages...')
+const projectRoot = process.cwd();
+const workerSrc = path.join(projectRoot, '.open-next', 'worker.js');
+const assetsDir = path.join(projectRoot, '.open-next', 'assets');
+const workerDst = path.join(assetsDir, '_worker.js');
 
-if (!fs.existsSync(openNextDir)) {
-    console.error('❌ Diretório .open-next não encontrado.')
-    process.exit(1)
-}
-
-// ─── 1. worker.js → _worker.js ────────────────────────────────────────────
-const workerSrc = path.join(openNextDir, 'worker.js')
-const workerDest = path.join(assetsDir, '_worker.js')
+// Verificar se o worker existe
 if (!fs.existsSync(workerSrc)) {
-    console.error('❌ .open-next/worker.js não encontrado!')
-    process.exit(1)
-}
-fs.copyFileSync(workerSrc, workerDest)
-console.log('✅ worker.js → assets/_worker.js')
-
-// ─── 2. Copiar pastas pequenas que o worker.js referencia diretamente ─────
-// cloudflare/ e middleware/ são pequenos e autocontidos
-const smallDirs = ['cloudflare', 'middleware']
-for (const dir of smallDirs) {
-    const src = path.join(openNextDir, dir)
-    if (!fs.existsSync(src)) {
-        console.warn(`⚠️  ${dir}/ não encontrado, pulando...`)
-        continue
-    }
-    const dest = path.join(assetsDir, dir)
-    fs.cpSync(src, dest, { recursive: true, dereference: true, force: true })
-    console.log(`✅ ${dir}/ → assets/${dir}/`)
+  console.error('❌ .open-next/worker.js não encontrado. Execute opennextjs-cloudflare build primeiro.');
+  process.exit(1);
 }
 
-// ─── 3. Copiar apenas os arquivos JS de .build/durable-objects ─────────────
-// (já são bundles autocontidos — sem node_modules)
-const buildSrc = path.join(openNextDir, '.build', 'durable-objects')
-const buildDest = path.join(assetsDir, '.build', 'durable-objects')
-if (fs.existsSync(buildSrc)) {
-    fs.mkdirSync(buildDest, { recursive: true })
-    for (const file of fs.readdirSync(buildSrc)) {
-        if (file.endsWith('.js')) {
-            fs.copyFileSync(
-                path.join(buildSrc, file),
-                path.join(buildDest, file)
-            )
-        }
-    }
-    console.log('✅ .build/durable-objects/*.js → assets/.build/durable-objects/')
+// Verificar se o diretório assets existe
+if (!fs.existsSync(assetsDir)) {
+  console.error('❌ .open-next/assets/ não encontrado. Execute opennextjs-cloudflare build primeiro.');
+  process.exit(1);
 }
 
-// ─── 4. Copiar APENAS o handler.mjs bundlado (não o node_modules inteiro!) ─
-// handler.mjs já foi bundlado pelo esbuild — é autocontido
-// Copiar server-functions/default/node_modules causaria estouro do limite de
-// 20.000 arquivos do Cloudflare Pages, quebrando o upload dos _next/static/
-const handlerSrc = path.join(openNextDir, 'server-functions', 'default', 'handler.mjs')
-const handlerDest = path.join(assetsDir, 'server-functions', 'default', 'handler.mjs')
-if (fs.existsSync(handlerSrc)) {
-    fs.mkdirSync(path.dirname(handlerDest), { recursive: true })
-    fs.copyFileSync(handlerSrc, handlerDest)
-    console.log('✅ server-functions/default/handler.mjs → assets/server-functions/default/handler.mjs')
-} else {
-    console.warn('⚠️  handler.mjs não encontrado em server-functions/default/')
-}
+console.log('📦 Bundlando worker.js para Cloudflare Pages...');
 
-console.log('\n🚀 [PAGES] Estrutura pronta! _next/static/ está intacto para servir os chunks JS/CSS.')
+const esbuildBin = path.join(projectRoot, 'node_modules', '.bin', 'esbuild');
+
+// esbuild bundla worker.js + todos os imports relativos em um único arquivo ESM
+// node:* e cloudflare:* são mantidos como externos (disponíveis no runtime do Worker)
+const cmd = [
+  `"${esbuildBin}"`,
+  `"${workerSrc}"`,
+  '--bundle',
+  '--format=esm',
+  `--outfile="${workerDst}"`,
+  '--external:node:*',
+  '--external:cloudflare:*',
+  '--platform=browser',
+  '--target=esnext',
+  '--log-level=info',
+].join(' ');
+
+try {
+  execSync(cmd, { stdio: 'inherit', cwd: projectRoot });
+  const sizeKB = Math.round(fs.statSync(workerDst).size / 1024);
+  console.log(`✅ _worker.js gerado com sucesso! (${sizeKB} KB)`);
+} catch (e) {
+  console.error('❌ Falha ao bundlar worker.js:', e.message);
+  process.exit(1);
+}

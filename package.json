@@ -11,7 +11,7 @@
     "images:migrate:run": "node scripts/optimize-existing-product-images.cjs --execute",
     "backfill:orders:addresses:dry": "node --env-file=.env.local scripts/backfill-order-addresses.cjs",
     "backfill:orders:addresses:run": "node --env-file=.env.local scripts/backfill-order-addresses.cjs --execute",
-    "pages:build": "opennextjs-cloudflare build",
+    "pages:build": "opennextjs-cloudflare build && node scripts/prepare-pages.cjs",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy"
 
   },
