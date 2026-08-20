@@ -44,7 +44,7 @@ const cmd = [
   `--outfile="${workerDst}"`,
   '--external:node:*',
   '--external:cloudflare:*',
-  '--platform=browser',
+  '--platform=node',
   '--target=esnext',
   '--log-level=info',
 ].join(' ');
