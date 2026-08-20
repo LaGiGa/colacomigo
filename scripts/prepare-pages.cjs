@@ -2,58 +2,107 @@
 /**
  * prepare-pages.cjs
  *
- * Bundla o .open-next/worker.js (e todos os seus imports) em um único
- * .open-next/assets/_worker.js para deploy no Cloudflare Pages (advanced mode).
+ * Copia apenas os arquivos de RUNTIME necessários do .open-next/ para
+ * .open-next/assets/, permitindo que o bundler do Cloudflare Pages (Wrangler)
+ * resolva todos os imports — incluindo .wasm — corretamente.
  *
- * Isso replica exatamente o que `wrangler deploy` faz internamente, mas
- * em vez de fazer deploy, gera o bundle no diretório de assets do CF Pages.
+ * Estrutura gerada em assets/:
+ *   _worker.js          ← entry point do Worker
+ *   cloudflare/         ← runtime do Cloudflare (images, init, skew-protection)
+ *   middleware/         ← middleware handler
+ *   server-functions/   ← handler.mjs do Next.js (bundlado pelo OpenNext)
+ *   .build/             ← Durable Objects
+ *   cloudflare-templates/shims/  ← shims de substituição
  */
 
-const { execSync } = require('child_process');
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
 
 const projectRoot = process.cwd();
-const workerSrc = path.join(projectRoot, '.open-next', 'worker.js');
-const assetsDir = path.join(projectRoot, '.open-next', 'assets');
-const workerDst = path.join(assetsDir, '_worker.js');
+const openNextDir = path.join(projectRoot, '.open-next');
+const assetsDir = path.join(openNextDir, 'assets');
 
-// Verificar se o worker existe
+function copyDirSync(src, dst, { exclude = [] } = {}) {
+  if (!fs.existsSync(src)) {
+    console.log(`  ⚠ Diretório não encontrado (pulando): ${path.relative(projectRoot, src)}`);
+    return 0;
+  }
+  fs.mkdirSync(dst, { recursive: true });
+  let count = 0;
+  for (const entry of fs.readdirSync(src)) {
+    if (exclude.includes(entry)) continue;
+    const srcPath = path.join(src, entry);
+    const dstPath = path.join(dst, entry);
+    const stat = fs.lstatSync(srcPath);
+    if (stat.isSymbolicLink()) {
+      // Resolver symlinks (evita EISDIR)
+      const realPath = fs.realpathSync(srcPath);
+      const realStat = fs.statSync(realPath);
+      if (realStat.isDirectory()) {
+        count += copyDirSync(realPath, dstPath, { exclude });
+      } else {
+        fs.copyFileSync(realPath, dstPath);
+        count++;
+      }
+    } else if (stat.isDirectory()) {
+      count += copyDirSync(srcPath, dstPath, { exclude });
+    } else {
+      fs.copyFileSync(srcPath, dstPath);
+      count++;
+    }
+  }
+  return count;
+}
+
+console.log('📦 Preparando assets do CF Pages...\n');
+
+// 1. worker.js → assets/_worker.js (entry point do CF Pages advanced mode)
+const workerSrc = path.join(openNextDir, 'worker.js');
 if (!fs.existsSync(workerSrc)) {
   console.error('❌ .open-next/worker.js não encontrado. Execute opennextjs-cloudflare build primeiro.');
   process.exit(1);
 }
+fs.copyFileSync(workerSrc, path.join(assetsDir, '_worker.js'));
+console.log('✓ _worker.js copiado');
 
-// Verificar se o diretório assets existe
-if (!fs.existsSync(assetsDir)) {
-  console.error('❌ .open-next/assets/ não encontrado. Execute opennextjs-cloudflare build primeiro.');
-  process.exit(1);
-}
+// 2. cloudflare/ → runtime handlers (images, init, skew-protection)
+const n2 = copyDirSync(
+  path.join(openNextDir, 'cloudflare'),
+  path.join(assetsDir, 'cloudflare')
+);
+console.log(`✓ cloudflare/ copiado (${n2} arquivo(s))`);
 
-console.log('📦 Bundlando worker.js para Cloudflare Pages...');
+// 3. middleware/ → middleware handler
+const n3 = copyDirSync(
+  path.join(openNextDir, 'middleware'),
+  path.join(assetsDir, 'middleware')
+);
+console.log(`✓ middleware/ copiado (${n3} arquivo(s))`);
 
-const esbuildBin = path.join(projectRoot, 'node_modules', '.bin', 'esbuild');
+// 4. server-functions/default/ → handler do Next.js
+//    EXCLUIR .next/ — é apenas o output do build, não é necessário em runtime
+//    (handler.mjs já inclui tudo inline via esbuild do OpenNext)
+const n4 = copyDirSync(
+  path.join(openNextDir, 'server-functions'),
+  path.join(assetsDir, 'server-functions'),
+  { exclude: ['.next'] }
+);
+console.log(`✓ server-functions/ copiado (${n4} arquivo(s), sem .next/)`);
 
-// esbuild bundla worker.js + todos os imports relativos em um único arquivo ESM
-// node:* e cloudflare:* são mantidos como externos (disponíveis no runtime do Worker)
-const cmd = [
-  `"${esbuildBin}"`,
-  `"${workerSrc}"`,
-  '--bundle',
-  '--format=esm',
-  `--outfile="${workerDst}"`,
-  '--external:node:*',
-  '--external:cloudflare:*',
-  '--platform=node',
-  '--target=esnext',
-  '--log-level=info',
-].join(' ');
+// 5. .build/ → Durable Objects
+const n5 = copyDirSync(
+  path.join(openNextDir, '.build'),
+  path.join(assetsDir, '.build')
+);
+console.log(`✓ .build/ copiado (${n5} arquivo(s))`);
 
-try {
-  execSync(cmd, { stdio: 'inherit', cwd: projectRoot });
-  const sizeKB = Math.round(fs.statSync(workerDst).size / 1024);
-  console.log(`✅ _worker.js gerado com sucesso! (${sizeKB} KB)`);
-} catch (e) {
-  console.error('❌ Falha ao bundlar worker.js:', e.message);
-  process.exit(1);
-}
+// 6. cloudflare-templates/shims/ → shims de substituição usados como aliases
+const n6 = copyDirSync(
+  path.join(openNextDir, 'cloudflare-templates', 'shims'),
+  path.join(assetsDir, 'cloudflare-templates', 'shims')
+);
+console.log(`✓ cloudflare-templates/shims/ copiado (${n6} arquivo(s))`);
+
+const total = 1 + n2 + n3 + n4 + n5 + n6;
+console.log(`\n✅ Pronto! ${total} arquivos de runtime copiados para assets/`);
+console.log('   O bundler do CF Pages (Wrangler) irá resolver os imports restantes.');
