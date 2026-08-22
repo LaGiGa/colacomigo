@@ -1,0 +1,138 @@
+/* ============================================================
+   PLENA INTELLIGENCE — TOKENS OFICIAIS
+   Arquivo canônico. NÃO editar por projeto.
+   Importar em globals.css ANTES de qualquer estilo local.
+   ============================================================ */
+
+:root {
+  /* ---------- MARCA (IMUTÁVEL — nunca alterar por projeto/tema) ---------- */
+  --plena-azul:   #041E42;  /* Azul Noturno — fundo/títulos, autoridade */
+  --plena-verde:  #00C19F;  /* Verde Água — acentos/ícones */
+  --plena-cinza:  #D8D8D5;  /* Cinza Neutro — bordas/texto secundário */
+  --plena-from:   #00AFEC;  /* início do Gradiente Plena */
+  --plena-to:     #01EFA1;  /* fim do Gradiente Plena */
+  --plena-gradient: linear-gradient(90deg, var(--plena-from) 0%, var(--plena-to) 100%);
+
+  /* ---------- SUPERFÍCIES — LIGHT ---------- */
+  --surface-app:     #F4F7FB;  /* fundo da área de conteúdo */
+  --surface-card:    #FFFFFF;
+  --surface-sunken:  #EEF3F9;
+  --surface-header:  rgba(255,255,255,0.80);
+  --surface-sidebar: #FFFFFF;
+  --border-subtle:   #E2E8F0;
+  --border-strong:   #CBD5E1;
+  --border-glass:    rgba(15,23,42,0.08);
+
+  /* ---------- TEXTO — LIGHT ---------- */
+  --text-strong: #0F172A;
+  --text-body:   #334155;
+  --text-muted:  #64748B;
+  --text-faint:  #94A3B8;
+  --text-invert: #FFFFFF;
+
+  /* ---------- SEMÂNTICAS (iguais em light e dark) ---------- */
+  --ok-bg:     #DCFCE7;  --ok-fg:     #166534;  --ok-solid:   #16A34A;
+  --warn-bg:   #FEF3C7;  --warn-fg:   #92400E;  --warn-solid: #F59E0B;
+  --danger-bg: #FEE2E2;  --danger-fg: #991B1B;  --danger-solid:#EF4444;
+  --info-bg:   #DBEAFE;  --info-fg:   #1E40AF;  --info-solid: #2563EB;
+  --neutral-bg:#F1F5F9;  --neutral-fg:#475569;
+
+  /* ---------- TEMA ATIVO (o seletor "TEMAS" só troca ESTES) ---------- */
+  --theme-accent:      #00AFEC;
+  --theme-accent-soft: rgba(0,175,236,0.12);
+  --theme-accent-fg:   #FFFFFF;
+  --theme-gradient:    linear-gradient(135deg, #00AFEC 0%, #01EFA1 100%);
+
+  /* ---------- ESPAÇAMENTO ---------- */
+  --space-xs: 4px;  --space-sm: 8px;  --space-md: 16px;
+  --space-lg: 24px; --space-xl: 32px; --space-2xl: 48px; --space-3xl: 64px;
+
+  /* ---------- RAIO ---------- */
+  --radius-sm: 6px;  --radius-md: 8px;   --radius-lg: 12px;
+  --radius-xl: 16px; --radius-2xl: 20px; --radius-pill: 9999px;
+
+  /* ---------- SOMBRA ---------- */
+  --shadow-sm: 0 1px 2px rgba(15,23,42,0.05);
+  --shadow-md: 0 4px 6px rgba(15,23,42,0.08);
+  --shadow-lg: 0 10px 15px rgba(15,23,42,0.10);
+  --shadow-xl: 0 20px 25px rgba(15,23,42,0.15);
+
+  /* ---------- LAYOUT DO SHELL ---------- */
+  --sidebar-w:           288px;  /* 18rem — expandida */
+  --sidebar-w-collapsed:  80px;  /* 5rem  — recolhida */
+  --header-h:             72px;
+  --content-max:        1400px;
+
+  /* ---------- MOVIMENTO ---------- */
+  --motion-fast: 150ms;
+  --motion-base: 250ms;
+  --motion-slow: 400ms;
+  --motion-ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ---------- TIPOGRAFIA ---------- */
+  --font-display: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+  --font-sans:    'Roboto', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ============================================================
+   DARK MODE — só troca superfícies e texto.
+   As cores de MARCA permanecem idênticas.
+   ============================================================ */
+.dark {
+  --surface-app:     #0B1220;
+  --surface-card:    #1E293B;
+  --surface-sunken:  #0F172A;
+  --surface-header:  rgba(30,41,59,0.60);
+  --surface-sidebar: #0B1220;
+  --border-subtle:   rgba(255,255,255,0.08);
+  --border-strong:   rgba(255,255,255,0.16);
+  --border-glass:    rgba(255,255,255,0.10);
+
+  --text-strong: #F1F5F9;
+  --text-body:   #CBD5E1;
+  --text-muted:  #94A3B8;
+  --text-faint:  #64748B;
+
+  --ok-bg:     rgba(22,163,74,0.18);   --ok-fg:     #4ADE80;
+  --warn-bg:   rgba(245,158,11,0.18);  --warn-fg:   #FCD34D;
+  --danger-bg: rgba(239,68,68,0.18);   --danger-fg: #FCA5A5;
+  --info-bg:   rgba(37,99,235,0.18);   --info-fg:   #93C5FD;
+  --neutral-bg:rgba(255,255,255,0.06); --neutral-fg:#CBD5E1;
+}
+
+/* ============================================================
+   TEMAS DE ACENTO — seletor "TEMAS" do header.
+   Aplicar em <html data-theme="...">. 8 temas, ordem fixa.
+   Trocam SOMENTE --theme-*. Nunca tocam --plena-*.
+   ============================================================ */
+[data-theme="ciano"]    { --theme-accent:#00AFEC; --theme-accent-soft:rgba(0,175,236,.12);  --theme-gradient:linear-gradient(135deg,#00AFEC 0%,#01EFA1 100%); }
+[data-theme="esmeralda"]{ --theme-accent:#00C19F; --theme-accent-soft:rgba(0,193,159,.12);  --theme-gradient:linear-gradient(135deg,#00C19F 0%,#01EFA1 100%); }
+[data-theme="azul"]     { --theme-accent:#2563EB; --theme-accent-soft:rgba(37,99,235,.12);  --theme-gradient:linear-gradient(135deg,#2563EB 0%,#00AFEC 100%); }
+[data-theme="coral"]    { --theme-accent:#E2603C; --theme-accent-soft:rgba(226,96,60,.12);  --theme-gradient:linear-gradient(135deg,#E2603C 0%,#F59E0B 100%); }
+[data-theme="lima"]     { --theme-accent:#4CAF6D; --theme-accent-soft:rgba(76,175,109,.12); --theme-gradient:linear-gradient(135deg,#4CAF6D 0%,#01EFA1 100%); }
+[data-theme="noturno"]  { --theme-accent:#1E293B; --theme-accent-soft:rgba(30,41,59,.12);   --theme-gradient:linear-gradient(135deg,#041E42 0%,#1E293B 100%); }
+[data-theme="ambar"]    { --theme-accent:#A8850C; --theme-accent-soft:rgba(168,133,12,.12); --theme-gradient:linear-gradient(135deg,#A8850C 0%,#F59E0B 100%); }
+[data-theme="violeta"]  { --theme-accent:#7C4DBE; --theme-accent-soft:rgba(124,77,190,.12); --theme-gradient:linear-gradient(135deg,#7C4DBE 0%,#00AFEC 100%); }
+
+/* ============================================================
+   CORES DE MÓDULO — identidade fixa de cada produto.
+   NÃO mudam com o tema. Usadas na sidebar e nos cards de módulo.
+   ============================================================ */
+:root {
+  --mod-gestorsus-from:#3B6EA5; --mod-gestorsus-to:#2C5480;  /* Plena Gestor SUS  — azul  */
+  --mod-emendas-from:  #1B9E9E; --mod-emendas-to:  #14807F;  /* Plena Emendas     — teal  */
+  --mod-projetos-from: #D8552F; --mod-projetos-to: #B4401F;  /* Plena Projetos    — coral */
+  --mod-legis-from:    #C0951A; --mod-legis-to:    #96720F;  /* Plena Legis SUS   — âmbar */
+  --mod-agentes-from:  #8B5CF6; --mod-agentes-to:  #6D3FD1;  /* Plena Agentes I.A.— violeta */
+  --mod-financas-from: #1F8A55; --mod-financas-to: #14663D;  /* Plena Finanças    — verde */
+  --mod-comercial-from:#E2603C; --mod-comercial-to:#C24427;  /* Plena Comercial   — coral esc. */
+  --mod-governanca-from:#334155;--mod-governanca-to:#1E293B; /* Governança        — grafite */
+}
+
+/* Acessibilidade: respeitar preferência de movimento reduzido. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

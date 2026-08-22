@@ -1,0 +1,61 @@
+# CLAUDE.md — <NOME DO PROJETO>
+
+> Copie este arquivo para a **raiz** do repositório como `CLAUDE.md`.
+> O Claude Code lê este arquivo automaticamente ao abrir a sessão.
+> Substitua os campos `<...>` e apague os comentários entre parênteses.
+
+## Identidade do projeto
+
+- **Produto:** `<Plena Gestor SUS | Plena Emendas | Plena Projetos | ...>`
+- **Plataforma:** Plena Intelligence — `plenaintelligence.ai`
+- **Cliente/tenant piloto:** `<ex.: COSEMS-TO>` (nome do cliente **não** renomeia o produto)
+- **Stack:** Next.js (App Router) + TypeScript + Tailwind + Supabase + Lucide
+
+## ⚠️ REGRA DE FRONTEND — LEIA ANTES DE ESCREVER QUALQUER UI
+
+Toda interface deste repositório **obedece obrigatoriamente** a:
+
+- `design-system/PLENA-UI-STANDARD.md` — padrão normativo de UI (shell, temas, componentes)
+- `design-system/plena-tokens.css` — tokens canônicos (importado no `globals.css`)
+- `design-system/tailwind-plena-preset.js` — preset do Tailwind
+- `IDENTIDADE_VISUAL_PLENA.md` — brandbook
+
+**Antes de criar ou alterar qualquer tela, componente ou estilo, leia
+`design-system/PLENA-UI-STANDARD.md` por inteiro.** Não improvise cores, fontes,
+layout de menu ou estrutura de header — tudo isso já está definido.
+
+**Ao final de qualquer trabalho de UI, rode o "Checklist de Entrega" (seção 14) do padrão
+e relate o resultado item a item.**
+
+### Resumo não-negociável
+
+- Fontes: **Montserrat** (títulos) + **Roboto** (corpo). Nunca Inter/Geist/Fira/Poppins.
+- Marca: `#041E42` azul · `#00C19F` verde · `#00AFEC → #01EFA1` gradiente.
+- Logotipo Plena (`public/Plena_Intelligence_LOGO - 1.png` / `- 4.png`) no topo da sidebar,
+  sempre. Nunca inicial em círculo, nunca emoji.
+- **8 temas** de acento no header (label `TEMAS` + 8 bolinhas), independentes do
+  toggle claro/escuro. Trocar tema não altera cor de marca, de módulo nem semântica.
+- Shell único (`<AppShell>`): sidebar de módulos com submenu inline + header de 72px +
+  breadcrumb + FAB "Plena I.A.". Nenhuma página redesenha o shell.
+- Ícones **só** Lucide. **Emoji nunca é ícone.**
+- Nomes de módulo são fixos e prefixados por `Plena` — não renomear para o cliente.
+- Sem barra de navegação inferior com abas de módulo.
+- Interface 100% pt-BR; moeda `R$ 1.234,56`; data `dd/mm/aaaa`.
+
+### Documentos revogados
+
+Se existir `design-system/plena-intelligence/MASTER.md` (auto-gerado, com Fira Code /
+`#22C55E` / "Dark Mode OLED"), **ignore-o e apague-o** — não é a identidade Plena.
+
+## Comandos
+
+```bash
+npm install
+npm run dev
+npm run build
+npm run lint
+```
+
+## Arquitetura
+
+`<descreva rotas, entidades e integrações específicas deste produto>`
