@@ -1,0 +1,104 @@
+/* ============================================================
+   PLENA INTELLIGENCE — PONTE PARA TAILWIND v4
+   ============================================================
+
+   USE ESTE ARQUIVO **APENAS** SE O PROJETO USA TAILWIND v4.
+   Como saber: o globals.css começa com  @import "tailwindcss";
+   e NÃO existe tailwind.config.js no repositório.
+
+   No Tailwind v3, ignore este arquivo e use `tailwind-plena-preset.js`.
+   Nunca use os dois ao mesmo tempo.
+
+   ------------------------------------------------------------
+   COMO LIGAR (globals.css) — a ordem importa:
+
+       @import "tailwindcss";
+       @import "../../design-system/plena-tokens.css";
+       @import "../../design-system/plena-theme-v4.css";
+
+   Todo @import tem que vir ANTES de qualquer outra regra CSS.
+   Ajuste `../../` conforme a profundidade do globals.css:
+       app/globals.css       ->  ../design-system/...
+       src/app/globals.css   ->  ../../design-system/...
+   ============================================================ */
+
+/* Dark mode por classe (.dark), igual ao v3 com darkMode:'class'.
+   Sem isto, o v4 usa prefers-color-scheme e o seu toggle não funciona. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* ---------- MARCA ---------- */
+  --color-plena-azul:  #041E42;
+  --color-plena-verde: #00C19F;
+  --color-plena-cinza: #D8D8D5;
+  --color-plena-from:  #00AFEC;
+  --color-plena-to:    #01EFA1;
+
+  /* ---------- SUPERFÍCIES (seguem light/dark via plena-tokens.css) ---------- */
+  --color-surface-app:     var(--surface-app);
+  --color-surface-card:    var(--surface-card);
+  --color-surface-sunken:  var(--surface-sunken);
+  --color-surface-sidebar: var(--surface-sidebar);
+
+  /* ---------- TEXTO ---------- */
+  --color-content-strong: var(--text-strong);
+  --color-content-body:   var(--text-body);
+  --color-content-muted:  var(--text-muted);
+  --color-content-faint:  var(--text-faint);
+
+  /* ---------- BORDAS ---------- */
+  --color-line-subtle: var(--border-subtle);
+  --color-line-strong: var(--border-strong);
+
+  /* ---------- ACENTO DO TEMA ATIVO ---------- */
+  --color-theme:      var(--theme-accent);
+  --color-theme-soft: var(--theme-accent-soft);
+
+  /* ---------- SEMÂNTICAS ---------- */
+  --color-ok:     var(--ok-solid);
+  --color-warn:   var(--warn-solid);
+  --color-danger: var(--danger-solid);
+  --color-info:   var(--info-solid);
+
+  /* ---------- TIPOGRAFIA ---------- */
+  --font-display: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --font-sans:    "Roboto", ui-sans-serif, system-ui, sans-serif;
+
+  /* ---------- LAYOUT DO SHELL ---------- */
+  --spacing-sidebar:           18rem;   /* 288px */
+  --spacing-sidebar-collapsed:  5rem;   /* 80px  */
+  --spacing-header:           4.5rem;   /* 72px  */
+
+  /* ---------- RAIO ---------- */
+  --radius-card: 16px;
+
+  /* ---------- SOMBRA ---------- */
+  --shadow-plena-sm: 0 1px 2px rgba(15,23,42,0.05);
+  --shadow-plena-md: 0 4px 6px rgba(15,23,42,0.08);
+  --shadow-plena-lg: 0 10px 15px rgba(15,23,42,0.10);
+  --shadow-plena-xl: 0 20px 25px rgba(15,23,42,0.15);
+}
+
+/* ============================================================
+   GRADIENTES — o v4 não gera utilitário a partir de @theme para
+   background-image, então ficam como classes utilitárias.
+   ============================================================ */
+@utility bg-plena-gradient {
+  background-image: linear-gradient(90deg, #00AFEC 0%, #01EFA1 100%);
+}
+
+@utility bg-theme-gradient {
+  background-image: var(--theme-gradient);
+}
+
+/* ============================================================
+   LIMITAÇÃO CONHECIDA — leia antes de reportar bug
+   ------------------------------------------------------------
+   As cores acima que apontam para `var(--...)` (surface, content,
+   line, theme, semânticas) mudam corretamente com tema e dark mode,
+   MAS não aceitam modificador de opacidade: `bg-surface-card/50`
+   não funciona, porque o valor não é uma cor literal.
+
+   Onde precisar de opacidade, use uma cor de marca literal
+   (`bg-plena-azul/30` funciona) ou escreva o rgba direto.
+   ============================================================ */

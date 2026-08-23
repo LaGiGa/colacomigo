@@ -27,7 +27,29 @@ repositório**, onde toda ferramenta a encontra automaticamente.
 | `tailwind-plena-preset.js` | Preset do Tailwind com os tokens | `design-system/`, referenciado no `tailwind.config.js` |
 | `CLAUDE.md.template` | Arquivo que faz a IA reconhecer o projeto | raiz do repo, renomeado para `CLAUDE.md` |
 | `PROMPT-INICIAL.md` | Texto para colar em ferramentas que não leem o repo | uso manual |
+| `INSTALACAO-CODIGO.md` | **Guia de execução**: ligar tokens ao Tailwind (v3 e v4), fontes, migração | `design-system/` |
+| `plena-theme-v4.css` | Ponte `@theme` para projetos Tailwind **v4** (onde o preset `.js` não funciona) | `design-system/` |
+| `Diagnostico-PlenaDesignSystem.ps1` | Script que detecta o que ainda falta ligar no repositório | uso manual |
 | `COMPARATIVO-TELAS.md` | Auditoria da tela divergente × referência | histórico |
+
+---
+
+---
+
+## ⚠️ Copiar os arquivos não muda a aparência de nada
+
+Copiar o pacote cria os tokens, mas **nenhum componente passa a usá-los**. Sem os passos
+de ligação, o resultado é: tokens existem ✅ · ninguém os usa ❌ · tela idêntica.
+
+Os três passos que faltam depois da cópia:
+
+1. **Ligar ao Tailwind** — preset no `tailwind.config.js` (v3) **ou** `plena-theme-v4.css`
+   importado no `globals.css` (v4). Sem isso, `bg-plena-azul` e `font-display` não existem.
+2. **Instalar Montserrat + Roboto** no `layout.tsx` — maior ganho visual pelo menor esforço.
+3. **Migrar os tokens antigos** (`--brand-blue` etc.) para os tokens Plena.
+
+Passo a passo completo: **`INSTALACAO-CODIGO.md`**.
+Para saber o que falta no seu repositório, rode `Diagnostico-PlenaDesignSystem.ps1` na raiz.
 
 ---
 
@@ -37,6 +59,7 @@ repositório**, onde toda ferramenta a encontra automaticamente.
 # 1) copiar o pacote
 mkdir -p design-system
 cp PLENA-UI-STANDARD.md plena-tokens.css tailwind-plena-preset.js design-system/
+cp INSTALACAO-CODIGO.md plena-theme-v4.css design-system/   # v4: a ponte CSS e obrigatoria
 
 # 2) arquivo de reconhecimento na raiz
 cp CLAUDE.md.template CLAUDE.md   # depois edite os campos <...>
