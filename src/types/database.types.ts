@@ -624,6 +624,7 @@ export type Database = {
           id: string
           phone: string | null
           role: string
+          is_admin: boolean
           updated_at: string
         }
         Insert: {
@@ -633,6 +634,7 @@ export type Database = {
           id: string
           phone?: string | null
           role?: string
+          is_admin?: boolean
           updated_at?: string
         }
         Update: {
@@ -642,6 +644,7 @@ export type Database = {
           id?: string
           phone?: string | null
           role?: string
+          is_admin?: boolean
           updated_at?: string
         }
         Relationships: []

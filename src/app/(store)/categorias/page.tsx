@@ -6,7 +6,7 @@ import { ArrowRight } from '@/components/ui/icons'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 300 // 5 minutos - ISR (cache Cloudflare/Next.js)
 
 
 export const metadata: Metadata = {

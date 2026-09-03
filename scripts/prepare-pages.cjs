@@ -65,8 +65,8 @@ export default {
         return runWithCloudflareRequestContext(request, env, ctx, async () => {
             const url = new URL(request.url);
 
-            // 1. Tentar servir assets estáticos diretamente via env.ASSETS se for chunk ou arquivo estático
-            if (env.ASSETS && (url.pathname.startsWith('/_next/static/') || /\\.[a-zA-Z0-9]+$/.test(url.pathname))) {
+            // 1. Tentar servir assets estáticos diretamente via env.ASSETS se for chunk ou arquivo estático (nunca rotas administrativas ou proxy de imagens)
+            if (env.ASSETS && !url.pathname.startsWith('/admin') && !url.pathname.startsWith('/api/admin') && !url.pathname.startsWith('/supabase-images') && (url.pathname.startsWith('/_next/static/') || /\\.[a-zA-Z0-9]+$/.test(url.pathname))) {
                 const assetResponse = await env.ASSETS.fetch(request);
                 if (assetResponse.status !== 404) {
                     return assetResponse;

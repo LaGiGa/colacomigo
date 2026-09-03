@@ -5,9 +5,6 @@ import { cookies } from 'next/headers'
 const DEFAULT_SUPABASE_URL = 'https://ygdlmathcksuhnybkcpy.supabase.co'
 const DEFAULT_SUPABASE_ANON_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnZGxtYXRoY2tzdWhueWJrY3B5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2NzUyNzYsImV4cCI6MjA4ODI1MTI3Nn0.-W97wm88UqWT4sLs_Fgfah6NimmcW_lGzkx2OhvsSoc'
-const DEFAULT_SUPABASE_SERVICE_ROLE_KEY =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnZGxtYXRoY2tzdWhueWJrY3B5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjY3NTI3NiwiZXhwIjoyMDg4MjUxMjc2fQ.7_X_4gZkiSWbD3DKbM2jisDc_LP5i2H1xiolDSnRQhY'
-
 function getSupabaseUrl() {
     return process.env.NEXT_PUBLIC_SUPABASE_URL || DEFAULT_SUPABASE_URL
 }
@@ -17,7 +14,11 @@ function getAnonKey() {
 }
 
 function getServiceRoleKey() {
-    return process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_SERVICE_ROLE_KEY
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!key) {
+        throw new Error('CONFIG ERROR: SUPABASE_SERVICE_ROLE_KEY não está configurada no ambiente.')
+    }
+    return key
 }
 
 /**

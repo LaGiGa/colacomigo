@@ -12,6 +12,7 @@ import { toast } from 'sonner'
 import { ChevronDown, ImagePlus, Loader2, Plus, Save, X } from '@/components/ui/icons'
 import Image from 'next/image'
 import { optimizeImageFile } from '@/lib/image-client'
+import { cn } from '@/lib/utils'
 
 
 interface ProductFormValues {
@@ -130,7 +131,10 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
         init()
     }, [productId]) // eslint-disable-line
 
-    const { register, handleSubmit, setValue, reset } = useForm<ProductFormValues>({
+    const SNEAKER_SIZES = ['34', '35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46']
+    const CLOTHING_SIZES = ['PP', 'P', 'M', 'G', 'GG', 'XGG', 'ÚNICO']
+
+    const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm<ProductFormValues>({
         defaultValues: {
             name: initialProduct?.name || '',
             slug: initialProduct?.slug || '',
@@ -215,7 +219,39 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
     }
 
     function addVariant() {
-        setVariants((prev) => [...prev, { size: '', colorName: '', colorHex: '#000000', priceDelta: 0, sku: '', stock: 0 }])
+        setVariants((prev) => [...prev, { size: '', colorName: '', colorHex: '#000000', priceDelta: 0, sku: '', stock: 10 }])
+    }
+
+    function addVariantWithSize(size: string) {
+        setVariants((prev) => {
+            // Se tiver apenas uma variante e ela estiver vazia, preenche seu tamanho
+            if (prev.length === 1 && !prev[0].size?.trim()) {
+                return [{ ...prev[0], size, stock: prev[0].stock || 10 }]
+            }
+            if (prev.some((v) => v.size === size)) {
+                toast.info(`Tamanho ${size} já existe na grade.`)
+                return prev
+            }
+            const baseColorName = prev[0]?.colorName || ''
+            const baseColorHex = prev[0]?.colorHex || '#000000'
+            return [...prev, { size, colorName: baseColorName, colorHex: baseColorHex, priceDelta: 0, sku: '', stock: 10 }]
+        })
+    }
+
+    function generateSneakerGrid() {
+        const sneakerSizes = ['38', '39', '40', '41', '42', '43', '44']
+        const baseColorName = variants[0]?.colorName || ''
+        const baseColorHex = variants[0]?.colorHex || '#000000'
+
+        setVariants(sneakerSizes.map((size) => ({
+            size,
+            colorName: baseColorName,
+            colorHex: baseColorHex,
+            priceDelta: 0,
+            sku: '',
+            stock: 10,
+        })))
+        toast.success('Grade de tênis (38 ao 44) gerada com sucesso!')
     }
 
     function removeVariant(i: number) { setVariants((prev) => prev.filter((_, idx) => idx !== i)) }
@@ -224,7 +260,29 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
         setVariants((prev) => { const u = [...prev]; u[i] = { ...u[i], [field]: value }; return u })
     }
 
+    const onInvalid = (fieldErrors: any) => {
+        console.warn('[PRODUTO FORM VALIDATION FAILED]', fieldErrors)
+        if (fieldErrors.name) {
+            toast.error('Preencha o Nome do Produto (campo obrigatório).')
+            return
+        }
+        if (fieldErrors.price) {
+            toast.error('Informe um Preço de venda válido para o produto.')
+            return
+        }
+        toast.error('Por favor, preencha os campos obrigatórios em destaque no formulário.')
+    }
+
     async function onSubmit(data: ProductFormValues) {
+        if (!data.name?.trim()) {
+            toast.error('O nome do produto é obrigatório.')
+            return
+        }
+        if (!data.price || isNaN(parseFloat(data.price)) || parseFloat(data.price) < 0) {
+            toast.error('Informe um preço válido para o produto.')
+            return
+        }
+
         if (images.some((img) => img.uploading)) {
             toast.error('Aguarde o upload das imagens terminar antes de salvar.')
             return
@@ -241,37 +299,46 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
             return
         }
 
-        const normalizedVariants = variants
-            .filter((v) => v.sku || v.size || v.colorName)
-            .map(v => ({
-                // O id precisa ir junto: é ele que faz a API ATUALIZAR a variante
-                // existente em vez de criar uma nova (o que zeraria o estoque e
-                // quebraria o vínculo com os pedidos antigos).
+        // Se o usuário não definiu nenhuma variante ou deixou vazio, gera uma variante padrão
+        const activeVariantsList = variants.length > 0
+            ? variants
+            : [{ size: 'Único', colorName: 'Padrão', colorHex: '#000000', priceDelta: 0, sku: '', stock: 10 }]
+
+        const cleanSlug = (data.slug || generateSlug(data.name)).toUpperCase().replace(/[^A-Z0-9]/g, '')
+
+        const normalizedVariants = activeVariantsList.map((v, i) => {
+            const cleanSize = (v.size?.trim() || 'UN').toUpperCase().replace(/[^A-Z0-9]/g, '')
+            const generatedSku = `${cleanSlug}-${cleanSize}-${i + 1}`
+
+            return {
                 id: v.id || undefined,
-                sku: v.sku || undefined,
-                size: v.size || undefined,
-                color_name: v.colorName || undefined,
-                color_hex: v.colorHex || undefined,
+                sku: v.sku?.trim() || generatedSku,
+                size: v.size?.trim() || 'Único',
+                color_name: v.colorName?.trim() || null,
+                color_hex: v.colorHex || '#000000',
                 price_delta: parseFloat(v.priceDelta as any) || 0,
                 stock: Number.isFinite(v.stock) ? v.stock : 0,
                 is_active: true,
-            }))
-
-        if (normalizedVariants.length === 0) {
-            toast.error('Adicione pelo menos uma variante (com SKU/tamanho/cor) para vender o produto.')
-            return
-        }
+            }
+        })
 
         startTransition(async () => {
             try {
                 const payload = {
-                    ...data,
+                    name: data.name.trim(),
+                    slug: data.slug?.trim() || generateSlug(data.name),
+                    sku: data.sku?.trim() || null,
+                    description: data.description?.trim() || null,
                     price: parseFloat(data.price),
-                    compare_price: data.compare_price ? parseFloat(data.compare_price) : undefined,
+                    compare_price: data.compare_price ? parseFloat(data.compare_price) : null,
+                    category_id: data.category_id ? data.category_id : null,
+                    brand_id: data.brand_id ? data.brand_id : null,
+                    collection_id: data.collection_id ? data.collection_id : null,
                     weight_kg: data.weight_kg ? parseFloat(data.weight_kg) : undefined,
-                    collection_id: data.collection_id || null,
+                    is_active: data.is_active ?? true,
                     images: uploadedImages.map((img, i) => ({
-                        url: img.url!, is_primary: i === 0,
+                        url: img.url!,
+                        is_primary: i === 0,
                     })),
                     variants: normalizedVariants,
                 }
@@ -285,18 +352,21 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
                     body: JSON.stringify(payload),
                 })
                 const result = await res.json()
-                if (!res.ok) throw new Error(result.error)
-                toast.success(initialProduct ? 'Produto atualizado!' : 'Produto cadastrado com sucesso!')
+                if (!res.ok) {
+                    throw new Error(result.error || result.message || 'Falha ao salvar produto no servidor')
+                }
+                toast.success(initialProduct ? 'Produto atualizado com sucesso!' : 'Produto cadastrado com sucesso!')
                 router.push('/admin/produtos')
                 router.refresh()
             } catch (err) {
+                console.error('[ERRO SALVAR PRODUTO]', err)
                 toast.error(err instanceof Error ? err.message : 'Erro ao salvar produto')
             }
         })
     }
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 max-w-4xl">
+        <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-8 max-w-4xl">
 
             {/* ── Imagens ─────────────────────────────────────────── */}
             <div className="space-y-3">
@@ -341,48 +411,65 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
                 <div className="grid sm:grid-cols-2 gap-4">
 
                     <div className="sm:col-span-2 space-y-1">
-                        <Label>Nome do Produto *</Label>
+                        <Label className="flex items-center gap-1">
+                            Nome do Produto <span className="text-destructive">*</span>
+                        </Label>
                         <Input
-                            {...register('name')}
-                            placeholder="Boné Chronic Five Panel"
+                            {...register('name', { required: 'Nome do produto é obrigatório' })}
+                            placeholder="Tênis Nike Air Force 1, Camiseta Chronic..."
+                            className={cn(errors.name && 'border-destructive focus-visible:ring-destructive')}
                             onChange={(e) => {
                                 register('name').onChange(e)
                                 setValue('slug', generateSlug(e.target.value))
                             }}
                         />
+                        {errors.name && (
+                            <p className="text-xs text-destructive font-medium">{errors.name.message}</p>
+                        )}
                     </div>
 
                     <div className="space-y-1">
                         <Label>Slug (URL) *</Label>
-                        <Input {...register('slug')} placeholder="bone-chronic-five-panel" className="font-mono text-xs" />
+                        <Input {...register('slug')} placeholder="tenis-nike-air-force-1" className="font-mono text-xs" />
                     </div>
 
                     <div className="space-y-1">
-                        <Label>SKU</Label>
-                        <Input {...register('sku')} placeholder="CHR-BP-001" className="font-mono" />
+                        <Label>SKU Base (Opcional)</Label>
+                        <Input {...register('sku')} placeholder="Ex: NKE-AF1-001 (ou deixe em branco)" className="font-mono" />
                     </div>
 
                     <div className="space-y-1">
-                        <Label>Preço (R$) *</Label>
-                        <Input {...register('price')} type="number" step="0.01" placeholder="119.90" />
+                        <Label className="flex items-center gap-1">
+                            Preço de Venda (R$) <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                            {...register('price', { required: 'Preço de venda é obrigatório' })}
+                            type="number"
+                            step="0.01"
+                            placeholder="199.90"
+                            className={cn(errors.price && 'border-destructive focus-visible:ring-destructive')}
+                        />
+                        {errors.price && (
+                            <p className="text-xs text-destructive font-medium">{errors.price.message}</p>
+                        )}
                     </div>
 
                     <div className="space-y-1">
                         <Label>Preço Comparativo (De:)</Label>
-                        <Input {...register('compare_price')} type="number" step="0.01" placeholder="149.90" />
+                        <Input {...register('compare_price')} type="number" step="0.01" placeholder="249.90" />
                     </div>
 
-                    {/* ── CATEGORIA ── */}
-                    <SelectField label="Categoria" required {...register('category_id')}>
-                        <option value="">{loadingDropdowns ? 'Carregando…' : 'Selecione uma categoria'}</option>
+                    {/* ── CATEGORIA (Opcional tolerante a vazios) ── */}
+                    <SelectField label="Categoria" {...register('category_id')}>
+                        <option value="">{loadingDropdowns ? 'Carregando…' : 'Selecione uma categoria (opcional)'}</option>
                         {categories.map((c) => (
                             <option key={c.id} value={c.id}>{c.name}</option>
                         ))}
                     </SelectField>
 
-                    {/* ── MARCA ── */}
-                    <SelectField label="Marca" required {...register('brand_id')}>
-                        <option value="">{loadingDropdowns ? 'Carregando…' : 'Selecione uma marca'}</option>
+                    {/* ── MARCA (Opcional tolerante a vazios) ── */}
+                    <SelectField label="Marca" {...register('brand_id')}>
+                        <option value="">{loadingDropdowns ? 'Carregando…' : 'Selecione uma marca (opcional)'}</option>
                         {brands.map((b) => (
                             <option key={b.id} value={b.id}>{b.name}</option>
                         ))}
@@ -406,7 +493,7 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
                         <textarea
                             {...register('description')}
                             rows={3}
-                            placeholder="Boné Five Panel original Chronic, aba plana, bordado exclusivo…"
+                            placeholder="Descrição completa do produto, material, detalhes e caimento…"
                             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
                         />
                     </div>
@@ -414,7 +501,7 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
                     <div className="flex gap-4">
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" {...register('is_active')} className="h-4 w-4 accent-orange-500" />
-                            <span className="text-sm">Produto ativo</span>
+                            <span className="text-sm font-medium">Produto ativo na loja</span>
                         </label>
                     </div>
                 </div>
@@ -422,22 +509,82 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
 
             <Separator className="bg-border/40" />
 
-            {/* ── Variantes ───────────────────────────────────────── */}
+            {/* ── Grades, Tamanhos & Estoque ───────────────────────── */}
             <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-secondary/30 p-4 rounded-xl border border-border/50">
                     <div>
-                        <h2 className="font-semibold text-base">Variantes</h2>
-                        <p className="text-xs text-muted-foreground">Tamanho, cor e SKU por variante. Deixe em branco se não houver.</p>
+                        <h2 className="font-semibold text-base flex items-center gap-2">
+                            <span>Grades de Tamanhos & Estoque</span>
+                        </h2>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                            Gere a grade de calçados com um clique ou selecione tamanhos rápidos abaixo.
+                        </p>
                     </div>
-                    <Button type="button" variant="outline" size="sm" onClick={addVariant}>
-                        <Plus className="h-4 w-4 mr-1" /> Adicionar Variante
-                    </Button>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={generateSneakerGrid}
+                            className="border border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 font-semibold text-xs"
+                        >
+                            ⚡ Gerar Grade de Tênis (38 ao 44)
+                        </Button>
+                        <Button type="button" variant="outline" size="sm" onClick={addVariant} className="text-xs">
+                            <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar Variante
+                        </Button>
+                    </div>
                 </div>
 
-                <div className="space-y-4">
+                {/* ── Barra de Atalhos Rápidos por Categoria de Tamanho ── */}
+                <div className="space-y-2 p-3.5 rounded-xl border border-border/40 bg-zinc-950/40">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mr-1">
+                            👟 Calçados / Tênis:
+                        </span>
+                        {SNEAKER_SIZES.map((sz) => (
+                            <button
+                                key={sz}
+                                type="button"
+                                onClick={() => addVariantWithSize(sz)}
+                                className={cn(
+                                    "px-2.5 py-1 text-xs font-semibold rounded-md border transition-all",
+                                    variants.some((v) => v.size === sz)
+                                        ? "border-orange-500/40 bg-orange-500/20 text-orange-300"
+                                        : "border-border/60 bg-secondary/40 hover:bg-primary hover:text-white text-muted-foreground"
+                                )}
+                            >
+                                {sz}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border/30">
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mr-1">
+                            👕 Vestuário:
+                        </span>
+                        {CLOTHING_SIZES.map((sz) => (
+                            <button
+                                key={sz}
+                                type="button"
+                                onClick={() => addVariantWithSize(sz)}
+                                className={cn(
+                                    "px-2.5 py-1 text-xs font-semibold rounded-md border transition-all",
+                                    variants.some((v) => v.size === sz)
+                                        ? "border-orange-500/40 bg-orange-500/20 text-orange-300"
+                                        : "border-border/60 bg-secondary/40 hover:bg-primary hover:text-white text-muted-foreground"
+                                )}
+                            >
+                                {sz}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="space-y-3">
                     {variants.map((v, i) => (
                         <div key={i} className="grid grid-cols-1 sm:grid-cols-6 gap-3 p-4 rounded-xl bg-secondary/20 border border-border/40 relative">
-                            {/* Botão excluir (aparece no canto em mobile, mas integrado em desktop) */}
+                            {/* Botão excluir */}
                             {variants.length > 1 && (
                                 <button
                                     type="button" onClick={() => removeVariant(i)}
@@ -448,23 +595,48 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
                             )}
 
                             <div className="space-y-1 sm:col-span-2">
-                                <Label className="text-xs">SKU</Label>
-                                <Input value={v.sku} onChange={(e) => updateVariant(i, 'sku', e.target.value)} placeholder="CHR-BP-UNI" className="h-9 text-xs" />
+                                <Label className="text-xs">SKU da Variante</Label>
+                                <Input
+                                    value={v.sku}
+                                    onChange={(e) => updateVariant(i, 'sku', e.target.value)}
+                                    placeholder="Gerado automaticamente se vazio"
+                                    className="h-9 text-xs font-mono"
+                                />
                             </div>
 
                             <div className="grid grid-cols-2 gap-3 sm:col-span-2">
                                 <div className="space-y-1">
                                     <Label className="text-xs">Tamanho</Label>
-                                    <Input value={v.size} onChange={(e) => updateVariant(i, 'size', e.target.value)} placeholder="P, U..." className="h-9 text-xs" />
+                                    <Input
+                                        value={v.size}
+                                        onChange={(e) => updateVariant(i, 'size', e.target.value)}
+                                        placeholder="Ex: 41, 42, G..."
+                                        className="h-9 text-xs font-semibold"
+                                    />
+                                    <div className="flex gap-1 pt-1 overflow-x-auto">
+                                        {['39', '40', '41', '42', '43', '44'].map((quickSz) => (
+                                            <button
+                                                key={quickSz}
+                                                type="button"
+                                                onClick={() => updateVariant(i, 'size', quickSz)}
+                                                className={cn(
+                                                    "px-1.5 py-0.5 text-[10px] rounded border",
+                                                    v.size === quickSz ? "bg-primary text-white border-primary" : "border-border/40 text-muted-foreground hover:bg-secondary"
+                                                )}
+                                            >
+                                                {quickSz}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                                 <div className="space-y-1">
                                     <Label className="text-xs">Cor (Nome)</Label>
-                                    <Input value={v.colorName} onChange={(e) => updateVariant(i, 'colorName', e.target.value)} placeholder="Preto" className="h-9 text-xs" />
+                                    <Input value={v.colorName} onChange={(e) => updateVariant(i, 'colorName', e.target.value)} placeholder="Preto, Branco..." className="h-9 text-xs" />
                                 </div>
                             </div>
 
                             <div className="space-y-1 sm:col-span-2">
-                                <Label className="text-xs">Cor (Hex)</Label>
+                                <Label className="text-xs">Cor (Hexadecimal)</Label>
                                 <div className="flex items-center gap-1">
                                     <input type="color" value={v.colorHex} onChange={(e) => updateVariant(i, 'colorHex', e.target.value)} className="h-9 w-10 rounded border border-input cursor-pointer flex-shrink-0 p-0" />
                                     <Input value={v.colorHex} onChange={(e) => updateVariant(i, 'colorHex', e.target.value)} className="h-9 text-xs font-mono flex-1 p-2" />
@@ -473,15 +645,15 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
 
                             <div className="grid grid-cols-2 gap-3 sm:col-span-2">
                                 <div className="space-y-1">
-                                    <Label className="text-xs">Estoque</Label>
-                                    <Input value={v.stock} onChange={(e) => updateVariant(i, 'stock', parseInt(e.target.value) || 0)} type="number" className="h-9 text-xs" />
+                                    <Label className="text-xs">Estoque (Qtd)</Label>
+                                    <Input value={v.stock} onChange={(e) => updateVariant(i, 'stock', parseInt(e.target.value) || 0)} type="number" className="h-9 text-xs font-semibold" />
                                 </div>
                                 <div className="space-y-1">
-                                    <Label className="text-xs">Acréscimo R$</Label>
+                                    <Label className="text-xs">Diferença de Preço (R$)</Label>
                                     <div className="flex items-center gap-2">
                                         <Input value={v.priceDelta} onChange={(e) => updateVariant(i, 'priceDelta', parseFloat(e.target.value) || 0)} type="number" step="0.01" className="h-9 text-xs flex-1" />
                                         {variants.length > 1 && (
-                                            <button type="button" onClick={() => removeVariant(i)} className="hidden sm:flex h-9 w-9 flex-shrink-0 rounded-lg border border-destructive/50 text-destructive items-center justify-center hover:bg-destructive/10 transition-colors">
+                                            <button type="button" onClick={() => removeVariant(i)} className="hidden sm:flex h-9 w-9 flex-shrink-0 rounded-lg border border-destructive/50 text-destructive items-center justify-center hover:bg-destructive/10 transition-colors" title="Remover variante">
                                                 <X className="h-4 w-4" />
                                             </button>
                                         )}
@@ -497,9 +669,9 @@ export function ProductFormClient({ categories: initCats, brands: initBrands, co
 
             {/* Botões */}
             <div className="flex gap-3 pb-6">
-                <Button type="submit" disabled={isPending} className="gradient-brand text-white font-bold">
+                <Button type="submit" disabled={isPending} className="gradient-brand text-white font-bold px-6">
                     {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                    Salvar Produto
+                    {initialProduct ? 'Salvar Alterações' : 'Salvar Produto'}
                 </Button>
                 <Button type="button" variant="outline" onClick={() => router.back()}>Cancelar</Button>
             </div>

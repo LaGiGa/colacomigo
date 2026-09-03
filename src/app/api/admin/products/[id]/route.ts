@@ -2,9 +2,13 @@ export const dynamic = 'force-dynamic';
 // export const runtime = "edge";
 
 import { createServiceClient } from '@/lib/supabase/server'
+import { requireAdminApi } from '@/lib/auth/admin'
 import { NextResponse } from 'next/server'
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    const authError = await requireAdminApi()
+    if (authError) return authError
+
     const { id } = await params
     try {
         const supabase = createServiceClient()
@@ -18,33 +22,39 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 }
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    const authError = await requireAdminApi()
+    if (authError) return authError
+
     const { id } = await params
     try {
         const supabase = createServiceClient()
         const body = await req.json()
         
         const { error: productError } = await supabase.from('products').update({
-            name: body.name, slug: body.slug, sku: body.sku, description: body.description,
-            price: body.price, compare_price: body.compare_price, category_id: body.category_id || null,
-            brand_id: body.brand_id || null, collection_id: body.collection_id || null,
-            is_active: body.is_active,
+            name: body.name,
+            slug: body.slug,
+            sku: body.sku || null,
+            description: body.description || null,
+            price: typeof body.price === 'number' ? body.price : parseFloat(body.price),
+            compare_price: body.compare_price ? parseFloat(body.compare_price) : null,
+            category_id: body.category_id || null,
+            brand_id: body.brand_id || null,
+            collection_id: body.collection_id || null,
+            is_active: body.is_active ?? true,
         }).eq('id', id)
         if (productError) throw productError
         
-        await supabase.from('product_images').delete().eq('product_id', id)
-        if (body.images?.length > 0) {
-            const { error: imagesError } = await supabase.from('product_images').insert(
-                body.images.map((img: any) => ({ product_id: id, url: img.url, alt: body.name, is_primary: img.is_primary }))
-            )
-            if (imagesError) throw imagesError
+        if (Array.isArray(body.images)) {
+            await supabase.from('product_images').delete().eq('product_id', id)
+            if (body.images.length > 0) {
+                const { error: imagesError } = await supabase.from('product_images').insert(
+                    body.images.map((img: any) => ({ product_id: id, url: img.url, alt: body.name, is_primary: img.is_primary }))
+                )
+                if (imagesError) throw imagesError
+            }
         }
         
         // ─── Variantes: ATUALIZA, nunca apaga ────────────────────────────────
-        // Apagar e recriar (comportamento antigo) gerava IDs novos a cada
-        // edição: quebrava o vínculo dos pedidos antigos com o item vendido,
-        // invalidava carrinhos salvos no navegador do cliente e zerava o
-        // controle de estoque. Agora: atualiza as existentes, insere as novas
-        // e apenas DESATIVA as que o admin removeu do formulário.
         const incoming = (body.variants ?? []) as any[]
 
         const { data: currentVariants, error: currentErr } = await supabase
@@ -56,20 +66,33 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         const currentIds = new Set((currentVariants ?? []).map((v) => v.id))
         const keptIds = new Set<string>()
 
-        for (const variant of incoming) {
+        for (let i = 0; i < incoming.length; i++) {
+            const variant = incoming[i]
             const { id: variantId, ...fields } = variant
+            const cleanSlug = (body.slug || 'PROD').toUpperCase().replace(/[^A-Z0-9]/g, '')
+            const cleanSize = (fields.size || 'UN').toUpperCase().replace(/[^A-Z0-9]/g, '')
+            const autoSku = `${cleanSlug}-${cleanSize}-${i + 1}`
+
+            const variantPayload = {
+                ...fields,
+                sku: fields.sku?.trim() || autoSku,
+                size: fields.size?.trim() || null,
+                color_name: fields.color_name?.trim() || null,
+                color_hex: fields.color_hex || '#000000',
+                product_id: id,
+            }
 
             if (variantId && currentIds.has(variantId)) {
                 keptIds.add(variantId)
                 const { error } = await supabase
                     .from('product_variants')
-                    .update({ ...fields, product_id: id })
+                    .update(variantPayload)
                     .eq('id', variantId)
                 if (error) throw error
             } else {
                 const { data: created, error } = await supabase
                     .from('product_variants')
-                    .insert({ ...fields, product_id: id })
+                    .insert(variantPayload)
                     .select('id')
                     .single()
                 if (error) throw error
@@ -95,6 +118,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 }
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    const authError = await requireAdminApi()
+    if (authError) return authError
+
     const { id } = await params
     try {
         const supabase = createServiceClient()

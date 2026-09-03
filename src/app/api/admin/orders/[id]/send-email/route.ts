@@ -2,10 +2,14 @@ export const dynamic = 'force-dynamic';
 // export const runtime = "edge";
 
 import { createServiceClient } from '@/lib/supabase/server'
+import { requireAdminApi } from '@/lib/auth/admin'
 import { NextResponse } from 'next/server'
 import { sendEmailWithLazyLoad, getPurchaseEmailHtmlLazy, formatCurrencyStringLazy, getShippingEmailHtmlLazy } from '@/lib/api-lazy-loaders'
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    const authError = await requireAdminApi()
+    if (authError) return authError
+
     const { id: orderId } = await params
     try {
         const supabase = createServiceClient()

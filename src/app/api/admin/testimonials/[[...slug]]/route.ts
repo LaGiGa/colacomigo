@@ -2,9 +2,13 @@ export const dynamic = 'force-dynamic';
 // export const runtime = "edge";
 
 import { createServiceClient } from '@/lib/supabase/server'
+import { requireAdminApi } from '@/lib/auth/admin'
 import { NextResponse } from 'next/server'
 
 export async function GET() {
+    const authError = await requireAdminApi()
+    if (authError) return authError
+
     try {
         const supabase = createServiceClient()
         const { data, error } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false })
@@ -16,6 +20,9 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+    const authError = await requireAdminApi()
+    if (authError) return authError
+
     try {
         const supabase = createServiceClient()
         const body = await req.json()
@@ -28,6 +35,9 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ slug?: string[] }> }) {
+    const authError = await requireAdminApi()
+    if (authError) return authError
+
     try {
         const slug = (await params).slug
         const id = slug?.[0]
@@ -42,6 +52,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ slug?:
 }
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ slug?: string[] }> }) {
+    const authError = await requireAdminApi()
+    if (authError) return authError
+
     try {
         const slug = (await params).slug
         const id = slug?.[0]

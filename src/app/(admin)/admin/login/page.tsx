@@ -29,16 +29,22 @@ export default function AdminLoginPage() {
 
             if (error) throw error
 
-            // Validar se é admin (Profiles)
+            const emailNormalized = (data.user.email || email).toLowerCase().trim()
+            if (emailNormalized !== 'colacomigoshop@gmail.com') {
+                await supabase.auth.signOut()
+                throw new Error('Acesso proibido: E-mail não autorizado para o painel administrativo.')
+            }
+
+            // Validar se é admin (Profiles com role='admin' e is_admin=true)
             const { data: profile } = await supabase
                 .from('profiles')
-                .select('role')
+                .select('role, is_admin')
                 .eq('id', data.user.id)
                 .single()
 
-            if (profile?.role !== 'admin') {
+            if (profile?.role !== 'admin' || profile?.is_admin !== true) {
                 await supabase.auth.signOut()
-                throw new Error('Acesso restrito apenas para administradores.')
+                throw new Error('Acesso restrito apenas para administradores credenciados.')
             }
 
             toast.success('Acesso autorizado!')

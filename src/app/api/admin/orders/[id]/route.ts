@@ -2,9 +2,13 @@ export const dynamic = 'force-dynamic';
 // export const runtime = "edge";
 
 import { createServiceClient } from '@/lib/supabase/server'
+import { requireAdminApi } from '@/lib/auth/admin'
 import { NextResponse } from 'next/server'
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    const authError = await requireAdminApi()
+    if (authError) return authError
+
     const { id } = await params
     try {
         const supabase = createServiceClient()
@@ -18,6 +22,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 }
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    const authError = await requireAdminApi()
+    if (authError) return authError
+
     const { id } = await params
     try {
         const supabase = createServiceClient()

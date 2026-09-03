@@ -1,12 +1,20 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
+const DEFAULT_SUPABASE_URL = 'https://ygdlmathcksuhnybkcpy.supabase.co'
+const DEFAULT_SUPABASE_ANON_KEY =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnZGxtYXRoY2tzdWhueWJrY3B5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2NzUyNzYsImV4cCI6MjA4ODI1MTI3Nn0.-W97wm88UqWT4sLs_Fgfah6NimmcW_lGzkx2OhvsSoc'
+const AUTHORIZED_ADMIN_EMAILS = ['colacomigoshop@gmail.com']
+
 export async function middleware(request: NextRequest) {
     let supabaseResponse = NextResponse.next({ request })
 
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || DEFAULT_SUPABASE_URL
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY
+
     const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        supabaseUrl,
+        supabaseAnonKey,
         {
             cookies: {
                 getAll() {
@@ -30,8 +38,9 @@ export async function middleware(request: NextRequest) {
     } = await supabase.auth.getUser()
 
     const { pathname } = request.nextUrl
+    request.headers.set('x-pathname', pathname)
 
-    // ─── Rota /admin e /api/admin — exige autenticação + is_admin ──────────────────────────
+    // ─── Rota /admin e /api/admin — exige autenticação + whitelist + is_admin ──────────
     if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
         // Se for a própria página de login do admin, deixa passar
         if (pathname === '/admin/login') {
@@ -45,16 +54,25 @@ export async function middleware(request: NextRequest) {
             return NextResponse.redirect(new URL('/admin/login', request.url))
         }
 
-        // Verifica se o usuário tem role 'admin' no profile
+        const email = user.email?.toLowerCase().trim()
+        if (!email || !AUTHORIZED_ADMIN_EMAILS.includes(email)) {
+            console.warn(`[SECURITY] Acesso negado no middleware para e-mail não autorizado: ${email}`)
+            if (pathname.startsWith('/api/')) {
+                return NextResponse.json({ error: 'Acesso Proibido' }, { status: 403 })
+            }
+            return NextResponse.redirect(new URL('/admin/login', request.url))
+        }
+
+        // Verifica se o usuário tem role 'admin' E is_admin === true no profile
         try {
             const { data: profile, error } = await supabase
                 .from('profiles')
-                .select('role')
+                .select('role, is_admin')
                 .eq('id', user.id)
                 .maybeSingle()
 
-            if (error || !profile || profile.role !== 'admin') {
-                console.warn('Acesso negado: Usuário não é admin ou profile não encontrado.')
+            if (error || !profile || profile.role !== 'admin' || profile.is_admin !== true) {
+                console.warn('[SECURITY] Acesso negado: Usuário sem privilégios admin válidos.')
                 if (pathname.startsWith('/api/')) {
                     return NextResponse.json({ error: 'Acesso Proibido' }, { status: 403 })
                 }

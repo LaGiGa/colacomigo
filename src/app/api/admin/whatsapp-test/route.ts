@@ -2,12 +2,16 @@ export const dynamic = 'force-dynamic';
 // export const runtime = "edge";
 
 import { createServiceClient } from '@/lib/supabase/server'
+import { requireAdminApi } from '@/lib/auth/admin'
 import { NextResponse } from 'next/server'
 import { resolveProvider, sendWhatsAppText, normalizePhone } from '@/lib/whatsapp'
 import { resolveStoreWhatsAppNumber } from '@/lib/orders/fulfill'
 
 /** GET — mostra como a notificação está configurada (sem expor credenciais). */
 export async function GET() {
+    const authError = await requireAdminApi()
+    if (authError) return authError
+
     try {
         const supabase = createServiceClient()
         const { number, enabled } = await resolveStoreWhatsAppNumber(supabase)
@@ -27,6 +31,9 @@ export async function GET() {
 
 /** POST — dispara uma mensagem de teste para o número da loja. */
 export async function POST(req: Request) {
+    const authError = await requireAdminApi()
+    if (authError) return authError
+
     try {
         const body = await req.json().catch(() => ({}))
         const supabase = createServiceClient()

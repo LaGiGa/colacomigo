@@ -1,8 +1,9 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
-
 /**
- * Verifica se as variáveis essenciais do Cloudflare R2 estão configuradas.
+ * Cloudflare R2 Client com Lazy Loading
+ * Carrega @aws-sdk/client-s3 dinamicamente sob demanda para otimizar
+ * o bundle do Cloudflare Worker (limite de tamanho).
  */
+
 export function isR2Configured(): boolean {
     return Boolean(
         process.env.R2_ACCOUNT_ID &&
@@ -12,9 +13,9 @@ export function isR2Configured(): boolean {
     )
 }
 
-let s3ClientInstance: S3Client | null = null
+let s3ClientInstance: any = null
 
-export function getR2Client(): S3Client {
+export async function getR2Client() {
     if (s3ClientInstance) return s3ClientInstance
 
     const accountId = process.env.R2_ACCOUNT_ID
@@ -24,6 +25,8 @@ export function getR2Client(): S3Client {
     if (!accountId || !accessKeyId || !secretAccessKey) {
         throw new Error('Credenciais do Cloudflare R2 não configuradas no ambiente.')
     }
+
+    const { S3Client } = await import('@aws-sdk/client-s3')
 
     s3ClientInstance = new S3Client({
         region: 'auto',
@@ -57,7 +60,8 @@ export async function uploadToR2({
     key,
     contentType = 'image/webp',
 }: UploadToR2Params): Promise<UploadToR2Result> {
-    const client = getR2Client()
+    const client = await getR2Client()
+    const { PutObjectCommand } = await import('@aws-sdk/client-s3')
     const bucket = process.env.R2_BUCKET_NAME!
 
     await client.send(
@@ -98,7 +102,8 @@ export async function uploadToR2({
 export async function deleteFromR2(key: string): Promise<boolean> {
     if (!isR2Configured()) return false
     try {
-        const client = getR2Client()
+        const client = await getR2Client()
+        const { DeleteObjectCommand } = await import('@aws-sdk/client-s3')
         const bucket = process.env.R2_BUCKET_NAME!
         const cleanKey = key.replace(/^\/+/, '')
 

@@ -2,13 +2,14 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Boxes, Layers, Layout, LayoutDashboard, LogOut, MessageCircle, MoreHorizontal, Package, Settings2, ShoppingCart, Store, Tag, Ticket, TrendingUp, Truck, User, Users, X } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { AdminSalesNotifier } from '@/components/admin/AdminSalesNotifier'
+import { createClient } from '@/lib/supabase/client'
 
 // ─── Itens principais (bottom nav mobile) ──────────────
 const MAIN_NAV = [
@@ -39,7 +40,22 @@ const ALL_NAV = [
 
 export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
     const pathname = usePathname()
+    const router = useRouter()
     const [drawerOpen, setDrawerOpen] = useState(false)
+
+    useEffect(() => {
+        if (pathname === '/admin/login') return
+        const supabase = createClient()
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            if (!user || user.email?.toLowerCase().trim() !== 'colacomigoshop@gmail.com') {
+                router.replace('/admin/login')
+            }
+        })
+    }, [pathname, router])
+
+    if (pathname === '/admin/login') {
+        return <>{children}</>
+    }
 
     const isActive = (href: string) =>
         href === '/admin' ? pathname === '/admin' : pathname.startsWith(href)

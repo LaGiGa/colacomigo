@@ -2,30 +2,36 @@ export const dynamic = 'force-dynamic';
 // export const runtime = "edge";
 
 import { createServiceClient } from '@/lib/supabase/server'
+import { requireAdminApi } from '@/lib/auth/admin'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
+const emptyStringToNull = z.preprocess(
+    (val) => (val === '' || val === undefined ? null : val),
+    z.string().uuid().nullable().optional()
+)
+
 const ProductSchema = z.object({
-    name: z.string().min(1),
-    slug: z.string().min(1),
-    sku: z.string().optional(),
-    description: z.string().optional(),
-    price: z.number().min(0),
+    name: z.string().min(1, 'Nome do produto é obrigatório'),
+    slug: z.string().min(1, 'Slug é obrigatório'),
+    sku: z.string().optional().nullable(),
+    description: z.string().optional().nullable(),
+    price: z.number().min(0, 'Preço deve ser maior ou igual a zero'),
     compare_price: z.number().optional().nullable(),
-    category_id: z.string().uuid().optional().nullable(),
-    brand_id: z.string().uuid().optional().nullable(),
-    collection_id: z.string().uuid().optional().nullable(),
+    category_id: emptyStringToNull,
+    brand_id: emptyStringToNull,
+    collection_id: emptyStringToNull,
     is_active: z.boolean().default(true),
     images: z.array(z.object({
-        url: z.string().url(),
+        url: z.string().url('URL de imagem inválida'),
         is_primary: z.boolean().default(false)
     })).default([]),
     variants: z.array(z.object({
         id: z.string().uuid().optional(),
-        sku: z.string().optional(),
-        size: z.string().optional(),
-        color_name: z.string().optional(),
-        color_hex: z.string().optional(),
+        sku: z.string().optional().nullable(),
+        size: z.string().optional().nullable(),
+        color_name: z.string().optional().nullable(),
+        color_hex: z.string().optional().nullable(),
         price_delta: z.number().default(0),
         stock: z.number().int().min(0).default(0),
         is_active: z.boolean().default(true),
@@ -33,6 +39,9 @@ const ProductSchema = z.object({
 })
 
 export async function GET() {
+    const authError = await requireAdminApi()
+    if (authError) return authError
+
     try {
         const supabase = createServiceClient()
         const { data, error } = await supabase.from('products').select('*, category:categories(id, name), brand:brands(id, name), images:product_images(id, url, is_primary), variants:product_variants(*)').order('created_at', { ascending: false })
@@ -45,15 +54,34 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+    const authError = await requireAdminApi()
+    if (authError) return authError
+
     try {
+        const rawJson = await req.json()
+        const parseResult = ProductSchema.safeParse(rawJson)
+
+        if (!parseResult.success) {
+            const firstError = parseResult.error.issues[0]?.message || 'Dados inválidos no formulário'
+            return NextResponse.json({ error: firstError, details: parseResult.error.issues }, { status: 400 })
+        }
+
+        const body = parseResult.data
         const supabase = createServiceClient()
-        const body = ProductSchema.parse(await req.json())
+
         const { data: product, error: productError } = await supabase.from('products').insert({
-            name: body.name, slug: body.slug, sku: body.sku, description: body.description,
-            price: body.price, compare_price: body.compare_price, category_id: body.category_id || null,
-            brand_id: body.brand_id || null, collection_id: body.collection_id || null,
+            name: body.name,
+            slug: body.slug,
+            sku: body.sku || null,
+            description: body.description || null,
+            price: body.price,
+            compare_price: body.compare_price || null,
+            category_id: body.category_id || null,
+            brand_id: body.brand_id || null,
+            collection_id: body.collection_id || null,
             is_active: body.is_active,
         }).select().single()
+
         if (productError) throw productError
         
         if (body.images.length > 0) {
@@ -67,18 +95,31 @@ export async function POST(req: Request) {
         }
         
         const { error: variantsError } = await supabase.from('product_variants').insert(
-            body.variants.map((v: any) => {
+            body.variants.map((v: any, index: number) => {
                 const { id: _id, ...variantWithoutId } = v
-                return { ...variantWithoutId, product_id: product.id }
+                const cleanSlug = body.slug.toUpperCase().replace(/[^A-Z0-9]/g, '')
+                const cleanSize = (v.size || 'UN').toUpperCase().replace(/[^A-Z0-9]/g, '')
+                const autoSku = `${cleanSlug}-${cleanSize}-${index + 1}`
+
+                return {
+                    ...variantWithoutId,
+                    sku: v.sku?.trim() || autoSku,
+                    size: v.size?.trim() || null,
+                    color_name: v.color_name?.trim() || null,
+                    color_hex: v.color_hex || '#000000',
+                    product_id: product.id,
+                }
             })
         )
+
         if (variantsError) {
             await supabase.from('products').delete().eq('id', product.id)
             throw variantsError
         }
+
         return NextResponse.json({ product })
     } catch (err: any) {
         console.error('[API ADMIN PRODUCTS POST ERROR]', err)
-        return NextResponse.json({ error: err.message }, { status: 500 })
+        return NextResponse.json({ error: err.message || 'Erro ao cadastrar produto' }, { status: 500 })
     }
 }

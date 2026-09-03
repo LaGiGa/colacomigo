@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useTransition, useEffect } from 'react'
+import { useState, useTransition, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { GripVertical, Loader2, Pencil, Plus, Tag, Trash2 } from '@/components/ui/icons'
+import { GripVertical, ImagePlus, Loader2, Pencil, Plus, Tag, Trash2, X } from '@/components/ui/icons'
+import { optimizeImageFile } from '@/lib/image-client'
 
 interface Categoria {
     id: string
@@ -38,6 +40,8 @@ interface Props {
 export function CategoriasAdminClient({ initialCategories = [] }: Props) {
     const [categorias, setCategorias] = useState<Categoria[]>(initialCategories)
     const [loading, setLoading] = useState(initialCategories.length === 0)
+    const [uploading, setUploading] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
         if (initialCategories.length === 0) {
@@ -95,6 +99,36 @@ export function CategoriasAdminClient({ initialCategories = [] }: Props) {
     function cancelar() {
         setShowForm(false)
         setEditando(null)
+    }
+
+    async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        setUploading(true)
+        try {
+            const optimized = await optimizeImageFile(file, { maxSide: 1200, quality: 0.85 })
+            const formData = new FormData()
+            formData.append('file', optimized)
+            formData.append('folder', 'categorias')
+
+            const res = await fetch('/api/admin/upload', {
+                method: 'POST',
+                body: formData,
+            })
+            const data = await res.json()
+            if (!res.ok || !data?.url) {
+                throw new Error(data?.error || 'Erro no upload da imagem')
+            }
+            setImageUrl(data.url)
+            toast.success('Imagem enviada e otimizada com sucesso!')
+        } catch (err: any) {
+            console.error('[ERRO UPLOAD CATEGORIA]', err)
+            toast.error(err.message || 'Falha ao enviar imagem')
+        } finally {
+            setUploading(false)
+            if (e.target) e.target.value = ''
+        }
     }
 
     async function salvar() {
@@ -251,13 +285,86 @@ export function CategoriasAdminClient({ initialCategories = [] }: Props) {
                                 placeholder="Ex: Camisas grife e streetwear das melhores marcas"
                             />
                         </div>
-                        <div className="sm:col-span-2 space-y-1">
-                            <Label>URL da imagem (opcional)</Label>
-                            <Input
-                                value={imageUrl}
-                                onChange={(e) => setImageUrl(e.target.value)}
-                                placeholder="/cat-camisas.png ou https://..."
-                            />
+                        <div className="sm:col-span-2 space-y-2">
+                            <Label>Imagem da Categoria</Label>
+                            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                                {imageUrl ? (
+                                    <div className="relative h-24 w-24 rounded-xl overflow-hidden border border-border bg-secondary/30 flex-shrink-0 group">
+                                        <img
+                                            src={imageUrl}
+                                            alt="Preview da Categoria"
+                                            className="h-full w-full object-cover"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setImageUrl('')}
+                                            className="absolute top-1 right-1 h-6 w-6 rounded-full bg-destructive text-white flex items-center justify-center opacity-90 hover:opacity-100 transition-opacity"
+                                            title="Remover imagem"
+                                        >
+                                            <X className="h-3.5 w-3.5" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={uploading}
+                                        className="h-24 w-24 rounded-xl border-2 border-dashed border-border hover:border-primary/60 flex flex-col items-center justify-center gap-1.5 text-muted-foreground hover:text-primary transition-colors flex-shrink-0"
+                                    >
+                                        {uploading ? (
+                                            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                                        ) : (
+                                            <ImagePlus className="h-6 w-6" />
+                                        )}
+                                        <span className="text-[10px] font-medium text-center px-1">
+                                            {uploading ? 'Enviando...' : 'Subir Imagem'}
+                                        </span>
+                                    </button>
+                                )}
+
+                                <div className="space-y-2 flex-1 w-full">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={handleUpload}
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => fileInputRef.current?.click()}
+                                            disabled={uploading}
+                                            className="text-xs"
+                                        >
+                                            <ImagePlus className="h-3.5 w-3.5 mr-1.5" />
+                                            {imageUrl ? 'Trocar Imagem' : 'Escolher Imagem do Dispositivo'}
+                                        </Button>
+                                        {imageUrl && (
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setImageUrl('')}
+                                                className="text-xs text-destructive hover:bg-destructive/10"
+                                            >
+                                                Limpar
+                                            </Button>
+                                        )}
+                                    </div>
+                                    <Input
+                                        value={imageUrl}
+                                        onChange={(e) => setImageUrl(e.target.value)}
+                                        placeholder="Ou digite o caminho (ex: /cat-camisas.png ou /supabase-images/...)"
+                                        className="text-xs font-mono"
+                                    />
+                                    <p className="text-[11px] text-muted-foreground">
+                                        Ao selecionar do dispositivo, a imagem é convertida em WebP e servida via proxy Cloudflare.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                         <div>
                             <label className="flex items-center gap-2 cursor-pointer">

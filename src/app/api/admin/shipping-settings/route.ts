@@ -2,9 +2,13 @@ export const dynamic = 'force-dynamic';
 // export const runtime = "edge";
 
 import { createServiceClient } from '@/lib/supabase/server'
+import { requireAdminApi } from '@/lib/auth/admin'
 import { NextResponse } from 'next/server'
 
 export async function GET() {
+    const authError = await requireAdminApi()
+    if (authError) return authError
+
     try {
         const supabase = createServiceClient()
         const { data, error } = await supabase.from('shipping_settings').select('*').eq('id', 1).single()
@@ -17,6 +21,9 @@ export async function GET() {
 }
 
 export async function PATCH(req: Request) {
+    const authError = await requireAdminApi()
+    if (authError) return authError
+
     try {
         const supabase = createServiceClient()
         const body = await req.json()

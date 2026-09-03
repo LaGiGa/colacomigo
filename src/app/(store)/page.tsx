@@ -9,7 +9,7 @@ import {
 import { createServiceClient } from '@/lib/supabase/server'
 import type { Metadata } from 'next'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 300 // 5 minutos - ISR (cache Cloudflare/Next.js)
 
 
 export const metadata: Metadata = {

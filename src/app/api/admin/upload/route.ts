@@ -2,10 +2,14 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 import { createServiceClient } from '@/lib/supabase/server'
+import { requireAdminApi } from '@/lib/auth/admin'
 import { NextResponse } from 'next/server'
 import { isR2Configured, uploadToR2 } from '@/lib/r2'
 
 export async function POST(req: Request) {
+    const authError = await requireAdminApi()
+    if (authError) return authError
+
     try {
         const formData = await req.formData()
         const file = formData.get('file') as File
@@ -68,7 +72,8 @@ export async function POST(req: Request) {
         }
 
         const { data: { publicUrl } } = supabase.storage.from(uploadedBucket).getPublicUrl(filePath)
-        return NextResponse.json({ url: publicUrl, bucket: uploadedBucket })
+        const proxyUrl = `/supabase-images/${uploadedBucket}/${filePath}`
+        return NextResponse.json({ url: proxyUrl, directUrl: publicUrl, bucket: uploadedBucket })
     } catch (err: any) {
         console.error('[API ADMIN UPLOAD ERROR]', err)
         return NextResponse.json({ error: err.message }, { status: 500 })

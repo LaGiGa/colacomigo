@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 // export const runtime = "edge";
 
 import { createServiceClient } from '@/lib/supabase/server'
+import { requireAdminApi } from '@/lib/auth/admin'
 import { NextRequest, NextResponse } from 'next/server'
 
 /**
@@ -14,6 +15,9 @@ import { NextRequest, NextResponse } from 'next/server'
  * O `select *` sem limite fazia o painel puxar a base inteira a cada 10s.
  */
 export async function GET(req: NextRequest) {
+    const authError = await requireAdminApi()
+    if (authError) return authError
+
     try {
         const supabase = createServiceClient()
         const { searchParams } = req.nextUrl
