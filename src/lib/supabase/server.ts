@@ -87,3 +87,20 @@ export function createServiceClient() {
         }
     )
 }
+
+/**
+ * Cliente Supabase público e sem cookies para consultas da vitrine (banners, categorias, coleções).
+ * Seguro para uso em ISR (revalidate) e Static Site Generation no build na Cloudflare.
+ */
+export function createPublicClient() {
+    return createSupabaseClient(
+        getSupabaseUrl(),
+        getAnonKey(),
+        {
+            auth: {
+                autoRefreshToken: false,
+                persistSession: false,
+            },
+        }
+    )
+}

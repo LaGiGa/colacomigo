@@ -6,7 +6,7 @@ import {
     HeroCarousel,
     TestimonialsSection
 } from '@/components/store/StoreDynamicComponents'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/server'
 import type { Metadata } from 'next'
 
 export const revalidate = 300 // 5 minutos - ISR (cache Cloudflare/Next.js)
@@ -30,7 +30,7 @@ export default async function PaginaInicial() {
     let categoriasDB: any[] | null = null
 
     try {
-        const supabase = createServiceClient()
+        const supabase = createPublicClient()
         const [{ data: bData, error: bErr }, { data: mData, error: mErr }] = await Promise.all([
             supabase.from('hero_banners').select('*').order('sort_order', { ascending: true }),
             supabase.from('brands').select('name, slug, logo_url').order('sort_order', { ascending: true }).limit(6),
