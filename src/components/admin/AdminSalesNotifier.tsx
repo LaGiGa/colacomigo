@@ -55,11 +55,19 @@ export function AdminSalesNotifier() {
 
     useEffect(() => {
         seenIdsRef.current = readSeenIds()
+        let timer: NodeJS.Timeout | null = null
+
+        const scheduleNext = () => {
+            if (timer) clearTimeout(timer)
+            const isHidden = typeof document !== 'undefined' && document.hidden
+            // 15 segundos na aba ativa, 60 segundos em background (economiza recursos e evita excesso de conexões)
+            const interval = isHidden ? 60000 : 15000
+            timer = setTimeout(poll, interval)
+        }
 
         const poll = async () => {
             try {
-                // Payload enxuto e limitado: antes esse polling puxava a base
-                // inteira de pedidos a cada 10 segundos.
+                // Payload enxuto e limitado
                 const res = await fetch('/api/admin/orders?status=paid&fields=lite&limit=20', { cache: 'no-store' })
                 if (!res.ok) return
                 const data = await res.json()
@@ -91,12 +99,30 @@ export function AdminSalesNotifier() {
                 })
             } catch {
                 // polling silencioso
+            } finally {
+                scheduleNext()
+            }
+        }
+
+        const handleVisibilityChange = () => {
+            if (typeof document !== 'undefined' && !document.hidden) {
+                // Ao retornar para a aba do admin, checa imediatamente
+                if (timer) clearTimeout(timer)
+                poll()
             }
         }
 
         poll()
-        const timer = setInterval(poll, 10000)
-        return () => clearInterval(timer)
+        if (typeof document !== 'undefined') {
+            document.addEventListener('visibilitychange', handleVisibilityChange)
+        }
+
+        return () => {
+            if (timer) clearTimeout(timer)
+            if (typeof document !== 'undefined') {
+                document.removeEventListener('visibilitychange', handleVisibilityChange)
+            }
+        }
     }, [])
 
     const unreadCount = newOrders.length

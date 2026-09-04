@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { Boxes, Globe, Loader2, Pencil, Plus, Trash2 } from '@/components/ui/icons'
+import { Boxes, Globe, ImagePlus, Loader2, Pencil, Plus, Trash2, X } from '@/components/ui/icons'
+import { optimizeImageFile } from '@/lib/image-client'
 
 interface Marca {
     id: string
@@ -19,8 +21,6 @@ interface Marca {
     sort_order: number
     created_at: string
 }
-
-import { useEffect } from 'react'
 
 export function MarcasAdminClient({ initialMarcas = [] }: { initialMarcas?: Marca[] }) {
     const [marcas, setMarcas] = useState<Marca[]>(initialMarcas)
@@ -45,7 +45,10 @@ export function MarcasAdminClient({ initialMarcas = [] }: { initialMarcas?: Marc
     const [nome, setNome] = useState('')
     const [descricao, setDescricao] = useState('')
     const [website, setWebsite] = useState('')
+    const [logoUrl, setLogoUrl] = useState('')
+    const [uploadingLogo, setUploadingLogo] = useState(false)
     const [ativa, setAtiva] = useState(true)
+    const fileInputRef = useRef<HTMLInputElement>(null)
 
     if (loading) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
 
@@ -64,6 +67,7 @@ export function MarcasAdminClient({ initialMarcas = [] }: { initialMarcas?: Marc
         setNome('')
         setDescricao('')
         setWebsite('')
+        setLogoUrl('')
         setAtiva(true)
         setShowForm(true)
     }
@@ -73,6 +77,7 @@ export function MarcasAdminClient({ initialMarcas = [] }: { initialMarcas?: Marc
         setNome(marca.name)
         setDescricao(marca.description ?? '')
         setWebsite(marca.website ?? '')
+        setLogoUrl(marca.logo_url ?? '')
         setAtiva(marca.is_active)
         setShowForm(true)
     }
@@ -80,6 +85,36 @@ export function MarcasAdminClient({ initialMarcas = [] }: { initialMarcas?: Marc
     function cancelar() {
         setShowForm(false)
         setEditando(null)
+    }
+
+    async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        setUploadingLogo(true)
+        try {
+            const optimized = await optimizeImageFile(file, { maxSide: 800, quality: 0.85 })
+            const formData = new FormData()
+            formData.append('file', optimized)
+            formData.append('folder', 'marcas')
+
+            const res = await fetch('/api/admin/upload', {
+                method: 'POST',
+                body: formData,
+            })
+            const data = await res.json()
+            if (!res.ok || !data?.url) {
+                throw new Error(data?.error || 'Erro no upload do logo')
+            }
+            setLogoUrl(data.url)
+            toast.success('Logo enviado com sucesso!')
+        } catch (err: any) {
+            console.error('[ERRO UPLOAD LOGO MARCA]', err)
+            toast.error(err.message || 'Falha ao enviar logo')
+        } finally {
+            setUploadingLogo(false)
+            if (e.target) e.target.value = ''
+        }
     }
 
     async function salvar() {
@@ -94,6 +129,7 @@ export function MarcasAdminClient({ initialMarcas = [] }: { initialMarcas?: Marc
                 slug: slugify(nome.trim()),
                 description: descricao.trim() || null,
                 website: website.trim() || null,
+                logo_url: logoUrl.trim() || null,
                 is_active: ativa,
             }
 
@@ -195,6 +231,74 @@ export function MarcasAdminClient({ initialMarcas = [] }: { initialMarcas?: Marc
                                 className="bg-secondary/30 text-muted-foreground text-xs font-mono"
                             />
                         </div>
+
+                        {/* Upload de Logo da Marca */}
+                        <div className="sm:col-span-2 space-y-2">
+                            <Label>Logo da Marca (PNG transparente, SVG ou WebP)</Label>
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={handleLogoUpload}
+                            />
+                            {logoUrl ? (
+                                <div className="flex items-center gap-4 p-3 bg-secondary/40 border border-border rounded-xl">
+                                    <div className="relative h-14 w-28 bg-black/40 rounded-lg overflow-hidden border border-white/10 flex items-center justify-center p-1">
+                                        <Image
+                                            src={logoUrl}
+                                            alt="Preview do Logo"
+                                            fill
+                                            className="object-contain"
+                                            sizes="120px"
+                                        />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-semibold text-white truncate">Logo carregado</p>
+                                        <p className="text-[11px] text-muted-foreground truncate">{logoUrl}</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => fileInputRef.current?.click()}
+                                            disabled={uploadingLogo}
+                                        >
+                                            Trocar
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => setLogoUrl('')}
+                                            className="text-destructive hover:bg-destructive/10"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="border-2 border-dashed border-border hover:border-primary/50 rounded-xl p-6 text-center cursor-pointer transition-colors bg-secondary/20 hover:bg-secondary/40"
+                                >
+                                    {uploadingLogo ? (
+                                        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                                            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                                            Enviando e otimizando logo...
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center gap-2">
+                                            <ImagePlus className="h-8 w-8 text-muted-foreground/60" />
+                                            <p className="text-sm font-medium">Clique para selecionar o logo da marca</p>
+                                            <p className="text-xs text-muted-foreground">PNG transparente, WebP ou SVG (máx. 800px)</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
                         <div className="sm:col-span-2 space-y-1">
                             <Label>Descrição (opcional)</Label>
                             <Input
@@ -225,7 +329,7 @@ export function MarcasAdminClient({ initialMarcas = [] }: { initialMarcas?: Marc
                         </div>
                     </div>
                     <div className="flex gap-3">
-                        <Button className="gradient-brand text-white" onClick={salvar} disabled={isPending}>
+                        <Button className="gradient-brand text-white" onClick={salvar} disabled={isPending || uploadingLogo}>
                             {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                             Salvar
                         </Button>
@@ -249,10 +353,14 @@ export function MarcasAdminClient({ initialMarcas = [] }: { initialMarcas?: Marc
                     marcas.map((marca) => (
                         <div key={marca.id} className="bg-card border border-border rounded-2xl p-4 lg:px-6 lg:py-4 transition-all hover:border-primary/20">
                             <div className="flex flex-col lg:grid lg:grid-cols-5 lg:items-center gap-4">
-                                {/* Informações principais */}
+                                {/* Informações principais com miniatura visual */}
                                 <div className="flex items-center gap-3">
-                                    <div className="h-10 w-10 lg:h-8 lg:w-8 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
-                                        <Boxes className="h-5 w-5 lg:h-4 lg:w-4 text-muted-foreground/60" />
+                                    <div className="h-10 w-10 lg:h-9 lg:w-9 rounded-xl bg-secondary/80 border border-white/5 flex items-center justify-center flex-shrink-0 overflow-hidden relative">
+                                        {marca.logo_url ? (
+                                            <Image src={marca.logo_url} alt={marca.name} fill className="object-contain p-1" sizes="40px" />
+                                        ) : (
+                                            <Boxes className="h-5 w-5 lg:h-4 lg:w-4 text-muted-foreground/60" />
+                                        )}
                                     </div>
                                     <div className="min-w-0">
                                         <p className="font-bold text-sm lg:text-base truncate">{marca.name}</p>

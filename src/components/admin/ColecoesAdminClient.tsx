@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { Check, CheckCircle, GripVertical, Layers, Loader2, Pencil, Plus, Trash2, X, XCircle } from '@/components/ui/icons'
+import { Check, CheckCircle, GripVertical, ImagePlus, Layers, Loader2, Pencil, Plus, Trash2, X, XCircle } from '@/components/ui/icons'
+import { optimizeImageFile } from '@/lib/image-client'
 
 interface Colecao {
     id: string
@@ -18,8 +20,6 @@ interface Colecao {
     sort_order: number
     created_at: string
 }
-
-import { useEffect } from 'react'
 
 export function ColecoesAdminClient({ colecoes: initial = [] }: { colecoes?: Colecao[] }) {
     const [colecoes, setColecoes] = useState<Colecao[]>(initial)
@@ -43,7 +43,10 @@ export function ColecoesAdminClient({ colecoes: initial = [] }: { colecoes?: Col
 
     const [nome, setNome] = useState('')
     const [descricao, setDescricao] = useState('')
+    const [bannerUrl, setBannerUrl] = useState('')
+    const [uploadingBanner, setUploadingBanner] = useState(false)
     const [ativa, setAtiva] = useState(true)
+    const fileInputRef = useRef<HTMLInputElement>(null)
 
     if (loading) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
 
@@ -51,16 +54,64 @@ export function ColecoesAdminClient({ colecoes: initial = [] }: { colecoes?: Col
         return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-')
     }
 
-    function abrirNovo() { setEditando(null); setNome(''); setDescricao(''); setAtiva(true); setShowForm(true) }
+    function abrirNovo() {
+        setEditando(null)
+        setNome('')
+        setDescricao('')
+        setBannerUrl('')
+        setAtiva(true)
+        setShowForm(true)
+    }
 
     function abrirEditar(c: Colecao) {
-        setEditando(c); setNome(c.name); setDescricao(c.description ?? ''); setAtiva(c.is_active); setShowForm(true)
+        setEditando(c)
+        setNome(c.name)
+        setDescricao(c.description ?? '')
+        setBannerUrl(c.banner_url ?? '')
+        setAtiva(c.is_active)
+        setShowForm(true)
+    }
+
+    async function handleBannerUpload(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        setUploadingBanner(true)
+        try {
+            const optimized = await optimizeImageFile(file, { maxSide: 1600, quality: 0.85 })
+            const formData = new FormData()
+            formData.append('file', optimized)
+            formData.append('folder', 'colecoes')
+
+            const res = await fetch('/api/admin/upload', {
+                method: 'POST',
+                body: formData,
+            })
+            const data = await res.json()
+            if (!res.ok || !data?.url) {
+                throw new Error(data?.error || 'Erro no upload da imagem')
+            }
+            setBannerUrl(data.url)
+            toast.success('Banner da coleção enviado com sucesso!')
+        } catch (err: any) {
+            console.error('[ERRO UPLOAD BANNER COLECAO]', err)
+            toast.error(err.message || 'Falha ao enviar imagem')
+        } finally {
+            setUploadingBanner(false)
+            if (e.target) e.target.value = ''
+        }
     }
 
     async function salvar() {
         if (!nome.trim()) { toast.error('Nome é obrigatório.'); return }
         startTransition(async () => {
-            const payload = { name: nome.trim(), slug: slugify(nome.trim()), description: descricao.trim() || null, is_active: ativa }
+            const payload = {
+                name: nome.trim(),
+                slug: slugify(nome.trim()),
+                description: descricao.trim() || null,
+                banner_url: bannerUrl.trim() || null,
+                is_active: ativa,
+            }
             const url = editando ? `/api/admin/collections/${editando.id}` : '/api/admin/collections'
             const res = await fetch(url, { method: editando ? 'PATCH' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
             const data = await res.json()
@@ -110,6 +161,74 @@ export function ColecoesAdminClient({ colecoes: initial = [] }: { colecoes?: Col
                             <Label>Slug (automático)</Label>
                             <Input value={slugify(nome)} readOnly className="bg-secondary/30 text-muted-foreground text-xs font-mono" />
                         </div>
+
+                        {/* Upload de Imagem/Banner da Coleção */}
+                        <div className="sm:col-span-2 space-y-2">
+                            <Label>Banner/Imagem de Capa (opcional)</Label>
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={handleBannerUpload}
+                            />
+                            {bannerUrl ? (
+                                <div className="flex items-center gap-4 p-3 bg-secondary/40 border border-border rounded-xl">
+                                    <div className="relative h-16 w-32 bg-black/40 rounded-lg overflow-hidden border border-white/10 flex items-center justify-center">
+                                        <Image
+                                            src={bannerUrl}
+                                            alt="Preview do Banner"
+                                            fill
+                                            className="object-cover"
+                                            sizes="140px"
+                                        />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-semibold text-white truncate">Imagem carregada</p>
+                                        <p className="text-[11px] text-muted-foreground truncate">{bannerUrl}</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => fileInputRef.current?.click()}
+                                            disabled={uploadingBanner}
+                                        >
+                                            Trocar
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => setBannerUrl('')}
+                                            className="text-destructive hover:bg-destructive/10"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="border-2 border-dashed border-border hover:border-primary/50 rounded-xl p-6 text-center cursor-pointer transition-colors bg-secondary/20 hover:bg-secondary/40"
+                                >
+                                    {uploadingBanner ? (
+                                        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                                            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                                            Enviando e otimizando imagem...
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center gap-2">
+                                            <ImagePlus className="h-8 w-8 text-muted-foreground/60" />
+                                            <p className="text-sm font-medium">Clique para selecionar imagem de capa da coleção</p>
+                                            <p className="text-xs text-muted-foreground">WebP, PNG ou JPG (otimizada automaticamente)</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
                         <div className="sm:col-span-2 space-y-1">
                             <Label>Descrição</Label>
                             <Input value={descricao} onChange={e => setDescricao(e.target.value)} placeholder="Ex: Peças ideais para o inverno que chegou pesado" />
@@ -122,7 +241,7 @@ export function ColecoesAdminClient({ colecoes: initial = [] }: { colecoes?: Col
                         </div>
                     </div>
                     <div className="flex gap-3">
-                        <Button className="gradient-brand text-white" onClick={salvar} disabled={isPending}>
+                        <Button className="gradient-brand text-white" onClick={salvar} disabled={isPending || uploadingBanner}>
                             {isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />} Salvar
                         </Button>
                         <Button variant="outline" onClick={() => { setShowForm(false); setEditando(null) }}>Cancelar</Button>
@@ -134,11 +253,20 @@ export function ColecoesAdminClient({ colecoes: initial = [] }: { colecoes?: Col
             <div className="space-y-3 lg:hidden">
                 {colecoes.length > 0 ? colecoes.map(c => (
                     <div key={c.id} className="rounded-xl border border-border bg-card p-4 space-y-3">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <p className="font-bold">{c.name}</p>
-                                <code className="text-xs text-muted-foreground">{c.slug}</code>
-                                {c.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{c.description}</p>}
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                                <div className="relative h-12 w-20 rounded-lg bg-secondary/80 border border-white/5 overflow-hidden flex items-center justify-center flex-shrink-0">
+                                    {c.banner_url ? (
+                                        <Image src={c.banner_url} alt={c.name} fill className="object-cover" sizes="80px" />
+                                    ) : (
+                                        <Layers className="h-5 w-5 text-muted-foreground/50" />
+                                    )}
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="font-bold truncate">{c.name}</p>
+                                    <code className="text-xs text-muted-foreground">{c.slug}</code>
+                                    {c.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{c.description}</p>}
+                                </div>
                             </div>
                             {c.is_active
                                 ? <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs flex-shrink-0">Ativa</Badge>
@@ -177,7 +305,18 @@ export function ColecoesAdminClient({ colecoes: initial = [] }: { colecoes?: Col
                         {colecoes.length > 0 ? colecoes.map(c => (
                             <tr key={c.id} className="border-b border-border/40 hover:bg-secondary/20 transition-colors">
                                 <td className="p-4"><GripVertical className="h-4 w-4 text-muted-foreground/30" /></td>
-                                <td className="p-4 font-semibold">{c.name}</td>
+                                <td className="p-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="relative h-9 w-16 rounded-lg bg-secondary/80 border border-white/5 overflow-hidden flex items-center justify-center flex-shrink-0">
+                                            {c.banner_url ? (
+                                                <Image src={c.banner_url} alt={c.name} fill className="object-cover" sizes="64px" />
+                                            ) : (
+                                                <Layers className="h-4 w-4 text-muted-foreground/50" />
+                                            )}
+                                        </div>
+                                        <span className="font-semibold">{c.name}</span>
+                                    </div>
+                                </td>
                                 <td className="p-4"><code className="text-xs text-muted-foreground bg-secondary/50 px-2 py-0.5 rounded">{c.slug}</code></td>
                                 <td className="p-4 text-muted-foreground text-xs max-w-[200px] truncate">{c.description ?? '—'}</td>
                                 <td className="p-4">

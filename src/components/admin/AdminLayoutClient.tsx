@@ -43,15 +43,33 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
     const router = useRouter()
     const [drawerOpen, setDrawerOpen] = useState(false)
 
+    const [authorized, setAuthorized] = useState<boolean | null>(null)
+
     useEffect(() => {
         if (pathname === '/admin/login') return
+        if (authorized) return
+
         const supabase = createClient()
-        supabase.auth.getUser().then(({ data: { user } }) => {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            const user = session?.user
             if (!user || user.email?.toLowerCase().trim() !== 'colacomigoshop@gmail.com') {
                 router.replace('/admin/login')
+            } else {
+                setAuthorized(true)
             }
         })
-    }, [pathname, router])
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            const user = session?.user
+            if (!user || user.email?.toLowerCase().trim() !== 'colacomigoshop@gmail.com') {
+                router.replace('/admin/login')
+            } else {
+                setAuthorized(true)
+            }
+        })
+
+        return () => subscription.unsubscribe()
+    }, [pathname, router, authorized])
 
     if (pathname === '/admin/login') {
         return <>{children}</>
