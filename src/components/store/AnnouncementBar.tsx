@@ -25,17 +25,36 @@ export function AnnouncementBar() {
 
     useEffect(() => {
         async function load() {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const supabase = createClient() as any
-            const { data } = await supabase
-                .from('store_settings')
-                .select('announcements')
-                .eq('id', 1)
-                .single()
+            try {
+                const cached = sessionStorage.getItem('announcements')
+                if (cached) {
+                    setMessages(JSON.parse(cached))
+                    return
+                }
+            } catch {
+                // ignore sessionStorage error if disabled
+            }
 
-            if (data && data.announcements?.length > 0) {
-                setMessages(data.announcements)
-            } else {
+            try {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const supabase = createClient() as any
+                const { data } = await supabase
+                    .from('store_settings')
+                    .select('announcements')
+                    .eq('id', 1)
+                    .single()
+
+                if (data && data.announcements?.length > 0) {
+                    setMessages(data.announcements)
+                    try {
+                        sessionStorage.setItem('announcements', JSON.stringify(data.announcements))
+                    } catch {
+                        // ignore
+                    }
+                } else {
+                    setMessages(DEFAULT_MESSAGES)
+                }
+            } catch {
                 setMessages(DEFAULT_MESSAGES)
             }
         }

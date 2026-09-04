@@ -88,12 +88,11 @@ export function Header() {
     const [mobileLevel, setMobileLevel] = useState<null | { label: string; subs: string[]; subHrefs: string[] }>(null)
 
     const mobileSearchRef = useRef<HTMLInputElement>(null)
-    const supabase = createClient()
-
-    // Auth check
+    // Auth check (executa uma vez no mount e sincroniza via evento sem chamadas desnecessárias de rede)
     useEffect(() => {
-        supabase.auth.getUser().then(({ data: { user } }) => {
-            setUser(user)
+        const supabase = createClient()
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setUser(session?.user ?? null)
         })
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
@@ -101,7 +100,7 @@ export function Header() {
         })
 
         return () => subscription.unsubscribe()
-    }, [supabase])
+    }, [])
 
     // Scroll shadow no header
     useEffect(() => {

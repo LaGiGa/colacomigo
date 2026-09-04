@@ -24,47 +24,67 @@ export function RecentPurchasePopup() {
     // Buscar configurações globais e produtos dinamicamente
     useEffect(() => {
         async function loadData() {
-            const supabase = createClient()
-
-            // 1. Pegar Nomes ficticios
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { data: settings } = await (supabase as any)
-                .from('store_settings')
-                .select('recent_purchaser_names')
-                .eq('id', 1)
-                .single()
-
-            const names = settings?.recent_purchaser_names?.length
-                ? settings.recent_purchaser_names
-                : DEFAULT_NAMES
-
-            // 2. Pegar alguns produtos reais que estão ativos
-            const { data: products } = await supabase
-                .from('products')
-                .select('name, images:product_images(url)')
-                .eq('is_active', true)
-                .limit(10)
-
-            if (!products || products.length === 0) return
-
-            // 3. Gerar simulações
-            const generated: PurchasePreview[] = products.map((prod) => {
-                const randomName = names[Math.floor(Math.random() * names.length)]
-                const randomCity = DEFAULT_CITIES[Math.floor(Math.random() * DEFAULT_CITIES.length)]
-                const randomMins = Math.floor(Math.random() * 50) + 2
-
-                return {
-                    name: randomName,
-                    cityName: randomCity,
-                    timeAgo: `${randomMins} min`,
-                    productName: prod.name,
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    imageUrl: (prod.images && prod.images.length > 0) ? (prod.images as any)[0].url : null
+            try {
+                const cached = sessionStorage.getItem('recent_purchases')
+                if (cached) {
+                    setPurchases(JSON.parse(cached))
+                    return
                 }
-            })
+            } catch {
+                // ignore
+            }
 
-            // Embaralhar
-            setPurchases(generated.sort(() => Math.random() - 0.5))
+            try {
+                const supabase = createClient()
+
+                // 1. Pegar Nomes ficticios
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const { data: settings } = await (supabase as any)
+                    .from('store_settings')
+                    .select('recent_purchaser_names')
+                    .eq('id', 1)
+                    .single()
+
+                const names = settings?.recent_purchaser_names?.length
+                    ? settings.recent_purchaser_names
+                    : DEFAULT_NAMES
+
+                // 2. Pegar alguns produtos reais que estão ativos
+                const { data: products } = await supabase
+                    .from('products')
+                    .select('name, images:product_images(url)')
+                    .eq('is_active', true)
+                    .limit(10)
+
+                if (!products || products.length === 0) return
+
+                // 3. Gerar simulações
+                const generated: PurchasePreview[] = products.map((prod) => {
+                    const randomName = names[Math.floor(Math.random() * names.length)]
+                    const randomCity = DEFAULT_CITIES[Math.floor(Math.random() * DEFAULT_CITIES.length)]
+                    const randomMins = Math.floor(Math.random() * 50) + 2
+
+                    return {
+                        name: randomName,
+                        cityName: randomCity,
+                        timeAgo: `${randomMins} min`,
+                        productName: prod.name,
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        imageUrl: (prod.images && prod.images.length > 0) ? (prod.images as any)[0].url : null
+                    }
+                })
+
+                // Embaralhar
+                const shuffled = generated.sort(() => Math.random() - 0.5)
+                setPurchases(shuffled)
+                try {
+                    sessionStorage.setItem('recent_purchases', JSON.stringify(shuffled))
+                } catch {
+                    // ignore
+                }
+            } catch {
+                // ignore
+            }
         }
 
         loadData()
